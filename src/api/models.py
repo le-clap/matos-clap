@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timezone
 from typing import Optional, List
 from decimal import Decimal
@@ -32,7 +33,7 @@ class Categories(SQLModel, table=True):
 
 class Access(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    name: str  # Non Admin, Manager, Clap, User, Non Authentified
+    name: str  # Unauthenticated/User/Clap/Manager/Admin
     description: str | None = None
 
     users: List["Users"] = Relationship(back_populates="access")
@@ -67,6 +68,7 @@ class Catalog(SQLModel, table=True):
     label: str
     description: str | None = None
     category_id: int = Field(foreign_key="categories.id")
+    image_path: str | None = "pictures/default_picture.png"
 
     category: Categories = Relationship(back_populates="catalogs")
     items: List["Items"] = Relationship(back_populates="catalog")
@@ -80,6 +82,7 @@ class Items(SQLModel, table=True):
     deposit: Decimal = Field(default=0, max_digits=10, decimal_places=2)
     condition_id: int = Field(foreign_key="condition.id")
     availability_id: int = Field(foreign_key="availability.id")
+    last_availability_update: datetime
     deleted: bool = Field(default=False)
 
     catalog: Catalog = Relationship(back_populates="items")
@@ -93,6 +96,7 @@ class Items(SQLModel, table=True):
 class Requests(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     borrower_id: int = Field(foreign_key="users.id")
+    phone_number: str
     start_date: datetime
     end_date: datetime
     reasons: str | None = None
@@ -101,7 +105,7 @@ class Requests(SQLModel, table=True):
 
     borrower: Users = Relationship(back_populates="requests")
     items: List["Requested_items"] = Relationship(back_populates="request")
-    loan: Optional["Loans"] = Relationship(back_populates="request")
+    loan: Loans | None = Relationship(back_populates="request")
 
 
 class Requested_items(SQLModel, table=True):
@@ -123,8 +127,9 @@ class Loans(SQLModel, table=True):
     start_date: datetime
     end_date: datetime
     total_deposit: Decimal = Field(default=0, max_digits=10, decimal_places=2)
-    real_start_date: Optional[datetime] = None
-    real_return_date: Optional[datetime] = None
+    real_start_date: datetime | None = None
+    real_return_date: datetime | None = None
+    Retained_deposit: Decimal = Field(default=0, max_digits=10, decimal_places=2)
     request_id: int | None = Field(default=None, foreign_key="requests.id")
     comments: str | None = None
 
@@ -136,7 +141,7 @@ class Loans(SQLModel, table=True):
         back_populates="loans_as_assignee",
         sa_relationship_kwargs={"foreign_keys": "[Loans.assignee_id]"}
     )
-    request: Optional[Requests] = Relationship(back_populates="loan")
+    request: Requests | None = Relationship(back_populates="loan")
     items: List["Loaned_items"] = Relationship(back_populates="loan")
 
 
@@ -144,6 +149,7 @@ class Loaned_items(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     loan_id: int = Field(foreign_key="loans.id")
     item_id: int = Field(foreign_key="items.id")
+    condition_on_return_id: int = Field(foreign_key="condition.id")
 
     loan: Loans = Relationship(back_populates="items")
     item: Items = Relationship(back_populates="loaned_in")
