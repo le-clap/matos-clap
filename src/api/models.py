@@ -105,7 +105,7 @@ class Requests(SQLModel, table=True):
 
     borrower: Users = Relationship(back_populates="requests")
     items: List["Requested_items"] = Relationship(back_populates="request")
-    loan: Loans | None = Relationship(back_populates="request")
+    loan: Optional["Loans"] = Relationship(back_populates="request")
 
 
 class Requested_items(SQLModel, table=True):
@@ -127,8 +127,8 @@ class Loans(SQLModel, table=True):
     start_date: datetime
     end_date: datetime
     total_deposit: Decimal = Field(default=0, max_digits=10, decimal_places=2)
-    real_start_date: datetime | None = None
-    real_return_date: datetime | None = None
+    real_start_date: Optional[datetime]
+    real_return_date: Optional[datetime]
     Retained_deposit: Decimal = Field(default=0, max_digits=10, decimal_places=2)
     request_id: int | None = Field(default=None, foreign_key="requests.id")
     comments: str | None = None
@@ -141,7 +141,7 @@ class Loans(SQLModel, table=True):
         back_populates="loans_as_assignee",
         sa_relationship_kwargs={"foreign_keys": "[Loans.assignee_id]"}
     )
-    request: Requests | None = Relationship(back_populates="loan")
+    request: Optional[Requests] = Relationship(back_populates="loan")
     items: List["Loaned_items"] = Relationship(back_populates="loan")
 
 
