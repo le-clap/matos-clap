@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from models.models import *
+
 from routers import availability, catalog, categories, item, user
 
 from core.config import settings
@@ -19,6 +21,7 @@ async def lifespan(app: FastAPI):
 
     print("Shutting down...")
 app = FastAPI(
+    lifespan=lifespan,
     title="API emprunt",
     version="0.1.0",
     docs_url="/docs",
