@@ -12,7 +12,6 @@ class Condition(SQLModel, table=True):
     name: str  # New, Good, Degraded
     description: str | None = None
 
-    # FastAPI "Shortcuts"
     item: List["Item"] = Relationship(back_populates="condition")
 
 
@@ -29,7 +28,7 @@ class Category(SQLModel, table=True):
     name: str
     description: str | None = None
 
-    catalogs: List["Catalog"] = Relationship(back_populates="category")
+    catalog: List["Catalog"] = Relationship(back_populates="category")
 
 
 class Access(SQLModel, table=True):
@@ -47,7 +46,7 @@ class User(SQLModel, table=True):
     last_name: str
     first_name: str
     email: EmailStr = Field(unique=True, index=True)
-    session_id: str | None = uuid.uuid4()
+    session_id: str | None = Field(default_factory=lambda: uuid.uuid4().hex)
 
     access_id: int = Field(foreign_key="access.id")
 
@@ -70,7 +69,7 @@ class Catalog(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     label: str
     description: str | None = None
-    category_id: int = Field(foreign_key="Category.id")
+    category_id: int = Field(foreign_key="category.id")
     image_path: str | None = "pictures/default_picture.png"
 
     category: Category = Relationship(back_populates="catalog")
@@ -138,11 +137,11 @@ class Loan(SQLModel, table=True):
 
     borrower: User = Relationship(
         back_populates="loan_as_borrower",
-        sa_relationship_kwargs={"foreign_keys": "[Loan.borrower_id]"}
+        sa_relationship_kwargs={"foreign_keys": "Loan.borrower_id"}
     )
     assignee: User = Relationship(
         back_populates="loan_as_assignee",
-        sa_relationship_kwargs={"foreign_keys": "[Loan.assignee_id]"}
+        sa_relationship_kwargs={"foreign_keys": "Loan.assignee_id"}
     )
     request: Optional[Request] = Relationship(back_populates="loan")
     item: List["LoanedItem"] = Relationship(back_populates="loan")
