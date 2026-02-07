@@ -3,7 +3,7 @@ import { gsap } from 'gsap';
 
 export interface StaggeredMenuItem {
   label: string;
-  ariaLabel: string;
+  ariaLabel?: string;
   link: string;
 }
 export interface StaggeredMenuSocialItem {
@@ -22,7 +22,7 @@ export interface StaggeredMenuProps {
   menuButtonColor?: string;
   openMenuButtonColor?: string;
   accentColor?: string;
-  isFixed: boolean;
+  isFixed?: boolean;
   changeMenuColorOnOpen?: boolean;
   closeOnClickAway?: boolean;
   onMenuOpen?: () => void;
@@ -380,7 +380,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 
   return (
     <div
-      className={`sm-scope z-40 ${isFixed ? 'fixed top-0 left-0 w-screen h-screen overflow-hidden' : 'w-full h-full'}`}
+      className={`sm-scope z-40 ${isFixed ? 'fixed pointer-events-none top-0 left-0 w-screen h-screen overflow-hidden' : 'w-full h-full'}`}
     >
       <div
         className={
@@ -427,9 +427,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             />
           </div>
 
-          <div className="sm-title flex content-center">
-            <h1>Site d'emprunt du CLAP</h1>
-          </div>
+          {/*<div className="sm-title flex content-center">*/}
+          {/*  <h1>Site d'emprunt du CLAP</h1>*/}
+          {/*</div>*/}
 
           <button
             ref={toggleBtnRef}
@@ -542,8 +542,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 .sm-scope .staggered-menu-wrapper { position: relative; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
 .sm-scope .staggered-menu-header { position: absolute; top: 0; left: 0; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 2em; background: transparent; pointer-events: none; z-index: 20; }
 .sm-scope .staggered-menu-header > * { pointer-events: auto; }
+.sm-scope .sm-title { margin: 5px; font-family: Open Sans; font-size: 2em; border-radius: 5px;}
 .sm-scope .sm-logo { display: flex; align-items: center; user-select: none; }
-.sm-scope .sm-logo-img { display: block; height: 32px; width: auto; object-fit: contain; }
+.sm-scope .sm-logo-img { display: block; height: 64px; width: auto; object-fit: contain; }
 .sm-scope .sm-toggle { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; border: none; cursor: pointer; color: #e9e9ef; font-weight: 500; line-height: 1; overflow: visible; }
 .sm-scope .sm-toggle:focus-visible { outline: 2px solid #ffffffaa; outline-offset: 4px; border-radius: 4px; }
 .sm-scope .sm-line:last-of-type { margin-top: 6px; }

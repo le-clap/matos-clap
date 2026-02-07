@@ -12,9 +12,7 @@ router = APIRouter(
 
 @router.get("/", response_model=List[Item])
 def get_item(session: Session = Depends(get_session)):
-    item = session.exec(select(Item)).all()
-    return item
-
+    return session.exec(select(Item)).all()
 
 @router.post("/", response_model=Item, status_code=status.HTTP_201_CREATED)
 def create_item(item: Item, session: Session = Depends(get_session)):
