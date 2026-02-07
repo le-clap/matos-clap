@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
-from src.api.database import engine
-from src.api.models import Condition, Availability, Access
+from db.database import engine
+from models.models import Condition, Availability, Access
 
 def seed_data():
     with Session(engine) as session:
