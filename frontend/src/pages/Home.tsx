@@ -37,7 +37,11 @@ const Home = () => {
       {/* Background Visuals */}
       <div className="absolute inset-0 z-0">
          <ColorBends
-            colors={["#e01b24","#a51d2d", "#ffffff", "#eeaa11", "#26aaff"]}
+             speed={0.1}
+             autoRotate={2}
+             frequency={2.5}
+             scale={1}
+             colors={["#e01b24","#a51d2d", "#ffffff", "#3344aa"]}
          />
       </div>
 
@@ -47,6 +51,7 @@ const Home = () => {
             // logo="/src/assets/logos/Logo CLAP.png"
             items={navItems}
             buttonBgColor="#a01806"
+            menuColor="#a01806"
             baseColor="rgba(255, 255, 255, 0.1)" // Glassmorphism effect
         />
       </div>

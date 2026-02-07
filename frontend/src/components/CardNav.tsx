@@ -182,6 +182,7 @@ const CardNav: React.FC<CardNavProps> = ({
               yoyo={false}
               pauseOnHover={false}
               disabled={false}
+              className={"font-heading text-4xl "}
             />
           </div>
 

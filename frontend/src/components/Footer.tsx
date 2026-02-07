@@ -1,12 +1,12 @@
-import { Github, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { Github, Instagram, Linkedin } from 'lucide-react';
 import clapLogo from '@/assets/logos/Logo CLAP.png'; // Adjust path if necessary
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full bg-[#111111] text-zinc-400 border-t border-zinc-800">
-      <div className="max-w-7xl mx-auto px-6 py-12 md:py-16 lg:py-20">
+    <footer className="w-full bg-zinc-950 text-zinc-400 border-t border-zinc-800">
+      <div className="max-w-7xl mx-auto px-6 py-12 md:py-16 lg:py-18">
 
         {/* Top Section: Logo & Tagline */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-8">
@@ -48,18 +48,15 @@ const Footer = () => {
 
           {/* Column 4: Socials */}
           <div className="flex flex-col gap-4">
-            <h3 className="font-semibold text-white tracking-wide">Suivez-nous</h3>
-            <div className="flex gap-4">
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="bg-zinc-800 p-2 rounded-full hover:bg-[#5227FF] hover:text-white transition-all duration-300">
-                <Twitter size={20} />
-              </a>
-              <a href="https://github.com" target="_blank" rel="noreferrer" className="bg-zinc-800 p-2 rounded-full hover:bg-[#5227FF] hover:text-white transition-all duration-300">
+            <h3 className="font-semibold text-white tracking-wide">Suivez-nous !</h3>
+            <div className="flex gap-4 ">
+              <a href="https://github.com/le-clap" target="_blank" rel="noreferrer" className="bg-zinc-800 p-2 rounded-full hover:bg-[#5227FF] hover:text-white transition-all duration-300">
                 <Github size={20} />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="bg-zinc-800 p-2 rounded-full hover:bg-[#5227FF] hover:text-white transition-all duration-300">
+              <a href="https://www.linkedin.com/company/clap-centrale-lille/" target="_blank" rel="noreferrer" className="bg-zinc-800 p-2 rounded-full hover:bg-[#5227FF] hover:text-white transition-all duration-300">
                 <Linkedin size={20} />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="bg-zinc-800 p-2 rounded-full hover:bg-[#5227FF] hover:text-white transition-all duration-300">
+              <a href="https://www.instagram.com/le_clap_/" target="_blank" rel="noreferrer" className="bg-zinc-800 p-2 rounded-full hover:bg-[#5227FF] hover:text-white transition-all duration-300">
                 <Instagram size={20} />
               </a>
             </div>
