@@ -46,6 +46,7 @@ const Home = () => {
         <CardNav
             // logo="/src/assets/logos/Logo CLAP.png"
             items={navItems}
+            buttonBgColor="#a01806"
             baseColor="rgba(255, 255, 255, 0.1)" // Glassmorphism effect
         />
       </div>

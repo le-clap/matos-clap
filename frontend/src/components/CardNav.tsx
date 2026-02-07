@@ -1,3 +1,4 @@
+import ShinyText from './ShinyText';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { GoArrowUpRight } from 'react-icons/go';
@@ -167,6 +168,21 @@ const CardNav: React.FC<CardNavProps> = ({
           {/* LOGO */}
           <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0 pointer-events-none">
             {logo && <img src={logo} alt={logoAlt} className="h-7 object-contain" />}
+          </div>
+
+          <div>
+            <ShinyText
+              text="CLAP"
+              speed={4}
+              delay={0}
+              color="#f01826"
+              shineColor="#ffffff"
+              spread={140}
+              direction="left"
+              yoyo={false}
+              pauseOnHover={false}
+              disabled={false}
+            />
           </div>
 
           {/* CTA BUTTON */}
