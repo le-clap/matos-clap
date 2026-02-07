@@ -6,7 +6,7 @@ const Home = () => {
   const navItems = [
     {
       label: "Emprunter",
-      bgColor: "#a01801", // Your accent color
+      bgColor: "#590101", // Your accent color
       textColor: "#ffffff",
       links: [
         { label: "Nouvel emprunt", href: "/new-loan", ariaLabel: "Start new loan" }, // Ref 1.3
@@ -16,7 +16,7 @@ const Home = () => {
     {
       label: "Mon Espace",
       bgColor: "#a01801",
-      textColor: "#000000",
+      textColor: "#ffffff",
       links: [
         { label: "Mes emprunts", href: "/my-loans", ariaLabel: "My loans" }, // Ref 1.2
         { label: "Mon Panier", href: "/cart", ariaLabel: "My cart" } // Ref 1.4
@@ -47,7 +47,6 @@ const Home = () => {
             // logo="/src/assets/logos/Logo CLAP.png"
             items={navItems}
             baseColor="rgba(255, 255, 255, 0.1)" // Glassmorphism effect
-            className="mt-20" // Add margin to not overlap with StaggeredMenu if needed
         />
       </div>
     </div>

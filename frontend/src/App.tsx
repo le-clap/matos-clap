@@ -6,6 +6,7 @@ import Home from '@/pages/Home';
 const Inventory = () => <div className="p-20 text-white">Page Inventaire (1.1)</div>;
 const MyLoans = () => <div className="p-20 text-white">Page Mes Emprunts (1.2)</div>;
 const NewLoan = () => <div className="p-20 text-white">Page Nouvel Emprunt (1.3)</div>;
+const Cart = () => <div className="p-20 text-white">Page Panier (1.5)</div>;
 const Admin = () => <div className="p-20 text-white">Page Gestion (1.5)</div>;
 
 const App = () => {
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="inventory" element={<Inventory />} />
           <Route path="my-loans" element={<MyLoans />} />
           <Route path="new-loan" element={<NewLoan />} />
+          <Route path="cart" element={<Cart />} />
           <Route path="admin" element={<Admin />} />
 
           {/* Fallback for 404 */}

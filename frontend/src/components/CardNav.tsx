@@ -133,7 +133,7 @@ const CardNav: React.FC<CardNavProps> = ({
 
   return (
     <div
-      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-[800px] z-[50] top-[1.2em] md:top-[4em] ${className}`}
+      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-200 z-50 top-[1.2em] md:top-[4em] ${className}`}
     >
       <nav
         ref={navRef}
@@ -141,11 +141,11 @@ const CardNav: React.FC<CardNavProps> = ({
         style={{ backgroundColor: baseColor }}
       >
         {/* TOP BAR */}
-        <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[20] pointer-events-auto">
+        <div className="card-nav-top absolute inset-x-0 top-0 h-15 flex items-center justify-between p-2 pl-[1.1rem] z-20 pointer-events-auto">
 
           {/* HAMBURGER BUTTON */}
           <div
-            className={`hamburger-menu group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none w-[40px] z-[30]`}
+            className={`hamburger-menu group h-full flex flex-col items-center justify-center cursor-pointer gap-1.5 order-2 md:order-0 w-10 z-30`}
             onClick={toggleMenu}
             role="button"
             aria-label={isExpanded ? 'Close menu' : 'Open menu'}
@@ -153,26 +153,26 @@ const CardNav: React.FC<CardNavProps> = ({
             style={{ color: menuColor }}
           >
             <div
-              className={`w-[26px] h-[2px] bg-current transition-transform duration-300 ease-in-out ${
-                isHamburgerOpen ? 'translate-y-[4px] rotate-45' : ''
+              className={`w-6.5 h-0.5 bg-current transition-transform duration-300 ease-in-out ${
+                isHamburgerOpen ? 'translate-y-1 rotate-45' : ''
               }`}
             />
             <div
-              className={`w-[26px] h-[2px] bg-current transition-transform duration-300 ease-in-out ${
-                isHamburgerOpen ? '-translate-y-[4px] -rotate-45' : ''
+              className={`w-6.5 h-0.5 bg-current transition-transform duration-300 ease-in-out ${
+                isHamburgerOpen ? '-translate-y-1 -rotate-45' : ''
               }`}
             />
           </div>
 
           {/* LOGO */}
-          <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-none pointer-events-none">
-            {logo && <img src={logo} alt={logoAlt} className="h-[28px] object-contain" />}
+          <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0 pointer-events-none">
+            {logo && <img src={logo} alt={logoAlt} className="h-7 object-contain" />}
           </div>
 
           {/* CTA BUTTON */}
           <button
             type="button"
-            className="hidden md:inline-flex border-0 rounded-lg px-4 items-center h-[40px] font-medium cursor-pointer transition-colors duration-300 hover:opacity-90 active:scale-95"
+            className="hidden md:inline-flex border-0 rounded-lg px-4 items-center h-10 font-medium cursor-pointer transition-colors duration-300 hover:opacity-90 active:scale-95"
             style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
           >
             Get Started
@@ -181,7 +181,7 @@ const CardNav: React.FC<CardNavProps> = ({
 
         {/* EXPANDABLE CONTENT */}
         <div
-          className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col md:flex-row gap-2 z-[10] ${
+          className={`card-nav-content absolute left-0 right-0 top-15 bottom-0 p-2 flex flex-col md:flex-row gap-2 z-10 ${
             isExpanded ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
           }`}
         >
@@ -189,7 +189,7 @@ const CardNav: React.FC<CardNavProps> = ({
             <div
               key={idx}
               ref={setCardRef(idx)}
-              className="nav-card relative flex flex-col gap-2 p-4 rounded-lg flex-1 min-h-[60px]"
+              className="nav-card relative flex flex-col gap-2 p-4 rounded-lg flex-1 min-h-15"
               style={{ backgroundColor: item.bgColor, color: item.textColor }}
             >
               <div className="font-medium text-lg">{item.label}</div>
