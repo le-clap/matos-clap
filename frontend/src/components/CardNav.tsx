@@ -1,7 +1,8 @@
 import ShinyText from './ShinyText';
-import React, { useLayoutEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
-import { GoArrowUpRight } from 'react-icons/go';
+import React, {useLayoutEffect, useRef, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {gsap} from 'gsap';
+import {GoArrowUpRight} from 'react-icons/go';
 
 type CardNavLink = {
   label: string;
@@ -26,19 +27,24 @@ export interface CardNavProps {
   menuColor?: string;
   buttonBgColor?: string;
   buttonTextColor?: string;
+  ctaLink?: string;  // <--- AJOUT 2 : Le lien de destination
+  ctaLabel?: string; // <--- AJOUT 3 : Le texte du bouton (optionnel)
 }
 
 const CardNav: React.FC<CardNavProps> = ({
-  logo,
-  logoAlt = 'Logo',
-  items,
-  className = '',
-  ease = 'power3.out',
-  baseColor = '#fff',
-  menuColor = '#000',
-  buttonBgColor = '#000',
-  buttonTextColor = '#fff'
-}) => {
+                                           logo,
+                                           logoAlt = 'Logo',
+                                           items,
+                                           className = '',
+                                           ease = 'power3.out',
+                                           baseColor = '#fff',
+                                           menuColor = '#000',
+                                           buttonBgColor = '#000',
+                                           buttonTextColor = '#fff',
+                                           ctaLink = '/',
+                                           ctaLabel = 'Accueil',
+                                         }) => {
+  const navigate = useNavigate();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -55,10 +61,10 @@ const CardNav: React.FC<CardNavProps> = ({
       if (contentEl) {
         // Temporarily force visibility to measure true height
         const originalStyle = {
-            visibility: contentEl.style.visibility,
-            position: contentEl.style.position,
-            height: contentEl.style.height,
-            display: contentEl.style.display
+          visibility: contentEl.style.visibility,
+          position: contentEl.style.position,
+          height: contentEl.style.height,
+          display: contentEl.style.display
         };
 
         contentEl.style.visibility = 'visible';
@@ -83,32 +89,41 @@ const CardNav: React.FC<CardNavProps> = ({
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-        // Initial setup
-        gsap.set(navRef.current, { height: 60, overflow: 'hidden' });
-        gsap.set(cardsRef.current, { y: 50, opacity: 0 });
+      // Initial setup
+      gsap.set(navRef.current, {height: 60, overflow: 'hidden'});
+      gsap.set(cardsRef.current, {y: 50, opacity: 0});
 
-        // Create Timeline
-        const tl = gsap.timeline({ paused: true });
+      // Create Timeline
+      const tl = gsap.timeline({paused: true});
 
-        tl.to(navRef.current, {
-          height: () => calculateHeight(), // Use function wrapper to ensure recalc
-          duration: 0.4,
-          ease
-        });
+      tl.to(navRef.current, {
+        height: () => calculateHeight(), // Use function wrapper to ensure recalc
+        duration: 0.3,
+        ease
+      });
 
-        tl.to(cardsRef.current, {
-            y: 0,
-            opacity: 1,
-            duration: 0.4,
-            ease,
-            stagger: 0.08
-        }, '-=0.2');
+      tl.to(cardsRef.current, {
+        y: 0,
+        opacity: 1,
+        duration: 0.3,
+        ease,
+        stagger: 0.08
+      }, '-=0.2');
 
-        tlRef.current = tl;
+      tlRef.current = tl;
     }, navRef); // Scope to navRef
 
     return () => ctx.revert(); // Cleanup GSAP on unmount
   }, [ease, items]);
+
+  const closeMenu = () => {
+    if (!tlRef.current) return;
+
+    setIsHamburgerOpen(false);
+    tlRef.current.reverse().then(() => {
+      setIsExpanded(false);
+    });
+  };
 
   const toggleMenu = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent clicks from bubbling up
@@ -120,11 +135,7 @@ const CardNav: React.FC<CardNavProps> = ({
       setIsExpanded(true);
       tlRef.current.play();
     } else {
-      setIsHamburgerOpen(false);
-      // Use logic to update state after animation
-      tlRef.current.reverse().then(() => {
-          setIsExpanded(false);
-      });
+      closeMenu()
     }
   };
 
@@ -138,11 +149,12 @@ const CardNav: React.FC<CardNavProps> = ({
     >
       <nav
         ref={navRef}
-        className={`card-nav block p-0 rounded-xl shadow-2xl relative overflow-hidden will-change-[height]`}
-        style={{ backgroundColor: baseColor }}
+        className={`card-nav block p-0 rounded-xl shadow-lg relative overflow-hidden will-change-[height]`}
+        style={{backgroundColor: baseColor}}
       >
         {/* TOP BAR */}
-        <div className="card-nav-top absolute inset-x-0 top-0 h-15 flex items-center justify-between p-2 pl-[1.1rem] z-20 pointer-events-auto">
+        <div
+          className="card-nav-top absolute inset-x-0 top-0 h-15 flex items-center justify-between p-2 pl-[1.1rem] z-20 pointer-events-auto">
 
           {/* HAMBURGER BUTTON */}
           <div
@@ -151,7 +163,7 @@ const CardNav: React.FC<CardNavProps> = ({
             role="button"
             aria-label={isExpanded ? 'Close menu' : 'Open menu'}
             tabIndex={0}
-            style={{ color: menuColor }}
+            style={{color: menuColor}}
           >
             <div
               className={`w-6.5 h-0.5 bg-current transition-transform duration-300 ease-in-out ${
@@ -166,8 +178,9 @@ const CardNav: React.FC<CardNavProps> = ({
           </div>
 
           {/* LOGO */}
-          <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0 pointer-events-none">
-            {logo && <img src={logo} alt={logoAlt} className="h-7 object-contain" />}
+          <div
+            className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0 pointer-events-none">
+            {logo && <img src={logo} alt={logoAlt} className="h-7 object-contain"/>}
           </div>
 
           <div>
@@ -189,10 +202,14 @@ const CardNav: React.FC<CardNavProps> = ({
           {/* CTA BUTTON */}
           <button
             type="button"
+            onClick={() => {
+              closeMenu();
+              navigate(ctaLink)
+            }}
             className="hidden md:inline-flex border-0 rounded-lg px-4 items-center h-10 font-medium cursor-pointer transition-colors duration-300 hover:opacity-90 active:scale-95"
-            style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
+            style={{backgroundColor: buttonBgColor, color: buttonTextColor}}
           >
-            Get Started
+            {ctaLabel}
           </button>
         </div>
 
@@ -207,17 +224,29 @@ const CardNav: React.FC<CardNavProps> = ({
               key={idx}
               ref={setCardRef(idx)}
               className="nav-card relative flex flex-col gap-2 p-4 rounded-lg flex-1 min-h-15"
-              style={{ backgroundColor: item.bgColor, color: item.textColor }}
+              style={{backgroundColor: item.bgColor, color: item.textColor}}
             >
               <div className="font-medium text-lg">{item.label}</div>
               <div className="mt-auto flex flex-col gap-2">
                 {item.links?.map((lnk, i) => (
                   <a
-                    key={i}
+                    key={`${lnk.label}-${i}`}
+                    className="nav-card-link inline-flex items-center gap-1.5 no-underline cursor-pointer transition-opacity duration-300 hover:opacity-75 text-[15px] md:text-[16px]"
                     href={lnk.href}
-                    className="flex items-center gap-2 hover:opacity-75 transition-opacity text-sm font-medium"
+                    aria-label={lnk.ariaLabel}
+                    // C'EST ICI QUE LA MAGIE OPÈRE :
+                    onClick={(e) => {
+                      // Si le lien est interne (commence par /), on utilise la navigation React
+                      if (lnk.href.startsWith('/')) {
+                        e.preventDefault(); // Empêche le rechargement de page (l'écran blanc)
+                        closeMenu();
+                        navigate(lnk.href); // Navigue instantanément
+                      }
+                      // Sinon (ex : lien externe https://...), on laisse le navigateur faire
+                    }}
                   >
-                    <GoArrowUpRight /> {lnk.label}
+                    <GoArrowUpRight className="nav-card-link-icon shrink-0" aria-hidden="true"/>
+                    {lnk.label}
                   </a>
                 ))}
               </div>
