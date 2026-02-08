@@ -23,6 +23,8 @@ export interface CardNavProps {
   items: CardNavItem[];
   className?: string;
   ease?: string;
+  centerText?: string;
+  centerTextColor?: string;
   baseColor?: string;
   menuColor?: string;
   buttonBgColor?: string;
@@ -36,6 +38,8 @@ const CardNav: React.FC<CardNavProps> = ({
                                            logoAlt = 'Logo',
                                            items,
                                            className = '',
+                                           centerText = '',
+                                           centerTextColor = '#f01826',
                                            ease = 'power3.out',
                                            baseColor = '#fff',
                                            menuColor = '#000',
@@ -108,7 +112,7 @@ const CardNav: React.FC<CardNavProps> = ({
         duration: 0.3,
         ease,
         stagger: 0.08
-      }, '-=0.2');
+      },'-=0.2');
 
       tlRef.current = tl;
     }, navRef); // Scope to navRef
@@ -145,11 +149,11 @@ const CardNav: React.FC<CardNavProps> = ({
 
   return (
     <div
-      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-200 z-50 top-[1.2em] md:top-[4em] ${className}`}
+      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-200 z-50 top-[1.2em] md:top-[2.5em] ${className}`}
     >
       <nav
         ref={navRef}
-        className={`card-nav block p-0 rounded-xl shadow-lg relative overflow-hidden will-change-[height]`}
+        className={`card-nav block p-0 rounded-xl backdrop-blur-md shadow-lg relative overflow-hidden will-change-[height]`}
         style={{backgroundColor: baseColor}}
       >
         {/* TOP BAR */}
@@ -185,10 +189,10 @@ const CardNav: React.FC<CardNavProps> = ({
 
           <div>
             <ShinyText
-              text="CLAP"
+              text={centerText}
               speed={4}
               delay={0}
-              color="#f01826"
+              color={centerTextColor}
               shineColor="#ffffff"
               spread={140}
               direction="left"

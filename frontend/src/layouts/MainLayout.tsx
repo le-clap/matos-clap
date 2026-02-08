@@ -7,7 +7,7 @@ const MainLayout = () => {
   const navItems = [
     {
       label: "Emprunter",
-      bgColor: "#590101", // Your accent color
+      bgColor: "#590101aa", // Your accent color
       textColor: "#ffffff",
       links: [
         {label: "Nouvel emprunt", href: "/new-loan", ariaLabel: "Start new loan"}, // Ref 1.3
@@ -16,7 +16,7 @@ const MainLayout = () => {
     },
     {
       label: "Mon Espace",
-      bgColor: "#a01801",
+      bgColor: "#a01801aa",
       textColor: "#ffffff",
       links: [
         {label: "Mes emprunts", href: "/my-loans", ariaLabel: "My loans"}, // Ref 1.2
@@ -25,7 +25,7 @@ const MainLayout = () => {
     },
     {
       label: "Admin",
-      bgColor: "#e01b24",
+      bgColor: "#e01b24aa",
       textColor: "#ffffff",
       links: [
         {label: "Gestion", href: "/admin", ariaLabel: "Management"} // Ref 1.5
@@ -43,8 +43,9 @@ const MainLayout = () => {
         <CardNav
           // logo="/src/assets/logos/Logo CLAP.png"
           items={navItems}
-          buttonBgColor="#a01806"
-          menuColor="#a01806"
+          buttonBgColor="#a01801"
+          menuColor="#a01801"
+          centerText="CLAP"
           baseColor="rgba(255, 255, 255, 0.1)" // Glassmorphism effect
         />
       </div>
