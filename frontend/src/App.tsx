@@ -6,6 +6,8 @@ import MyLoans from "@/pages/MyLoans.tsx";
 import NewLoan from "@/pages/NewLoan.tsx";
 import Cart from "@/pages/Cart";
 
+import Error from "@/pages/Error";
+
 // Create placeholder components for pages you haven't built yet
 
 const Admin = () => <div className="p-20 min-h-screen text-white">Page Gestion (1.5)</div>;
@@ -26,7 +28,7 @@ const App = () => {
           <Route path="admin" element={<Admin/>}/>
 
           {/* Fallback for 404 */}
-          <Route path="*" element={<div className="text-white">404 - Not Found</div>}/>
+          <Route path="*" element={<Error/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

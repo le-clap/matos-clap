@@ -52,7 +52,6 @@ const MainLayout = () => {
       {/* Main Content Area */}
       {/* flex-grow ensures this takes all available space, pushing Footer down */}
       <main className="grow w-full relative z-1">
-
         {/* The Outlet renders the current page (Home, Inventory, etc.) */}
         <Outlet/>
       </main>

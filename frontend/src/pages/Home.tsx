@@ -1,9 +1,6 @@
 import ColorBends from "@/components/ColorBends";
-// import CardNav from "@/components/CardNav";
 
 const Home = () => {
-  // Mapping the Architecture Doc to CardNav items
-
   return (
     <div className="relative w-full h-screen overflow-hidden">
       {/* Background Visuals */}
@@ -17,6 +14,8 @@ const Home = () => {
           colors={["#e01b24", "#a51d2d", "#ffffff", "#3344aa"]}
         />
       </div>
+
+      <div className="relative pt-50 inset-0 z-0"></div>
 
     </div>
   );
