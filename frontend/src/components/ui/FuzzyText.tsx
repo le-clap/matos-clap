@@ -293,7 +293,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       canvas.cleanupFuzzyText = cleanup;
     };
 
-    init();
+    init().then(() => 0);
 
     return () => {
       isCancelled = true;

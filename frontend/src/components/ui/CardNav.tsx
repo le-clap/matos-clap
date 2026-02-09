@@ -1,4 +1,4 @@
-import ShinyText from './ShinyText';
+import ShinyText from './ShinyText.tsx';
 import React, {useLayoutEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {gsap} from 'gsap';

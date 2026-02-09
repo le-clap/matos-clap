@@ -1,4 +1,4 @@
-import ColorBends from "@/components/ColorBends";
+import ColorBends from "@/components/ui/ColorBends.tsx";
 
 const Home = () => {
   return (
@@ -15,7 +15,7 @@ const Home = () => {
         />
       </div>
 
-      <div className="relative pt-50 inset-0 z-0"></div>
+      <div className="relative py-25 inset-0 z-0"></div>
 
     </div>
   );

@@ -1,4 +1,4 @@
-export interface CatalogItem {
+export type CatalogItem = {
   id: number,
   label: string,
   description?: string,

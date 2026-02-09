@@ -1,6 +1,7 @@
 import {Outlet} from 'react-router-dom';
 import Footer from "@/components/Footer.tsx";
-import CardNav from "@/components/CardNav.tsx";
+import CardNav from "@/components/ui/CardNav.tsx";
+// import {ModeToggle} from "@/components/ModeToggle.tsx";
 
 const MainLayout = () => {
 
@@ -49,6 +50,10 @@ const MainLayout = () => {
           baseColor="rgba(255, 255, 255, 0.1)" // Glassmorphism effect
         />
       </div>
+
+      {/*<div className="absolute right-10 top-10 z-3">*/}
+      {/*  <ModeToggle/>*/}
+      {/*</div>*/}
 
       {/* Main Content Area */}
       {/* flex-grow ensures this takes all available space, pushing Footer down */}

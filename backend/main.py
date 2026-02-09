@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from models.models import *
 
-from routers import availability, catalog, categories, item, user
+from routers import catalog, item, user
 
 from core.config import settings
 
@@ -12,7 +12,7 @@ from db.database import create_tables
 from db.seed import seed_data
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     print("Initializing db...")
     create_tables()
     seed_data()
@@ -40,11 +40,10 @@ app.add_middleware(
 def read_root():
     return {"status": "System Online"}
 
-app.include_router(availability.router, prefix=settings.API_PREFIX)
+# app.include_router(availability.router, prefix=settings.API_PREFIX)
+# app.include_router(categories.router, prefix=settings.API_PREFIX)
 
 app.include_router(catalog.router, prefix=settings.API_PREFIX)
-
-app.include_router(categories.router, prefix=settings.API_PREFIX)
 
 app.include_router(item.router, prefix=settings.API_PREFIX)
 

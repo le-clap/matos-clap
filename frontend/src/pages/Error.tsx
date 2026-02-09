@@ -1,8 +1,8 @@
-import FuzzyText from "@/components/FuzzyText.tsx";
+import FuzzyText from "@/components/ui/FuzzyText.tsx";
 
 const Error = () => {
   return (
-    <div className="min-h-auto flex flex-col items-center justify-center bg-[#1a1a1a] pt-50 pb-20 pr-9 gap-5">
+    <div className="min-h-auto flex flex-col items-center justify-center bg-[#1a1a1a] pt-40 pb-20 pr-9 gap-5">
 
       <FuzzyText
         baseIntensity={0.2}

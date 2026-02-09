@@ -1,5 +1,5 @@
 import {Github, Instagram, Linkedin} from 'lucide-react';
-import clapLogo from '@/assets/logos/Logo CLAP.png'; // Adjust path if necessary
+import clapLogo from '@/assets/logos/Logo CLAP.png';
 import RezoleoLogoWhite from '@/assets/logos/LogoRezoleoWhite.svg';
 import React from 'react';
 import {useNavigate} from 'react-router-dom';
@@ -9,7 +9,7 @@ const Footer = () => {
   const navigate = useNavigate();
 
   const handleNavigation = (path: string) => (e: React.MouseEvent) => {
-    if (path.startsWith('/')) {
+    if (path.startsWith('/')) { // Ne se déclenche que si le chemin est interne. Sinon, laisse faire le navigateur
     e.preventDefault(); // Bloque le rechargement standard du navigateur
     navigate(path);     // Utilise le routeur React
     window.scrollTo(0, 0); // Remonte en haut de page après le clic
