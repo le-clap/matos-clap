@@ -1,24 +1,24 @@
-import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {BrowserRouter, Routes, Route} from 'react-router-dom'
 
-import MainLayout from '@/layouts/MainLayout';
+import MainLayout from '@/layouts/MainLayout'
 
-import Home from '@/pages/Home';
-import Inventory from '@/pages/Inventory';
-import MyLoans from "@/pages/MyLoans.tsx";
-import NewLoan from "@/pages/NewLoan.tsx";
-import Cart from "@/pages/Cart";
+import Home from '@/pages/Home'
+import Inventory from '@/pages/Inventory'
+import MyLoans from "@/pages/MyLoans.tsx"
+import NewLoan from "@/pages/NewLoan.tsx"
+import Cart from "@/pages/Cart"
 
-import Error from "@/pages/Error";
+import Error from "@/pages/Error"
 
-import {ThemeProvider} from "@/components/ThemeProvider.tsx";
+import {ThemeProvider} from "@/components/ThemeProvider"
 
 // Create placeholder components for pages you haven't built yet
 
-const Admin = () => <div className="p-20 min-h-screen text-white">Page Gestion (1.5)</div>;
+const Admin = () => <div className="p-20 min-h-screen text-white">Page Gestion (1.5)</div>
 
 const App = () => {
   return (
-    <ThemeProvider defaultTheme={"dark"}>
+    <ThemeProvider defaultTheme={"dark"} storageKey="vite-ui-theme">
 
       <BrowserRouter>
         <Routes>
@@ -40,7 +40,7 @@ const App = () => {
       </BrowserRouter>
 
     </ThemeProvider>
-  );
-};
+  )
+}
 
 export default App;

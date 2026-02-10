@@ -1,4 +1,4 @@
-import ColorBends from "@/components/ui/ColorBends.tsx";
+import ColorBends from "@/components/ui/ColorBends";
 
 const Home = () => {
   return (

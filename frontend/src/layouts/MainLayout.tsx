@@ -1,7 +1,7 @@
 import {Outlet} from 'react-router-dom';
-import Footer from "@/components/Footer.tsx";
-import CardNav from "@/components/ui/CardNav.tsx";
-// import {ModeToggle} from "@/components/ModeToggle.tsx";
+import Footer from "@/components/Footer";
+import CardNav from "@/components/ui/CardNav";
+import {ModeToggle} from "@/components/ModeToggle";
 
 const MainLayout = () => {
 
@@ -37,7 +37,7 @@ const MainLayout = () => {
   return (
 
     // Flex container to manage full height
-    <div className="flex flex-col min-h-screen w-full bg-[#101010] text-white">
+    <div className="flex flex-col min-h-screen w-full bg-background text-foreground">
 
       {/* Central Navigation Card */}
       <div className="relative z-10 flex items-center justify-center h-full">
@@ -47,13 +47,13 @@ const MainLayout = () => {
           buttonBgColor="#a01801"
           menuColor="#a01801"
           centerText="CLAP"
-          baseColor="rgba(255, 255, 255, 0.1)" // Glassmorphism effect
+          baseColor="var(--nav-bg)"
         />
       </div>
 
-      {/*<div className="absolute right-10 top-10 z-3">*/}
-      {/*  <ModeToggle/>*/}
-      {/*</div>*/}
+      <div className="absolute right-10 top-10 z-3">
+        <ModeToggle/>
+      </div>
 
       {/* Main Content Area */}
       {/* flex-grow ensures this takes all available space, pushing Footer down */}

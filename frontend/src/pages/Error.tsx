@@ -1,8 +1,8 @@
-import FuzzyText from "@/components/ui/FuzzyText.tsx";
+import FuzzyText from "@/components/ui/FuzzyText";
 
 const Error = () => {
   return (
-    <div className="min-h-auto flex flex-col items-center justify-center bg-[#1a1a1a] pt-40 pb-20 pr-9 gap-5">
+    <div className="min-h-auto flex flex-col items-center justify-center pt-40 pb-20 pr-9 gap-5">
 
       <FuzzyText
         baseIntensity={0.2}
@@ -10,6 +10,7 @@ const Error = () => {
         enableHover
         letterSpacing={2}
         clickEffect
+        color="#777"
       >
         404
       </FuzzyText>
@@ -20,6 +21,7 @@ const Error = () => {
         enableHover
         letterSpacing={2}
         clickEffect
+        color="#777"
       >
         not found
       </FuzzyText>

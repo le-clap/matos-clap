@@ -22,7 +22,7 @@ const CatalogGrid: FC<CatalogGridProps> = ({
                                              error
                                            }) => {
   if (isLoading) return (
-    <div className="text-zinc-400">
+    <div className="text-muted-foreground">
       <Item>
         <ItemMedia>
           <Spinner/>
@@ -34,18 +34,18 @@ const CatalogGrid: FC<CatalogGridProps> = ({
     </div>
   )
 
-  if (error) return <div className="text-red-500">{error.message}</div>
+  if (error) return <div className="text-destructive">{error.message}</div>
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {/* Boucle pour afficher les items */}
       {items?.map((item: CatalogItem) => (
-        <div key={item.id} className="flex flex-col bg-zinc-800 p-4 rounded-lg text-white gap-3 justify-between">
+        <div key={item.id} className="flex flex-col bg-secondary text-secondary-foreground p-4 rounded-lg gap-3 justify-between">
           <h2 className="text-xl font-bold">{item.label}</h2>
-          <p className="text-gray-400">{item.description}</p>
+          <p className="text-muted-foreground">{item.description}</p>
           {item.image_path ? (
             <img src={item.image_path} alt={"Photo"}
-                 className="aspect-square border-2 border-white object-cover rounded-2xl "/>
+                 className="aspect-square object-cover rounded-2xl "/>
           ) : (
             <img src={clapLogo} alt={"Logo CLAP"} className="aspect-square"/>
           )}
