@@ -14,13 +14,6 @@ router = APIRouter(
 def get_catalog(session: Session = Depends(get_session)):
     return session.exec(select(Catalog)).all()
 
-@router.get("/{category_id}", response_model=List[Catalog])
-def get_catalog_search(
-        category_id: int,
-        session: Session = Depends(get_session)
-):
-    pass
-
 @router.post("/", response_model=Catalog, status_code=status.HTTP_201_CREATED)
 def create_catalog_entry(
         catalog_entry: Catalog,

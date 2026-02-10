@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from models.models import *
 
-from routers import catalog, item, user
+from routers import catalog, item, user, request, loan, requested_item
 
 from core.config import settings
 
@@ -48,6 +48,12 @@ app.include_router(catalog.router, prefix=settings.API_PREFIX)
 app.include_router(item.router, prefix=settings.API_PREFIX)
 
 app.include_router(user.router, prefix=settings.API_PREFIX)
+
+app.include_router(loan.router, prefix=settings.API_PREFIX)
+
+app.include_router(request.router, prefix=settings.API_PREFIX)
+
+app.include_router(requested_item.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
