@@ -37,7 +37,7 @@ const CatalogGrid: FC<CatalogGridProps> = ({
   if (error) return <div className="text-destructive">{error.message}</div>
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {/* Boucle pour afficher les items */}
       {items?.map((item: CatalogItem) => (
         <div key={item.id} className="flex flex-col bg-secondary text-secondary-foreground p-4 rounded-lg gap-3 justify-between">
