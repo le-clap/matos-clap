@@ -3,20 +3,20 @@ from sqlmodel import select, Session
 from typing import List
 
 from db.database import get_session
-from models.models import RequestedItem, Request, Catalog
+from models.models import RequestedCatalog, Request, Catalog
 
 router = APIRouter(
     prefix="/requested-item",
     tags=["requested-item"],
 )
 
-@router.get("/", response_model=List[RequestedItem])
+@router.get("/", response_model=list[RequestedCatalog])
 def get_requested_items(session: Session = Depends(get_session)):
-    return session.exec(select(RequestedItem)).all()
+    return session.exec(select(RequestedCatalog)).all()
 
-@router.post("/", response_model=RequestedItem, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=RequestedCatalog, status_code=status.HTTP_201_CREATED)
 def create_user(
-        requested_item: RequestedItem,
+        requested_item: RequestedCatalog,
         session: Session = Depends(get_session),
 ):
 
