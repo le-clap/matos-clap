@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlmodel import select, Session
 from typing import List
 
 from db.database import get_session
-from models.models import Catalog
+from models.models import Catalog, Category
 
 router = APIRouter(
     prefix="/catalog",
@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[Catalog])
-def get_catalogs(session: Session = Depends(get_session)):
+def get_catalog(session: Session = Depends(get_session)):
     return session.exec(select(Catalog)).all()
 
 @router.post("/", response_model=Catalog, status_code=status.HTTP_201_CREATED)

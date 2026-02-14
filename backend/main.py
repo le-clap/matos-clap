@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from models.models import *
 
-from routers import availability, catalog, categories, item, user
+from routers import catalog, item, user, request, loan, requested_item
 
 from core.config import settings
 
@@ -12,7 +12,7 @@ from db.database import create_tables
 from db.seed import seed_data
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     print("Initializing db...")
     create_tables()
     seed_data()
@@ -28,27 +28,32 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=settings.ALLOWED_ORIGINS,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 @app.get("/")
 def read_root():
     return {"status": "System Online"}
 
-app.include_router(availability.router, prefix=settings.API_PREFIX)
+# app.include_router(availability.router, prefix=settings.API_PREFIX)
+# app.include_router(categories.router, prefix=settings.API_PREFIX)
 
 app.include_router(catalog.router, prefix=settings.API_PREFIX)
-
-app.include_router(categories.router, prefix=settings.API_PREFIX)
 
 app.include_router(item.router, prefix=settings.API_PREFIX)
 
 app.include_router(user.router, prefix=settings.API_PREFIX)
+
+app.include_router(loan.router, prefix=settings.API_PREFIX)
+
+app.include_router(request.router, prefix=settings.API_PREFIX)
+
+app.include_router(requested_item.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
