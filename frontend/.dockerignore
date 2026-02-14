@@ -1,0 +1,41 @@
+# VCS
+.git
+.gitignore
+.github
+
+# Dependencies (will be reinstalled)
+node_modules
+
+# Build output (will be regenerated)
+dist
+.vite
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.idea
+.vscode
+.code-workspace
+*.swp
+*.swo
+*.swn
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+nginx.conf
+
+# Docs
+README.md

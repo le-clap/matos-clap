@@ -1,0 +1,46 @@
+# VCS
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.env
+.venv
+venv/
+.pytest_cache
+.ruff_cache
+*.egg-info
+dist/
+build/
+
+# IDEs
+.idea
+.vscode
+*.swp
+*.swo
+*.swn
+*.sln
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.db
+database.db
+.coverage
+htmlcov/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Docs
+README.md
