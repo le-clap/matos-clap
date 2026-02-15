@@ -1,6 +1,6 @@
 export type CatalogItem = {
   id: number,
-  label: string,
+  name: string,
   description?: string,
   category_id: number,
   image_path?: string,

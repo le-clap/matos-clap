@@ -36,10 +36,6 @@ def seed_data():
         cat_sound = Category(name="Son", description="Micros, perches, enregistreurs")
         cat_mach = Category(name="Machinerie", description="Trépieds, stabilisateurs")
 
-        # Accès (Rôles)
-        access_admin = Access(name="Admin", description="Accès total")
-        access_user = Access(name="User", description="Utilisateur standard")
-
         # On ajoute tout ça à la session
         session.add(cond_new)
         session.add(cond_good)
@@ -51,8 +47,6 @@ def seed_data():
         session.add(cat_light)
         session.add(cat_sound)
         session.add(cat_mach)
-        session.add(access_admin)
-        session.add(access_user)
 
         # On commit pour générer les IDs (nécessaire pour la suite)
         session.commit()
@@ -60,7 +54,7 @@ def seed_data():
         # --- ÉTAPE 2 : Le Catalogue (Les fiches produits génériques) ---
 
         cat_sony = Catalog(
-            label="Sony A7S III",
+            name="Sony A7S III",
             description="Boîtier hybride plein format orienté vidéo 4K.",
             category_id=cat_camera.id,
             image_path="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
@@ -68,14 +62,14 @@ def seed_data():
         )
 
         cat_zoom = Catalog(
-            label="Zoom H6",
+            name="Zoom H6",
             description="Enregistreur portable 6 pistes.",
             category_id=cat_sound.id,
             image_path="https://producelikeapro.com/blog/wp-content/uploads/2021/06/Zoom-H6-Review-6-Channel-Handy-Recorder.jpg"
         )
 
         cat_tripod = Catalog(
-            label="Manfrotto 504HD",
+            name="Manfrotto 504HD",
             description="Trépied vidéo fluide pro.",
             category_id=cat_mach.id,
             image_path="https://www.f44location.com/wp-content/uploads/2020/03/40607_Manffroto_1.jpg"
@@ -124,10 +118,9 @@ def seed_data():
         # --- ÉTAPE 4 : Un Utilisateur de test ---
 
         test_user = User(
-            first_name="Jean",
-            last_name="Baptiste",
+            username="JBclap",
+            name="Jean Baptiste",
             email="jean.baptiste@le-clap.fr",
-            access_id=access_admin.id
         )
 
         session.add(test_user)

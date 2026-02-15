@@ -41,7 +41,7 @@ const CatalogGrid: FC<CatalogGridProps> = ({
       {/* Boucle pour afficher les items */}
       {items?.map((item: CatalogItem) => (
         <div key={item.id} className="flex flex-col bg-secondary text-secondary-foreground p-4 rounded-lg gap-3 justify-between">
-          <h2 className="text-xl font-bold">{item.label}</h2>
+          <h2 className="text-xl font-bold">{item.name}</h2>
           <p className="text-muted-foreground">{item.description}</p>
           {item.image_path ? (
             <img src={item.image_path} alt={"Photo"}
