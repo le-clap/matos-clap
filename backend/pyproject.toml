@@ -1,7 +1,7 @@
 [project]
-name = "backend"
+name = "matos-clap-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Backend for the Matos CLAP project, providing API endpoints and database interactions."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -16,6 +16,7 @@ dependencies = [
 dev = [
     "ruff>=0.11.0",
     "ty>=0.0.1",
+    "pre-commit>=4.5.0",
 ]
 
 [tool.ruff]
