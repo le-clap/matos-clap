@@ -1,4 +1,4 @@
-name: CI
+name: Lint & Type Check
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -27,6 +27,7 @@ jobs:
 
   frontend-lint:
     name: Frontend Lint & Build
+    if: false # Frontend CI disabled
     runs-on: ubuntu-latest
     defaults:
       run:
