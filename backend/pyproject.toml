@@ -1,7 +1,7 @@
 [project]
-name = "backend"
+name = "matos-clap-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Backend for the Matos CLAP project, providing API endpoints and database interactions."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -11,3 +11,27 @@ dependencies = [
     "sqlmodel>=0.0.32",
     "uvicorn[standard]>=0.40.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.0",
+    "ty>=0.0.1",
+    "pre-commit>=4.5.0",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008"]  # Depends() in FastAPI is standard
+
+[tool.ruff.lint.isort]
+known-first-party = ["core", "db", "models", "routers", "schema"]
+
+[tool.ty]
+python_version = "3.14"
+
+[tool.ty.environment]
+python = ".venv"
