@@ -29,9 +29,3 @@ ignore = ["B008"]  # Depends() in FastAPI is standard
 
 [tool.ruff.lint.isort]
 known-first-party = ["core", "db", "models", "routers", "schema"]
-
-[tool.ty]
-python_version = "3.14"
-
-[tool.ty.environment]
-python = ".venv"

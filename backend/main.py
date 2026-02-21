@@ -1,15 +1,12 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from models.models import *
-
-from routers import catalog, item, user, request, loan, requested_item
+from fastapi import FastAPI
 
 from core.config import settings
-
 from db.database import create_tables
 from db.seed import seed_data
+from routers import availability, catalog, category, item, loan, request, requested_catalog, user
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -20,6 +17,8 @@ async def lifespan(_: FastAPI):
     yield
 
     print("Shutting down...")
+
+
 app = FastAPI(
     lifespan=lifespan,
     title="API emprunt",
@@ -36,12 +35,15 @@ app = FastAPI(
 #     allow_headers=["*"],
 # )
 
+
 @app.get("/")
 def read_root():
     return {"status": "System Online"}
 
-# app.include_router(availability.router, prefix=settings.API_PREFIX)
-# app.include_router(categories.router, prefix=settings.API_PREFIX)
+
+app.include_router(availability.router, prefix=settings.API_PREFIX)
+
+app.include_router(category.router, prefix=settings.API_PREFIX)
 
 app.include_router(catalog.router, prefix=settings.API_PREFIX)
 
@@ -53,8 +55,9 @@ app.include_router(loan.router, prefix=settings.API_PREFIX)
 
 app.include_router(request.router, prefix=settings.API_PREFIX)
 
-app.include_router(requested_item.router, prefix=settings.API_PREFIX)
+app.include_router(requested_catalog.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

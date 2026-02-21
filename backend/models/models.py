@@ -13,6 +13,7 @@ class AccessLevel(StrEnum):
     """
     Represents the access level of a user.
     """
+
     UNAUTHENTICATED = "unauthenticated"
     USER = "user"
     CLAP = "clap"
@@ -122,7 +123,7 @@ class Request(SQLModel, table=True):
 
     borrower: User = Relationship(back_populates="requests")
     requested_catalogs: list[RequestedCatalog] = Relationship(back_populates="request")
-    loan: Optional["Loan"] = Relationship(back_populates="request") # noqa UP045
+    loan: Optional["Loan"] = Relationship(back_populates="request")  # noqa UP045
 
 
 class RequestedCatalog(SQLModel, table=True):

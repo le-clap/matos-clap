@@ -1,17 +1,16 @@
-from fastapi import APIRouter, Depends, status, HTTPException
-from sqlmodel import select, Session
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlmodel import Session, select
 
 from db.database import get_session
-from models.models import User, AccessLevel
+from models.models import AccessLevel, User
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/users",
     tags=["user"],
 )
 
 
-@router.get("/", response_model=List[User])
+@router.get("/", response_model=list[User])
 def get_users(session: Session = Depends(get_session)):
     return session.exec(select(User)).all()
 
@@ -23,13 +22,12 @@ def get_user(user_id: int, session: Session = Depends(get_session)):
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
 def create_user(
-        user: User,
-        session: Session = Depends(get_session),
+    user: User,
+    session: Session = Depends(get_session),
 ):
     if not session.get(AccessLevel, user.access_level):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Access ID {user.access_level} does not exist"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Access ID {user.access_level} does not exist"
         )
 
     session.add(user)
