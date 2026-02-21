@@ -12,10 +12,22 @@ import SearchBar from "@/components/SearchBar.tsx";
 import {Calendar} from "@/components/ui/calendar.tsx";
 import { addDays } from "date-fns"
 import { type DateRange } from "react-day-picker"
+import type {CatalogItem} from "@/types/CatalogItem.ts";
+
+import {useDebounce} from "@uidotdev/usehooks";
 
 const Inventory = () => {
 
-    const {data: allItems, isLoading} = useCatalog();
+    const {data: allItems, isLoading, isSuccess} = useCatalog();
+    const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500)
+
+    let filteredItems:Array<CatalogItem> = [];
+
+    if (isSuccess) {
+      filteredItems = allItems.filter(v => v.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
+    }
+
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
       from: new Date(new Date().getFullYear(), 0, 12),
       to: addDays(new Date(new Date().getFullYear(), 0, 12), 30),
@@ -29,7 +41,7 @@ const Inventory = () => {
 
           <div className="inventory-container flex flex-col gap-3">
             <div className="filter-bar p-4 flex justify-between rounded-lg bg-secondary gap-4">
-              <div className="flex-1"><SearchBar/></div>
+              <div className="flex-1"><SearchBar setSearch={setSearch}/></div>
               <div className="flex-2"><FilterBar/></div>
             </div>
             <div className="grid-filters-container flex flex-row gap-3">
@@ -45,7 +57,7 @@ const Inventory = () => {
               </div>
               <div className="catalog-grid flex flex-6 rounded-lg">
                 <CatalogGrid
-                  items={allItems}
+                  items={filteredItems}
                   isLoading={isLoading}
                 />
               </div>

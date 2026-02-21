@@ -11,6 +11,7 @@ from core.config import settings
 from db.database import create_tables
 from db.seed import seed_data
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     print("Initializing db...")
@@ -20,6 +21,8 @@ async def lifespan(_: FastAPI):
     yield
 
     print("Shutting down...")
+
+
 app = FastAPI(
     lifespan=lifespan,
     title="API emprunt",
@@ -27,6 +30,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
 
 # app.add_middleware(
 #     CORSMiddleware,
@@ -39,6 +43,7 @@ app = FastAPI(
 @app.get("/")
 def read_root():
     return {"status": "System Online"}
+
 
 # app.include_router(availability.router, prefix=settings.API_PREFIX)
 # app.include_router(categories.router, prefix=settings.API_PREFIX)
@@ -57,4 +62,5 @@ app.include_router(requested_item.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

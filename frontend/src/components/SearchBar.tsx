@@ -6,33 +6,29 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 
+import type {FC} from "react";
+
 import {Search} from "lucide-react";
-import {useState} from "react";
-import {number} from "motion";
 
-const SearchBar = () => {
+export type SearchBarProps = {
+  setSearch: (search: string) => void;
+}
 
-  const [search, setSearch] = useState<string>("");
-  const [array, setArray] = useState<Array<string>>([]);
-
-  const debounce = (func, delay:number) => {
-    return (...args) => {
-      let timeoutId:number
-      timeoutId = setTimeout(() => func(...args), delay)
-    }
-  }
+const SearchBar: FC<SearchBarProps> = ({
+                                         setSearch
+                                       }) => {
 
   return (
     <div>
-        <InputGroup >
-          <InputGroupInput placeholder="Rechercher..."
-          onChange={(e) => setSearch(e.target.value)}
-          />
-          <InputGroupAddon>
-            <Search />
-          </InputGroupAddon>
-          <InputGroupAddon align="inline-end">2 Résultats</InputGroupAddon>
-        </InputGroup>
+      <InputGroup>
+        <InputGroupInput placeholder="Rechercher..."
+                         onChange={(e) => setSearch(e.target.value)}
+        />
+        <InputGroupAddon>
+          <Search/>
+        </InputGroupAddon>
+        <InputGroupAddon align="inline-end">2 Résultats</InputGroupAddon>
+      </InputGroup>
     </div>
   )
 }
