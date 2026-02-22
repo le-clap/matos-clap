@@ -28,4 +28,4 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["B008"]  # Depends() in FastAPI is standard
 
 [tool.ruff.lint.isort]
-known-first-party = ["core", "db", "models", "routers", "schema"]
+known-first-party = ["core", "db", "models", "routers", "schemas"]
