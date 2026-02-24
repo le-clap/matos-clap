@@ -116,7 +116,7 @@ def _item_load_options():
 
 
 @router.get(
-    "/{catalog_id}/items/availability",
+    "/{catalog_id}/available-items",
     response_model=ItemAvailabilityResponse,
     responses={
         404: {"description": "Catalog not found"},

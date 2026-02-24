@@ -91,9 +91,9 @@ def update_item(
     return db_item
 
 
-@router.post(
-    "/{item_id}/soft-delete",
-    response_model=ItemPublic,
+@router.delete(
+    "/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
     responses={404: {"description": "Item not found"}},
 )
 def soft_delete_item(item_id: int, session: Session = Depends(get_session)):
@@ -104,22 +104,3 @@ def soft_delete_item(item_id: int, session: Session = Depends(get_session)):
     item.deleted = True
     session.add(item)
     session.commit()
-    session.refresh(item)
-    return item
-
-
-@router.post(
-    "/{item_id}/restore",
-    response_model=ItemPublic,
-    responses={404: {"description": "Item not found"}},
-)
-def restore_item(item_id: int, session: Session = Depends(get_session)):
-    item = session.get(Item, item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
-
-    item.deleted = False
-    session.add(item)
-    session.commit()
-    session.refresh(item)
-    return item
