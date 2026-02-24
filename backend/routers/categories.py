@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from db.database import get_session
 from models.models import Category
-from schemas.category import CategoryPatch, CategoryPost, CategoryPublic
+from schemas.categories import CategoryPatch, CategoryPost, CategoryPublic
 
 router = APIRouter(
     prefix="/categories",

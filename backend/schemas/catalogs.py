@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from schemas.category import CategoryPublic
+from schemas.categories import CategoryPublic
 
 
 class CatalogBrief(BaseModel):

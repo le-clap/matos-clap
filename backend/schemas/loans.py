@@ -3,8 +3,8 @@ from datetime import datetime
 from pydantic import BaseModel, model_validator
 
 from models.enums import Condition
-from schemas.item import ItemBrief
-from schemas.user import UserBrief
+from schemas.items import ItemBrief
+from schemas.users import UserBrief
 
 
 class LoanedItemPost(BaseModel):

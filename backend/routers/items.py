@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from db.database import get_session
 from models.enums import Availability, Condition
 from models.models import Catalog, Item
-from schemas.item import ItemPatch, ItemPost, ItemPublic
+from schemas.items import ItemPatch, ItemPost, ItemPublic
 
 router = APIRouter(
     prefix="/items",

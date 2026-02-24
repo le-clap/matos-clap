@@ -5,9 +5,9 @@ from sqlmodel import Session, select
 
 from db.database import get_session
 from models.models import Loan, LoanedItem, Request, RequestedCatalog, User
-from schemas.loan import LoanPublic
-from schemas.request import RequestPublic
-from schemas.user import UserPatch, UserPost, UserPublic
+from schemas.loans import LoanPublic
+from schemas.requests import RequestPublic
+from schemas.users import UserPatch, UserPost, UserPublic
 
 router = APIRouter(
     prefix="/users",
@@ -126,9 +126,9 @@ def get_user_requests(user_id: int, processed: bool | None = None, session: Sess
         .where(Request.borrower_id == user_id)
         .options(
             joinedload(Request.borrower),  # ty: ignore[invalid-argument-type]
-            selectinload(Request.requested_catalogs).joinedload(
-                RequestedCatalog.catalog
-            ),  # ty: ignore[invalid-argument-type]
+            selectinload(Request.requested_catalogs).joinedload(  # ty: ignore[invalid-argument-type]
+                RequestedCatalog.catalog  # ty: ignore[invalid-argument-type]
+            ),
         )
     )
     if processed is not None:

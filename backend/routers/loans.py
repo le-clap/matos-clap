@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from db.database import get_session
 from models.models import Item, Loan, LoanedItem, Request, User
-from schemas.loan import LoanedItemPatch, LoanedItemPublic, LoanPatch, LoanPost, LoanPublic
+from schemas.loans import LoanedItemPatch, LoanedItemPublic, LoanPatch, LoanPost, LoanPublic
 
 router = APIRouter(
     prefix="/loans",

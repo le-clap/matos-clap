@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from models.enums import Availability, Condition
-from schemas.catalog import CatalogPublic
+from schemas.catalogs import CatalogPublic
 
 
 class ItemBrief(BaseModel):

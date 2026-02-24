@@ -8,8 +8,8 @@ from sqlmodel import Session, select
 from db.database import get_session
 from models.enums import Availability
 from models.models import Catalog, Category, Item, Loan, LoanedItem
-from schemas.catalog import CatalogPatch, CatalogPost, CatalogPublic
-from schemas.item import ItemAvailabilityResponse
+from schemas.catalogs import CatalogPatch, CatalogPost, CatalogPublic
+from schemas.items import ItemAvailabilityResponse
 
 router = APIRouter(
     prefix="/catalogs",

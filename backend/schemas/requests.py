@@ -2,8 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, model_validator
 
-from schemas.catalog import CatalogBrief
-from schemas.user import UserBrief
+from schemas.catalogs import CatalogBrief
+from schemas.users import UserBrief
 
 
 class RequestedCatalogPost(BaseModel):

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from core.config import settings
 from db.database import create_tables
 from db.seed import seed_data
-from routers import catalog, category, item, loan, request, user
+from routers import catalogs, categories, items, loans, requests, users
 
 
 @asynccontextmanager
@@ -41,12 +41,12 @@ def read_root():
     return {"status": "System Online"}
 
 
-app.include_router(category.router, prefix=settings.API_PREFIX)
-app.include_router(catalog.router, prefix=settings.API_PREFIX)
-app.include_router(item.router, prefix=settings.API_PREFIX)
-app.include_router(user.router, prefix=settings.API_PREFIX)
-app.include_router(request.router, prefix=settings.API_PREFIX)
-app.include_router(loan.router, prefix=settings.API_PREFIX)
+app.include_router(categories.router, prefix=settings.API_PREFIX)
+app.include_router(catalogs.router, prefix=settings.API_PREFIX)
+app.include_router(items.router, prefix=settings.API_PREFIX)
+app.include_router(users.router, prefix=settings.API_PREFIX)
+app.include_router(requests.router, prefix=settings.API_PREFIX)
+app.include_router(loans.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn

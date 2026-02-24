@@ -4,7 +4,7 @@ from sqlmodel import Session, asc, select
 
 from db.database import get_session
 from models.models import Catalog, Request, RequestedCatalog, User
-from schemas.request import RequestPatch, RequestPost, RequestPublic
+from schemas.requests import RequestPatch, RequestPost, RequestPublic
 
 router = APIRouter(
     prefix="/requests",
@@ -15,9 +15,9 @@ router = APIRouter(
 def _request_load_options():
     return [
         joinedload(Request.borrower),  # ty: ignore[invalid-argument-type]
-        selectinload(Request.requested_catalogs).joinedload(
-            RequestedCatalog.catalog
-        ),  # ty: ignore[invalid-argument-type]
+        selectinload(Request.requested_catalogs).joinedload(  # ty: ignore[invalid-argument-type]
+            RequestedCatalog.catalog  # ty: ignore[invalid-argument-type]
+        ),
     ]
 
 
