@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
-from schemas.condition import ConditionPublic
+from models.enums import Condition
 from schemas.item import ItemBrief
+from schemas.user import UserBrief
 
 
 class LoanedItemPost(BaseModel):
@@ -11,13 +12,13 @@ class LoanedItemPost(BaseModel):
 
 
 class LoanedItemPatch(BaseModel):
-    return_condition_id: int | None = None
+    return_condition: Condition | None = None
 
 
 class LoanedItemPublic(BaseModel):
     id: int
     item: ItemBrief
-    return_condition: ConditionPublic | None = None
+    return_condition: Condition | None = None
 
 
 class LoanPost(BaseModel):
@@ -29,6 +30,13 @@ class LoanPost(BaseModel):
     request_id: int | None = None
     comments: str | None = None
     loaned_items: list[LoanedItemPost]
+
+    @classmethod
+    @model_validator(mode="after")
+    def validate_dates(cls, data):
+        if data.start_date >= data.end_date:
+            raise ValueError("start_date must be before end_date")
+        return data
 
 
 class LoanPatch(BaseModel):
@@ -43,8 +51,8 @@ class LoanPatch(BaseModel):
 
 class LoanPublic(BaseModel):
     id: int
-    borrower_id: int
-    assignee_id: int
+    borrower: UserBrief
+    assignee: UserBrief
     start_date: datetime
     end_date: datetime
     total_deposit_cents: int

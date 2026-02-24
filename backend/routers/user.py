@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 
 from db.database import get_session
@@ -11,7 +11,7 @@ from schemas.user import UserPatch, UserPost, UserPublic
 
 router = APIRouter(
     prefix="/users",
-    tags=["user"],
+    tags=["users"],
 )
 
 
@@ -125,12 +125,15 @@ def get_user_requests(user_id: int, processed: bool | None = None, session: Sess
         select(Request)
         .where(Request.borrower_id == user_id)
         .options(
-            selectinload(Request.requested_catalogs).joinedload(RequestedCatalog.catalog)
-        )  # ty: ignore[invalid-argument-type]
+            joinedload(Request.borrower),  # ty: ignore[invalid-argument-type]
+            selectinload(Request.requested_catalogs).joinedload(
+                RequestedCatalog.catalog
+            ),  # ty: ignore[invalid-argument-type]
+        )
     )
     if processed is not None:
         statement = statement.where(Request.processed == processed)
-    return session.exec(statement).all()
+    return session.exec(statement).unique().all()
 
 
 @router.get(
@@ -146,14 +149,13 @@ def get_user_loans(user_id: int, active: bool | None = None, session: Session = 
         select(Loan)
         .where(Loan.borrower_id == user_id)
         .options(
+            joinedload(Loan.borrower),  # ty: ignore[invalid-argument-type]
+            joinedload(Loan.assignee),  # ty: ignore[invalid-argument-type]
             selectinload(Loan.loaned_items).joinedload(LoanedItem.item),  # ty: ignore[invalid-argument-type]
-            selectinload(Loan.loaned_items).joinedload(
-                LoanedItem.return_condition
-            ),  # ty: ignore[invalid-argument-type]
         )
     )
     if active is True:
         statement = statement.where(Loan.actual_return_date.is_(None))  # type: ignore[union-attr]
     elif active is False:
         statement = statement.where(Loan.actual_return_date.is_not(None))  # type: ignore[union-attr]
-    return session.exec(statement).all()
+    return session.exec(statement).unique().all()

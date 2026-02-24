@@ -1,10 +1,7 @@
-from datetime import datetime
-
 from pydantic import BaseModel
 
-from schemas.availability import AvailabilityPublic
+from models.enums import Availability, Condition
 from schemas.catalog import CatalogPublic
-from schemas.condition import ConditionPublic
 
 
 class ItemBrief(BaseModel):
@@ -15,28 +12,29 @@ class ItemBrief(BaseModel):
 class ItemPost(BaseModel):
     name: str
     catalog_id: int
+    condition: Condition
+    availability: Availability = Availability.AVAILABLE
     deposit_cents: int = 0
-    condition_id: int
-    availability_id: int
 
 
 class ItemPatch(BaseModel):
     name: str | None = None
     catalog_id: int | None = None
+    condition: Condition | None = None
+    availability: Availability | None = None
     deposit_cents: int | None = None
-    condition_id: int | None = None
-    availability_id: int | None = None
 
 
 class ItemPublic(BaseModel):
     id: int
     name: str
-    catalog_id: int
     catalog: CatalogPublic
+    condition: Condition
+    availability: Availability
     deposit_cents: int
-    condition_id: int
-    condition: ConditionPublic
-    availability_id: int
-    availability: AvailabilityPublic
-    availability_update_date: datetime
     deleted: bool
+
+
+class ItemAvailabilityResponse(BaseModel):
+    available: list[ItemPublic]
+    unavailable: list[ItemPublic]

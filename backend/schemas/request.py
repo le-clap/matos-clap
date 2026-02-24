@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from schemas.catalog import CatalogBrief
+from schemas.user import UserBrief
 
 
 class RequestedCatalogPost(BaseModel):
@@ -25,6 +26,13 @@ class RequestPost(BaseModel):
     reason: str | None = None
     requested_catalogs: list[RequestedCatalogPost]
 
+    @classmethod
+    @model_validator(mode="after")
+    def validate_dates(cls, data):
+        if data.start_date >= data.end_date:
+            raise ValueError("start_date must be before end_date")
+        return data
+
 
 class RequestPatch(BaseModel):
     phone_number: str | None = None
@@ -36,7 +44,7 @@ class RequestPatch(BaseModel):
 
 class RequestPublic(BaseModel):
     id: int
-    borrower_id: int
+    borrower: UserBrief
     phone_number: str
     start_date: datetime
     end_date: datetime

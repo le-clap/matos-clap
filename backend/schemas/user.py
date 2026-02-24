@@ -3,6 +3,14 @@ from pydantic import BaseModel, EmailStr
 from models.models import AccessLevel
 
 
+class UserBrief(BaseModel):
+    id: int
+    username: str
+    name: str
+    email: EmailStr
+    access_level: AccessLevel
+
+
 class UserPost(BaseModel):
     username: str
     name: str

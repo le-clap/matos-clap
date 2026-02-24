@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, asc, select
 
 from db.database import get_session
@@ -8,12 +8,13 @@ from schemas.request import RequestPatch, RequestPost, RequestPublic
 
 router = APIRouter(
     prefix="/requests",
-    tags=["request"],
+    tags=["requests"],
 )
 
 
 def _request_load_options():
     return [
+        joinedload(Request.borrower),  # ty: ignore[invalid-argument-type]
         selectinload(Request.requested_catalogs).joinedload(
             RequestedCatalog.catalog
         ),  # ty: ignore[invalid-argument-type]
@@ -32,7 +33,7 @@ def get_requests(
     if processed is not None:
         statement = statement.where(Request.processed == processed)
 
-    return session.exec(statement).all()
+    return session.exec(statement).unique().all()
 
 
 @router.get(
@@ -42,7 +43,7 @@ def get_requests(
 )
 def get_request_by_id(request_id: int, session: Session = Depends(get_session)):
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
-    db_request = session.exec(statement).first()
+    db_request = session.exec(statement).unique().first()
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
     return db_request

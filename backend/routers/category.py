@@ -8,7 +8,7 @@ from schemas.category import CategoryPatch, CategoryPost, CategoryPublic
 
 router = APIRouter(
     prefix="/categories",
-    tags=["category"],
+    tags=["categories"],
 )
 
 

@@ -27,6 +27,5 @@ class CatalogPublic(BaseModel):
     id: int
     name: str
     description: str | None = None
-    category_id: int
     category: CategoryPublic
     image_path: str | None = None

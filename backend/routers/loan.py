@@ -3,19 +3,20 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 
 from db.database import get_session
-from models.models import Condition, Item, Loan, LoanedItem, Request, User
+from models.models import Item, Loan, LoanedItem, Request, User
 from schemas.loan import LoanedItemPatch, LoanedItemPublic, LoanPatch, LoanPost, LoanPublic
 
 router = APIRouter(
     prefix="/loans",
-    tags=["loan"],
+    tags=["loans"],
 )
 
 
 def _loan_load_options():
     return [
+        joinedload(Loan.borrower),  # ty: ignore[invalid-argument-type]
+        joinedload(Loan.assignee),  # ty: ignore[invalid-argument-type]
         selectinload(Loan.loaned_items).joinedload(LoanedItem.item),  # ty: ignore[invalid-argument-type]
-        selectinload(Loan.loaned_items).joinedload(LoanedItem.return_condition),  # ty: ignore[invalid-argument-type]
     ]
 
 
@@ -32,7 +33,7 @@ def get_loans(
         statement = statement.where(Loan.actual_return_date.is_(None))  # type: ignore[union-attr]
     elif active is False:
         statement = statement.where(Loan.actual_return_date.is_not(None))  # type: ignore[union-attr]
-    return session.exec(statement).all()
+    return session.exec(statement).unique().all()
 
 
 @router.get(
@@ -42,7 +43,7 @@ def get_loans(
 )
 def get_loan_by_id(loan_id: int, session: Session = Depends(get_session)):
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
-    loan = session.exec(statement).first()
+    loan = session.exec(statement).unique().first()
     if not loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
     return loan
@@ -145,26 +146,14 @@ def update_loaned_item(
         select(LoanedItem)
         .where(LoanedItem.id == loaned_item_id, LoanedItem.loan_id == loan_id)
         .options(
-            joinedload(LoanedItem.item), joinedload(LoanedItem.return_condition)
-        )  # ty: ignore[invalid-argument-type]
+            joinedload(LoanedItem.item),  # ty: ignore[invalid-argument-type]
+        )
     )
     db_li = session.exec(statement).first()
     if not db_li:
         raise HTTPException(status_code=404, detail=f"Loaned item {loaned_item_id} not found in loan {loan_id}")
 
-    update_data = loaned_item_patch.model_dump(exclude_unset=True)
-
-    if (
-        "return_condition_id" in update_data
-        and update_data["return_condition_id"] is not None
-        and not session.get(Condition, update_data["return_condition_id"])
-    ):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Condition with ID {update_data['return_condition_id']} not found",
-        )
-
-    db_li.sqlmodel_update(update_data)
+    db_li.sqlmodel_update(loaned_item_patch.model_dump(exclude_unset=True))
     session.add(db_li)
     session.commit()
     session.refresh(db_li)

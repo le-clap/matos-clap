@@ -1,60 +1,11 @@
 import uuid
 from datetime import UTC, datetime
-from enum import StrEnum
 from typing import Optional
 
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
 
-# --- Enums ---
-
-
-class AccessLevel(StrEnum):
-    """
-    Represents the access level of a user.
-    """
-
-    UNAUTHENTICATED = "unauthenticated"
-    USER = "user"
-    CLAP = "clap"
-    MANAGER = "manager"
-    ADMIN = "admin"
-
-
-# --- Reference Tables ---
-
-
-class Condition(SQLModel, table=True):
-    """
-    Represents the condition of an item in the inventory. Examples include: New, Good, Degraded.
-    """
-
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
-    description: str | None = None
-
-    items: list[Item] = Relationship(back_populates="condition")
-
-
-class Availability(SQLModel, table=True):
-    """
-    Represents the availability status of an item. Examples include: Available, On Loan, Maintenance, Retired.
-    """
-
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
-    description: str | None = None
-
-    items: list[Item] = Relationship(back_populates="availability")
-
-
-class Category(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
-    description: str | None = None
-
-    catalogs: list[Catalog] = Relationship(back_populates="category")
-
+from models.enums import AccessLevel, Availability, Condition
 
 # --- User ---
 
@@ -80,6 +31,14 @@ class User(SQLModel, table=True):
 # --- Inventory ---
 
 
+class Category(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    description: str | None = None
+
+    catalogs: list[Catalog] = Relationship(back_populates="category")
+
+
 class Catalog(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
@@ -96,15 +55,12 @@ class Item(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True, index=True)
     name: str  # Internal ID (ex: CAM-01)
     catalog_id: int = Field(foreign_key="catalog.id")
+    condition: Condition = Condition.NEW
+    availability: Availability = Availability.AVAILABLE
     deposit_cents: int = Field(default=0, ge=0)
-    condition_id: int = Field(foreign_key="condition.id")
-    availability_id: int = Field(foreign_key="availability.id")
-    availability_update_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
     deleted: bool = Field(default=False)
 
     catalog: Catalog = Relationship(back_populates="items")
-    condition: Condition = Relationship(back_populates="items")
-    availability: Availability = Relationship(back_populates="items")
     loaned_items: list[LoanedItem] = Relationship(back_populates="item")
 
 
@@ -166,8 +122,7 @@ class LoanedItem(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True, index=True)
     loan_id: int = Field(foreign_key="loan.id")
     item_id: int = Field(foreign_key="item.id")
-    return_condition_id: int | None = Field(default=None, foreign_key="condition.id")
+    return_condition: Condition | None = None
 
     loan: Loan = Relationship(back_populates="loaned_items")
     item: Item = Relationship(back_populates="loaned_items")
-    return_condition: Condition | None = Relationship()
