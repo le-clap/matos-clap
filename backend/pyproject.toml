@@ -5,6 +5,7 @@ description = "Backend for the Matos CLAP project."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "alembic>=1.18.4",
     "fastapi>=0.133.0",
     "pydantic-settings>=2.13.1",
     "pydantic[email]>=2.12.5",
