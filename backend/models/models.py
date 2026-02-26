@@ -11,7 +11,11 @@ from models.enums import AccessLevel, Availability, Condition
 
 
 class User(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, index=True)
+    """Represents a user of the system, who can be a borrower or an assignee."""
+
+    __tablename__ = "matos_user"  # "user" is a reserved keyword in PostgreSQL
+
+    id: int | None = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
     name: str
     email: EmailStr = Field(unique=True, index=True)
@@ -32,6 +36,8 @@ class User(SQLModel, table=True):
 
 
 class Category(SQLModel, table=True):
+    """Represents a category of catalogs in the inventory."""
+
     id: int | None = Field(default=None, primary_key=True)
     name: str
     description: str | None = None
@@ -40,10 +46,12 @@ class Category(SQLModel, table=True):
 
 
 class Catalog(SQLModel, table=True):
+    """Represents a catalog of items in the inventory, linked to a category."""
+
     id: int | None = Field(default=None, primary_key=True)
     name: str
     description: str | None = None
-    category_id: int = Field(foreign_key="category.id")
+    category_id: int = Field(foreign_key="category.id", index=True, ondelete="RESTRICT")
     image_path: str | None = None
 
     category: Category = Relationship(back_populates="catalogs")
@@ -52,9 +60,11 @@ class Catalog(SQLModel, table=True):
 
 
 class Item(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, index=True)
-    name: str  # Internal ID (ex: CAM-01)
-    catalog_id: int = Field(foreign_key="catalog.id")
+    """Represents a physical item in the inventory, linked to a catalog."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    catalog_id: int = Field(foreign_key="catalog.id", index=True, ondelete="RESTRICT")
     condition: Condition = Condition.NEW
     availability: Availability = Availability.AVAILABLE
     deposit_cents: int = Field(default=0, ge=0)
@@ -68,8 +78,10 @@ class Item(SQLModel, table=True):
 
 
 class Request(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, index=True)
-    borrower_id: int = Field(foreign_key="user.id")
+    """Represents a borrower's request to loan items, which can be processed into a loan."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
     phone_number: str
     start_date: datetime
     end_date: datetime
@@ -83,9 +95,13 @@ class Request(SQLModel, table=True):
 
 
 class RequestedCatalog(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, index=True)
-    request_id: int = Field(foreign_key="request.id")
-    catalog_id: int = Field(foreign_key="catalog.id")
+    """Represents a specific catalog and quantity requested within a borrower's request."""
+
+    __tablename__ = "requested_catalog"
+
+    id: int | None = Field(default=None, primary_key=True)
+    request_id: int = Field(foreign_key="request.id", index=True, ondelete="CASCADE")
+    catalog_id: int = Field(foreign_key="catalog.id", index=True, ondelete="RESTRICT")
     quantity: int = Field(default=1)
 
     request: Request = Relationship(back_populates="requested_catalogs")
@@ -96,16 +112,18 @@ class RequestedCatalog(SQLModel, table=True):
 
 
 class Loan(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, index=True)
-    borrower_id: int = Field(foreign_key="user.id")
-    assignee_id: int = Field(foreign_key="user.id")
+    """Represents an actual loan of items to a borrower, for example processed from a request."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
+    assignee_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
     start_date: datetime
     end_date: datetime
     total_deposit_cents: int = Field(default=0, ge=0)
     actual_start_date: datetime | None = None
     actual_return_date: datetime | None = None
     retained_deposit_cents: int | None = Field(default=None, ge=0)
-    request_id: int | None = Field(default=None, foreign_key="request.id")
+    request_id: int | None = Field(default=None, foreign_key="request.id", index=True, ondelete="SET NULL")
     comments: str | None = None
 
     borrower: User = Relationship(
@@ -119,9 +137,13 @@ class Loan(SQLModel, table=True):
 
 
 class LoanedItem(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, index=True)
-    loan_id: int = Field(foreign_key="loan.id")
-    item_id: int = Field(foreign_key="item.id")
+    """Represents a specific item that was loaned within a loan."""
+
+    __tablename__ = "loaned_item"
+
+    id: int | None = Field(default=None, primary_key=True)
+    loan_id: int = Field(foreign_key="loan.id", index=True, ondelete="CASCADE")
+    item_id: int = Field(foreign_key="item.id", index=True, ondelete="RESTRICT")
     return_condition: Condition | None = None
 
     loan: Loan = Relationship(back_populates="loaned_items")

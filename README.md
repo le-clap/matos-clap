@@ -85,4 +85,4 @@ Le frontend (Nginx) reverse-proxy les routes `/api/` vers le service backend.
 
 ## CI
 
-Un workflow GitHub Actions (`.github/workflows/ci.yml`) vérifie sur push/PR vers `main`.
+Un workflow GitHub Actions (`.github/workflows/lint.yml`) vérifie sur push/PR vers `main`.
