@@ -3,7 +3,8 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import Session, select
 
 from db.database import get_session
-from models.enums import Availability, Condition
+from dependencies.auth import require_role
+from models.enums import AccessLevel, Availability, Condition
 from models.models import Catalog, Item
 from schemas.items import ItemPatch, ItemPost, ItemPublic
 
@@ -52,7 +53,9 @@ def get_item_by_id(item_id: int, session: Session = Depends(get_session)):
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Referenced catalog not found"}},
 )
-def create_item(item: ItemPost, session: Session = Depends(get_session)):
+def create_item(
+    item: ItemPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
+):
     if not session.get(Catalog, item.catalog_id):
         raise HTTPException(status_code=404, detail=f"Catalog with ID {item.catalog_id} not found")
 
@@ -72,6 +75,7 @@ def update_item(
     item_id: int,
     item_patch: ItemPatch,
     session: Session = Depends(get_session),
+    _user=Depends(require_role(AccessLevel.MANAGER)),
 ):
     db_item = session.get(Item, item_id)
     if not db_item:
@@ -93,7 +97,9 @@ def update_item(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={404: {"description": "Item not found"}},
 )
-def soft_delete_item(item_id: int, session: Session = Depends(get_session)):
+def soft_delete_item(
+    item_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
+):
     item = session.get(Item, item_id)
     if not item:
         raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")

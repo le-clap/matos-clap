@@ -3,6 +3,8 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, asc, select
 
 from db.database import get_session
+from dependencies.auth import require_role
+from models.enums import AccessLevel
 from models.models import Catalog, Request, RequestedCatalog, User
 from schemas.requests import RequestPatch, RequestPost, RequestPublic
 
@@ -26,6 +28,7 @@ def get_requests(
     borrower_id: int | None = None,
     processed: bool | None = None,
     session: Session = Depends(get_session),
+    _user=Depends(require_role(AccessLevel.CLAP)),
 ):
     statement = select(Request).options(*_request_load_options()).order_by(asc(Request.start_date))
     if borrower_id is not None:
@@ -41,7 +44,9 @@ def get_requests(
     response_model=RequestPublic,
     responses={404: {"description": "Request not found"}},
 )
-def get_request_by_id(request_id: int, session: Session = Depends(get_session)):
+def get_request_by_id(
+    request_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
+):
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
     db_request = session.exec(statement).unique().first()
     if not db_request:
@@ -55,7 +60,9 @@ def get_request_by_id(request_id: int, session: Session = Depends(get_session)):
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Borrower or catalog not found"}},
 )
-def create_request(request_data: RequestPost, session: Session = Depends(get_session)):
+def create_request(
+    request_data: RequestPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.USER))
+):
     if not session.get(User, request_data.borrower_id):
         raise HTTPException(status_code=404, detail=f"User with ID {request_data.borrower_id} not found")
 
@@ -97,6 +104,7 @@ def update_request(
     request_id: int,
     request_patch: RequestPatch,
     session: Session = Depends(get_session),
+    _user=Depends(require_role(AccessLevel.CLAP)),
 ):
     db_request = session.get(Request, request_id)
     if not db_request:
@@ -114,7 +122,9 @@ def update_request(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={404: {"description": "Request not found"}},
 )
-def delete_request(request_id: int, session: Session = Depends(get_session)):
+def delete_request(
+    request_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
+):
     db_request = session.get(Request, request_id)
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")

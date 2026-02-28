@@ -6,7 +6,8 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import Session, select
 
 from db.database import get_session
-from models.enums import Availability
+from dependencies.auth import require_role
+from models.enums import AccessLevel, Availability
 from models.models import Catalog, Category, Item, Loan, LoanedItem
 from schemas.catalogs import CatalogPatch, CatalogPost, CatalogPublic
 from schemas.items import ItemAvailabilityResponse
@@ -48,7 +49,9 @@ def get_catalog_by_id(catalog_id: int, session: Session = Depends(get_session)):
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Category not found"}},
 )
-def create_catalog(catalog: CatalogPost, session: Session = Depends(get_session)):
+def create_catalog(
+    catalog: CatalogPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
+):
     if not session.get(Category, catalog.category_id):
         raise HTTPException(status_code=404, detail=f"Category with ID {catalog.category_id} not found")
 
@@ -68,6 +71,7 @@ def update_catalog(
     catalog_id: int,
     catalog_patch: CatalogPatch,
     session: Session = Depends(get_session),
+    _user=Depends(require_role(AccessLevel.MANAGER)),
 ):
     db_catalog = session.get(Catalog, catalog_id)
     if not db_catalog:
@@ -93,7 +97,9 @@ def update_catalog(
         409: {"description": "Catalog still used by items or requests"},
     },
 )
-def delete_catalog(catalog_id: int, session: Session = Depends(get_session)):
+def delete_catalog(
+    catalog_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
+):
     db_catalog = session.get(Catalog, catalog_id)
     if not db_catalog:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")

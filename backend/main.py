@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import settings
 from db.seed import seed_data
 from routers import catalogs, categories, items, loans, requests, users
+from routers.auth import router as auth_router
 
 
 @asynccontextmanager
@@ -25,13 +27,13 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=settings.ALLOWED_ORIGINS,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,  # ty: ignore[invalid-argument-type]
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -39,6 +41,7 @@ def read_root():
     return {"status": "System Online"}
 
 
+app.include_router(auth_router, prefix=settings.API_PREFIX)
 app.include_router(categories.router, prefix=settings.API_PREFIX)
 app.include_router(catalogs.router, prefix=settings.API_PREFIX)
 app.include_router(items.router, prefix=settings.API_PREFIX)

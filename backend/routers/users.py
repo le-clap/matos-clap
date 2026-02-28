@@ -4,6 +4,8 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 
 from db.database import get_session
+from dependencies.auth import require_role
+from models.enums import AccessLevel
 from models.models import Loan, LoanedItem, Request, RequestedCatalog, User
 from schemas.loans import LoanPublic
 from schemas.requests import RequestPublic
@@ -12,6 +14,7 @@ from schemas.users import UserPatch, UserPost, UserPublic
 router = APIRouter(
     prefix="/users",
     tags=["users"],
+    dependencies=[Depends(require_role(AccessLevel.ADMIN))],
 )
 
 
