@@ -3,15 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from core.config import settings
-from db.database import create_tables
 from db.seed import seed_data
 from routers import catalogs, categories, items, loans, requests, users
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    print("Initializing db...")
-    create_tables()
+    print("Starting up...")
     seed_data()
 
     yield

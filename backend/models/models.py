@@ -1,28 +1,32 @@
-import uuid
-from datetime import UTC, datetime
+import secrets
+from datetime import datetime
 from typing import Optional
 
 from pydantic import EmailStr
+from sqlalchemy import Column, DateTime, Enum, Text
 from sqlmodel import Field, Relationship, SQLModel
 
 from models.enums import AccessLevel, Availability, Condition
+from models.timestamps import TimestampSQLModel
 
 # --- User ---
 
 
-class User(SQLModel, table=True):
+class User(TimestampSQLModel, table=True):
     """Represents a user of the system, who can be a borrower or an assignee."""
 
     __tablename__ = "matos_user"  # "user" is a reserved keyword in PostgreSQL
 
     id: int | None = Field(default=None, primary_key=True)
-    username: str = Field(unique=True, index=True)
-    name: str
-    email: EmailStr = Field(unique=True, index=True)
-    access_level: AccessLevel = AccessLevel.USER
+    username: str = Field(max_length=50, unique=True, index=True)
+    name: str = Field(max_length=255)
+    email: EmailStr = Field(max_length=255, unique=True, index=True)
+    access_level: AccessLevel = Field(
+        default=AccessLevel.USER,
+        sa_column=Column(Enum(AccessLevel, name="access_level", native_enum=False), nullable=False),
+    )
 
-    session_id: str | None = Field(default_factory=lambda: uuid.uuid4().hex)
-
+    sessions: list[UserSession] = Relationship(back_populates="user")
     requests: list[Request] = Relationship(back_populates="borrower")
     loans_as_borrower: list[Loan] = Relationship(
         back_populates="borrower", sa_relationship_kwargs={"foreign_keys": "Loan.borrower_id"}
@@ -32,43 +36,62 @@ class User(SQLModel, table=True):
     )
 
 
+class UserSession(TimestampSQLModel, table=True):
+    """Represents an active login session."""
+
+    __tablename__ = "user_session"
+
+    id: int | None = Field(default=None, primary_key=True)
+    token: str = Field(max_length=64, unique=True, index=True, default_factory=lambda: secrets.token_urlsafe(32))
+    user_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="CASCADE")
+    expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False, index=True))
+
+    user: User = Relationship(back_populates="sessions")
+
+
 # --- Inventory ---
 
 
-class Category(SQLModel, table=True):
+class Category(TimestampSQLModel, table=True):
     """Represents a category of catalogs in the inventory."""
 
     id: int | None = Field(default=None, primary_key=True)
-    name: str
-    description: str | None = None
+    name: str = Field(max_length=255)
+    description: str | None = Field(default=None, sa_type=Text)
 
     catalogs: list[Catalog] = Relationship(back_populates="category")
 
 
-class Catalog(SQLModel, table=True):
+class Catalog(TimestampSQLModel, table=True):
     """Represents a catalog of items in the inventory, linked to a category."""
 
     id: int | None = Field(default=None, primary_key=True)
-    name: str
-    description: str | None = None
+    name: str = Field(max_length=255)
+    description: str | None = Field(default=None, sa_type=Text)
     category_id: int = Field(foreign_key="category.id", index=True, ondelete="RESTRICT")
-    image_path: str | None = None
+    image_path: str | None = Field(default=None, max_length=255)
 
     category: Category = Relationship(back_populates="catalogs")
     items: list[Item] = Relationship(back_populates="catalog")
     requested_catalogs: list[RequestedCatalog] = Relationship(back_populates="catalog")
 
 
-class Item(SQLModel, table=True):
+class Item(TimestampSQLModel, table=True):
     """Represents a physical item in the inventory, linked to a catalog."""
 
     id: int | None = Field(default=None, primary_key=True)
-    name: str
+    name: str = Field(max_length=255)
     catalog_id: int = Field(foreign_key="catalog.id", index=True, ondelete="RESTRICT")
-    condition: Condition = Condition.NEW
-    availability: Availability = Availability.AVAILABLE
+    condition: Condition = Field(
+        default=Condition.NEW,
+        sa_column=Column(Enum(Condition, name="condition", native_enum=False), nullable=False),
+    )
+    availability: Availability = Field(
+        default=Availability.AVAILABLE,
+        sa_column=Column(Enum(Availability, name="availability", native_enum=False), nullable=False),
+    )
     deposit_cents: int = Field(default=0, ge=0)
-    deleted: bool = Field(default=False)
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     catalog: Catalog = Relationship(back_populates="items")
     loaned_items: list[LoanedItem] = Relationship(back_populates="item")
@@ -77,17 +100,16 @@ class Item(SQLModel, table=True):
 # --- Request Flow ---
 
 
-class Request(SQLModel, table=True):
+class Request(TimestampSQLModel, table=True):
     """Represents a borrower's request to loan items, which can be processed into a loan."""
 
     id: int | None = Field(default=None, primary_key=True)
     borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
-    phone_number: str
-    start_date: datetime
-    end_date: datetime
-    reason: str | None = None
-    creation_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    processed: bool = Field(default=False)
+    phone_number: str = Field(max_length=20)
+    start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    end_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    reason: str | None = Field(default=None, max_length=255)
+    processed: bool = False
 
     borrower: User = Relationship(back_populates="requests")
     requested_catalogs: list[RequestedCatalog] = Relationship(back_populates="request")
@@ -111,20 +133,20 @@ class RequestedCatalog(SQLModel, table=True):
 # --- Loan Flow ---
 
 
-class Loan(SQLModel, table=True):
+class Loan(TimestampSQLModel, table=True):
     """Represents an actual loan of items to a borrower, for example processed from a request."""
 
     id: int | None = Field(default=None, primary_key=True)
     borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
     assignee_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
-    start_date: datetime
-    end_date: datetime
+    start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    end_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     total_deposit_cents: int = Field(default=0, ge=0)
-    actual_start_date: datetime | None = None
-    actual_return_date: datetime | None = None
+    actual_start_date: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    actual_return_date: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     retained_deposit_cents: int | None = Field(default=None, ge=0)
     request_id: int | None = Field(default=None, foreign_key="request.id", index=True, ondelete="SET NULL")
-    comments: str | None = None
+    comments: str | None = Field(default=None, sa_type=Text)
 
     borrower: User = Relationship(
         back_populates="loans_as_borrower", sa_relationship_kwargs={"foreign_keys": "Loan.borrower_id"}
@@ -144,7 +166,10 @@ class LoanedItem(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     loan_id: int = Field(foreign_key="loan.id", index=True, ondelete="CASCADE")
     item_id: int = Field(foreign_key="item.id", index=True, ondelete="RESTRICT")
-    return_condition: Condition | None = None
+    return_condition: Condition | None = Field(
+        default=None,
+        sa_column=Column(Enum(Condition, name="condition", native_enum=False), nullable=True),
+    )
 
     loan: Loan = Relationship(back_populates="loaned_items")
     item: Item = Relationship(back_populates="loaned_items")

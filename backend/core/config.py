@@ -1,15 +1,29 @@
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     API_PREFIX: str = "/api"
 
-    DATABASE_URL: str = "sqlite:///./database.db"
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = ""
+    DB_USER: str = ""
+    DB_PASSWORD: str = ""
+
+    DATABASE_URL: str = ""
 
     ALLOWED_ORIGINS: str = ""
 
-    DEBUG: bool = True
+    DEBUG: bool = False
+
+    @model_validator(mode="after")
+    def build_database_url(self) -> Settings:
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = (
+                f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+            )
+        return self
 
     @field_validator("ALLOWED_ORIGINS")
     def parse_allowed_origins(cls, v: str) -> list[str]:

@@ -21,14 +21,11 @@ def _item_load_options():
 
 @router.get("/", response_model=list[ItemPublic])
 def get_items(
-    include_deleted: bool = False,
     availability: Availability | None = None,
     condition: Condition | None = None,
     session: Session = Depends(get_session),
 ):
-    statement = select(Item).options(*_item_load_options())
-    if not include_deleted:
-        statement = statement.where(Item.deleted == False)  # noqa: E712
+    statement = select(Item).options(*_item_load_options()).where(Item.deleted_at == None)  # noqa: E711 noqa: E712
     if availability is not None:
         statement = statement.where(Item.availability == availability)
     if condition is not None:

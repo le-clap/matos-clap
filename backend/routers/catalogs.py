@@ -145,7 +145,7 @@ def get_catalog_items_availability(
     all_items = (
         session.exec(
             select(Item)
-            .where(Item.catalog_id == catalog_id, Item.deleted == False)  # noqa: E712
+            .where(Item.catalog_id == catalog_id, Item.deleted_at == None)  # noqa: E711
             .options(*_item_load_options())
         )
         .unique()
