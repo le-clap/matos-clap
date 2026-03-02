@@ -6,10 +6,8 @@ from sqlmodel import Session, select
 
 from core.config import settings
 from db.database import get_session
-from dependencies.auth import get_current_user
 from models.enums import AccessLevel
 from models.models import User, UserSession
-from schemas.users import UserPublic
 from services.cla_auth import create_or_update_user, get_auth_url, validate_ticket
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -57,11 +55,6 @@ async def cla_callback(ticket: str, db: Session = Depends(get_session)):
     response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     _set_session_cookie(response, user_session)
     return response
-
-
-@router.get("/me", response_model=UserPublic)
-def get_me(user: User = Depends(get_current_user)):
-    return user
 
 
 @router.post("/logout")

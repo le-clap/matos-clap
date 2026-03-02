@@ -31,6 +31,8 @@ def get_loans(
 ):
     if not has_role(current_user, AccessLevel.CLAP):
         borrower_id = current_user.id
+    if borrower_id is not None and not session.get(User, borrower_id):
+        raise HTTPException(status_code=404, detail=f"User with ID {borrower_id} not found")
     statement = select(Loan).options(*_loan_load_options())
     if borrower_id is not None:
         statement = statement.where(Loan.borrower_id == borrower_id)
@@ -135,9 +137,6 @@ def delete_loan(loan_id: int, session: Session = Depends(get_session), _user=Dep
     db_loan = session.get(Loan, loan_id)
     if not db_loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
-
-    for li in db_loan.loaned_items:
-        session.delete(li)
 
     session.delete(db_loan)
     session.commit()

@@ -3,7 +3,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, asc, select
 
 from db.database import get_session
-from dependencies.auth import require_role
+from dependencies.auth import get_current_user, has_role, require_role
 from models.enums import AccessLevel
 from models.models import Catalog, Request, RequestedCatalog, User
 from schemas.requests import RequestPatch, RequestPost, RequestPublic
@@ -28,8 +28,12 @@ def get_requests(
     borrower_id: int | None = None,
     processed: bool | None = None,
     session: Session = Depends(get_session),
-    _user=Depends(require_role(AccessLevel.CLAP)),
+    current_user: User = Depends(get_current_user),
 ):
+    if not has_role(current_user, AccessLevel.CLAP):
+        borrower_id = current_user.id
+    if borrower_id is not None and not session.get(User, borrower_id):
+        raise HTTPException(status_code=404, detail=f"User with ID {borrower_id} not found")
     statement = select(Request).options(*_request_load_options()).order_by(asc(Request.start_date))
     if borrower_id is not None:
         statement = statement.where(Request.borrower_id == borrower_id)
@@ -128,10 +132,6 @@ def delete_request(
     db_request = session.get(Request, request_id)
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
-
-    # Delete associated requested catalogs first
-    for rc in db_request.requested_catalogs:
-        session.delete(rc)
 
     session.delete(db_request)
     session.commit()
