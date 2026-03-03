@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:openapi": "cd ../backend && uv run python generate_openapi.py",
+    "generate:client": "openapi-ts",
+    "generate": "npm run generate:openapi && npm run generate:client"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
@@ -32,6 +35,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@hey-api/client-fetch": "^0.13.1",
+    "@hey-api/openapi-ts": "^0.93.1",
     "@types/node": "^24.10.11",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
