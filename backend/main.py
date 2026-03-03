@@ -2,11 +2,18 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.routing import APIRoute
 
 from core.config import settings
 from db.seed import seed_data
 from routers import catalogs, categories, items, loans, requests, users
 from routers.auth import router as auth_router
+
+
+def _unique_id(route: APIRoute) -> str:
+    """Defines a more readable unique ID for this API route."""
+    tag = f"{route.tags[0]}_" if len(route.tags) > 0 else ""
+    return tag + route.name
 
 
 @asynccontextmanager
@@ -25,6 +32,7 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    generate_unique_id_function=_unique_id,
 )
 
 app.add_middleware(

@@ -8,7 +8,7 @@
     "/": {
       "get": {
         "summary": "Read Root",
-        "operationId": "read_root__get",
+        "operationId": "read_root",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -21,24 +21,130 @@
         }
       }
     },
+    "/api/auth/login": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Cla Login",
+        "operationId": "auth_cla_login",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/cla/callback": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Cla Callback",
+        "operationId": "auth_cla_callback",
+        "parameters": [
+          {
+            "name": "ticket",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticket"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "operationId": "auth_logout",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories/": {
       "get": {
         "tags": [
           "categories"
         ],
         "summary": "Get Categories",
-        "operationId": "get_categories_api_categories__get",
+        "operationId": "categories_get_categories",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/CategoryPublic"
                   },
-                  "type": "array",
-                  "title": "Response Get Categories Api Categories  Get"
+                  "title": "Response Categories Get Categories"
                 }
               }
             }
@@ -50,16 +156,34 @@
           "categories"
         ],
         "summary": "Create Category",
-        "operationId": "create_category_api_categories__post",
+        "operationId": "categories_create_category",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CategoryPost"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -91,7 +215,7 @@
           "categories"
         ],
         "summary": "Get Category By Id",
-        "operationId": "get_category_by_id_api_categories__category_id__get",
+        "operationId": "categories_get_category_by_id",
         "parameters": [
           {
             "name": "category_id",
@@ -134,7 +258,7 @@
           "categories"
         ],
         "summary": "Update Category",
-        "operationId": "update_category_api_categories__category_id__patch",
+        "operationId": "categories_update_category",
         "parameters": [
           {
             "name": "category_id",
@@ -143,6 +267,22 @@
             "schema": {
               "type": "integer",
               "title": "Category Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -187,7 +327,7 @@
           "categories"
         ],
         "summary": "Delete Category",
-        "operationId": "delete_category_api_categories__category_id__delete",
+        "operationId": "categories_delete_category",
         "parameters": [
           {
             "name": "category_id",
@@ -196,6 +336,22 @@
             "schema": {
               "type": "integer",
               "title": "Category Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -228,18 +384,18 @@
           "catalogs"
         ],
         "summary": "Get Catalogs",
-        "operationId": "get_catalogs_api_catalogs__get",
+        "operationId": "catalogs_get_catalogs",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/CatalogPublic"
                   },
-                  "type": "array",
-                  "title": "Response Get Catalogs Api Catalogs  Get"
+                  "title": "Response Catalogs Get Catalogs"
                 }
               }
             }
@@ -251,16 +407,34 @@
           "catalogs"
         ],
         "summary": "Create Catalog",
-        "operationId": "create_catalog_api_catalogs__post",
+        "operationId": "catalogs_create_catalog",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CatalogPost"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -295,7 +469,7 @@
           "catalogs"
         ],
         "summary": "Get Catalog By Id",
-        "operationId": "get_catalog_by_id_api_catalogs__catalog_id__get",
+        "operationId": "catalogs_get_catalog_by_id",
         "parameters": [
           {
             "name": "catalog_id",
@@ -338,7 +512,7 @@
           "catalogs"
         ],
         "summary": "Update Catalog",
-        "operationId": "update_catalog_api_catalogs__catalog_id__patch",
+        "operationId": "catalogs_update_catalog",
         "parameters": [
           {
             "name": "catalog_id",
@@ -347,6 +521,22 @@
             "schema": {
               "type": "integer",
               "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -391,7 +581,7 @@
           "catalogs"
         ],
         "summary": "Delete Catalog",
-        "operationId": "delete_catalog_api_catalogs__catalog_id__delete",
+        "operationId": "catalogs_delete_catalog",
         "parameters": [
           {
             "name": "catalog_id",
@@ -400,6 +590,22 @@
             "schema": {
               "type": "integer",
               "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -433,7 +639,7 @@
         ],
         "summary": "Get Catalog Items Availability",
         "description": "Return items split by availability for the requested date range.\n\nAn item is **available** if it is not deleted, has availability status\n``AVAILABLE``, and is not loaned for any part of [start_date, end_date].\nAll other non-deleted items are returned in the **unavailable** list\nso an admin can still force-assign them.",
-        "operationId": "get_catalog_items_availability_api_catalogs__catalog_id__available_items_get",
+        "operationId": "catalogs_get_catalog_items_availability",
         "parameters": [
           {
             "name": "catalog_id",
@@ -491,7 +697,7 @@
           "items"
         ],
         "summary": "Get Items",
-        "operationId": "get_items_api_items__get",
+        "operationId": "items_get_items",
         "parameters": [
           {
             "name": "availability",
@@ -536,7 +742,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ItemPublic"
                   },
-                  "title": "Response Get Items Api Items  Get"
+                  "title": "Response Items Get Items"
                 }
               }
             }
@@ -558,7 +764,25 @@
           "items"
         ],
         "summary": "Create Item",
-        "operationId": "create_item_api_items__post",
+        "operationId": "items_create_item",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -602,7 +826,7 @@
           "items"
         ],
         "summary": "Get Item By Id",
-        "operationId": "get_item_by_id_api_items__item_id__get",
+        "operationId": "items_get_item_by_id",
         "parameters": [
           {
             "name": "item_id",
@@ -645,7 +869,7 @@
           "items"
         ],
         "summary": "Update Item",
-        "operationId": "update_item_api_items__item_id__patch",
+        "operationId": "items_update_item",
         "parameters": [
           {
             "name": "item_id",
@@ -654,6 +878,22 @@
             "schema": {
               "type": "integer",
               "title": "Item Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -698,7 +938,7 @@
           "items"
         ],
         "summary": "Soft Delete Item",
-        "operationId": "soft_delete_item_api_items__item_id__delete",
+        "operationId": "items_soft_delete_item",
         "parameters": [
           {
             "name": "item_id",
@@ -707,6 +947,22 @@
             "schema": {
               "type": "integer",
               "title": "Item Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -736,42 +992,80 @@
           "users"
         ],
         "summary": "Get Users",
-        "operationId": "get_users_api_users__get",
+        "operationId": "users_get_users",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/UserPublic"
                   },
-                  "type": "array",
-                  "title": "Response Get Users Api Users  Get"
+                  "title": "Response Users Get Users"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
           }
         }
-      },
-      "post": {
+      }
+    },
+    "/api/users/me": {
+      "get": {
         "tags": [
           "users"
         ],
-        "summary": "Create User",
-        "operationId": "create_user_api_users__post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserPost"
-              }
+        "summary": "Get Me",
+        "operationId": "users_get_me",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -780,9 +1074,6 @@
                 }
               }
             }
-          },
-          "409": {
-            "description": "Username or email already exists"
           },
           "422": {
             "description": "Validation Error",
@@ -803,7 +1094,7 @@
           "users"
         ],
         "summary": "Get User By Id",
-        "operationId": "get_user_by_id_api_users__user_id__get",
+        "operationId": "users_get_user_by_id",
         "parameters": [
           {
             "name": "user_id",
@@ -812,6 +1103,22 @@
             "schema": {
               "type": "integer",
               "title": "User Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -846,7 +1153,7 @@
           "users"
         ],
         "summary": "Update User",
-        "operationId": "update_user_api_users__user_id__patch",
+        "operationId": "users_update_user",
         "parameters": [
           {
             "name": "user_id",
@@ -855,6 +1162,22 @@
             "schema": {
               "type": "integer",
               "title": "User Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -882,178 +1205,6 @@
           "404": {
             "description": "User not found"
           },
-          "409": {
-            "description": "Username or email already exists"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "users"
-        ],
-        "summary": "Delete User",
-        "operationId": "delete_user_api_users__user_id__delete",
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "409": {
-            "description": "User still referenced by requests or loans"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/users/{user_id}/requests": {
-      "get": {
-        "tags": [
-          "users"
-        ],
-        "summary": "Get User Requests",
-        "operationId": "get_user_requests_api_users__user_id__requests_get",
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          },
-          {
-            "name": "processed",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Processed"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RequestPublic"
-                  },
-                  "title": "Response Get User Requests Api Users  User Id  Requests Get"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/users/{user_id}/loans": {
-      "get": {
-        "tags": [
-          "users"
-        ],
-        "summary": "Get User Loans",
-        "operationId": "get_user_loans_api_users__user_id__loans_get",
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          },
-          {
-            "name": "active",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Active"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoanPublic"
-                  },
-                  "title": "Response Get User Loans Api Users  User Id  Loans Get"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found"
-          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1073,7 +1224,7 @@
           "requests"
         ],
         "summary": "Get Requests",
-        "operationId": "get_requests_api_requests__get",
+        "operationId": "requests_get_requests",
         "parameters": [
           {
             "name": "borrower_id",
@@ -1106,6 +1257,22 @@
               ],
               "title": "Processed"
             }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
           }
         ],
         "responses": {
@@ -1118,7 +1285,7 @@
                   "items": {
                     "$ref": "#/components/schemas/RequestPublic"
                   },
-                  "title": "Response Get Requests Api Requests  Get"
+                  "title": "Response Requests Get Requests"
                 }
               }
             }
@@ -1140,7 +1307,25 @@
           "requests"
         ],
         "summary": "Create Request",
-        "operationId": "create_request_api_requests__post",
+        "operationId": "requests_create_request",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1184,7 +1369,7 @@
           "requests"
         ],
         "summary": "Get Request By Id",
-        "operationId": "get_request_by_id_api_requests__request_id__get",
+        "operationId": "requests_get_request_by_id",
         "parameters": [
           {
             "name": "request_id",
@@ -1193,6 +1378,22 @@
             "schema": {
               "type": "integer",
               "title": "Request Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -1227,7 +1428,7 @@
           "requests"
         ],
         "summary": "Update Request",
-        "operationId": "update_request_api_requests__request_id__patch",
+        "operationId": "requests_update_request",
         "parameters": [
           {
             "name": "request_id",
@@ -1236,6 +1437,22 @@
             "schema": {
               "type": "integer",
               "title": "Request Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -1280,7 +1497,7 @@
           "requests"
         ],
         "summary": "Delete Request",
-        "operationId": "delete_request_api_requests__request_id__delete",
+        "operationId": "requests_delete_request",
         "parameters": [
           {
             "name": "request_id",
@@ -1289,6 +1506,22 @@
             "schema": {
               "type": "integer",
               "title": "Request Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -1318,7 +1551,7 @@
           "loans"
         ],
         "summary": "Get Loans",
-        "operationId": "get_loans_api_loans__get",
+        "operationId": "loans_get_loans",
         "parameters": [
           {
             "name": "borrower_id",
@@ -1351,6 +1584,22 @@
               ],
               "title": "Active"
             }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
           }
         ],
         "responses": {
@@ -1363,7 +1612,7 @@
                   "items": {
                     "$ref": "#/components/schemas/LoanPublic"
                   },
-                  "title": "Response Get Loans Api Loans  Get"
+                  "title": "Response Loans Get Loans"
                 }
               }
             }
@@ -1385,7 +1634,25 @@
           "loans"
         ],
         "summary": "Create Loan",
-        "operationId": "create_loan_api_loans__post",
+        "operationId": "loans_create_loan",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1429,7 +1696,7 @@
           "loans"
         ],
         "summary": "Get Loan By Id",
-        "operationId": "get_loan_by_id_api_loans__loan_id__get",
+        "operationId": "loans_get_loan_by_id",
         "parameters": [
           {
             "name": "loan_id",
@@ -1438,6 +1705,22 @@
             "schema": {
               "type": "integer",
               "title": "Loan Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -1472,7 +1755,7 @@
           "loans"
         ],
         "summary": "Update Loan",
-        "operationId": "update_loan_api_loans__loan_id__patch",
+        "operationId": "loans_update_loan",
         "parameters": [
           {
             "name": "loan_id",
@@ -1481,6 +1764,22 @@
             "schema": {
               "type": "integer",
               "title": "Loan Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -1525,7 +1824,7 @@
           "loans"
         ],
         "summary": "Delete Loan",
-        "operationId": "delete_loan_api_loans__loan_id__delete",
+        "operationId": "loans_delete_loan",
         "parameters": [
           {
             "name": "loan_id",
@@ -1534,6 +1833,22 @@
             "schema": {
               "type": "integer",
               "title": "Loan Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -1563,7 +1878,7 @@
           "loans"
         ],
         "summary": "Update Loaned Item",
-        "operationId": "update_loaned_item_api_loans__loan_id__items__loaned_item_id__patch",
+        "operationId": "loans_update_loaned_item",
         "parameters": [
           {
             "name": "loan_id",
@@ -1581,6 +1896,22 @@
             "schema": {
               "type": "integer",
               "title": "Loaned Item Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -2631,11 +2962,6 @@
             "type": "string",
             "title": "Name"
           },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
           "access_level": {
             "$ref": "#/components/schemas/AccessLevel"
           }
@@ -2645,88 +2971,21 @@
           "id",
           "username",
           "name",
-          "email",
           "access_level"
         ],
         "title": "UserBrief"
       },
       "UserPatch": {
         "properties": {
-          "username": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Username"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "email"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
           "access_level": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AccessLevel"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "title": "UserPatch"
-      },
-      "UserPost": {
-        "properties": {
-          "username": {
-            "type": "string",
-            "title": "Username"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "access_level": {
-            "$ref": "#/components/schemas/AccessLevel",
-            "default": "user"
+            "$ref": "#/components/schemas/AccessLevel"
           }
         },
         "type": "object",
         "required": [
-          "username",
-          "name",
-          "email"
+          "access_level"
         ],
-        "title": "UserPost"
+        "title": "UserPatch"
       },
       "UserPublic": {
         "properties": {
