@@ -3,6 +3,8 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 
 from db.database import get_session
+from dependencies.auth import get_current_user, has_role, require_role
+from models.enums import AccessLevel
 from models.models import Item, Loan, LoanedItem, Request, User
 from schemas.loans import LoanedItemPatch, LoanedItemPublic, LoanPatch, LoanPost, LoanPublic
 
@@ -25,7 +27,12 @@ def get_loans(
     borrower_id: int | None = None,
     active: bool | None = None,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
+    if not has_role(current_user, AccessLevel.CLAP):
+        borrower_id = current_user.id
+    if borrower_id is not None and not session.get(User, borrower_id):
+        raise HTTPException(status_code=404, detail=f"User with ID {borrower_id} not found")
     statement = select(Loan).options(*_loan_load_options())
     if borrower_id is not None:
         statement = statement.where(Loan.borrower_id == borrower_id)
@@ -41,11 +48,15 @@ def get_loans(
     response_model=LoanPublic,
     responses={404: {"description": "Loan not found"}},
 )
-def get_loan_by_id(loan_id: int, session: Session = Depends(get_session)):
+def get_loan_by_id(
+    loan_id: int, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)
+):
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
     loan = session.exec(statement).unique().first()
     if not loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    if not has_role(current_user, AccessLevel.CLAP) and loan.borrower_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
     return loan
 
 
@@ -55,7 +66,9 @@ def get_loan_by_id(loan_id: int, session: Session = Depends(get_session)):
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Referenced user, request, or item not found"}},
 )
-def create_loan(loan_data: LoanPost, session: Session = Depends(get_session)):
+def create_loan(
+    loan_data: LoanPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
+):
     if not session.get(User, loan_data.borrower_id):
         raise HTTPException(status_code=404, detail=f"Borrower with ID {loan_data.borrower_id} not found")
     if not session.get(User, loan_data.assignee_id):
@@ -102,6 +115,7 @@ def update_loan(
     loan_id: int,
     loan_patch: LoanPatch,
     session: Session = Depends(get_session),
+    _user=Depends(require_role(AccessLevel.CLAP)),
 ):
     db_loan = session.get(Loan, loan_id)
     if not db_loan:
@@ -119,13 +133,10 @@ def update_loan(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={404: {"description": "Loan not found"}},
 )
-def delete_loan(loan_id: int, session: Session = Depends(get_session)):
+def delete_loan(loan_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))):
     db_loan = session.get(Loan, loan_id)
     if not db_loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
-
-    for li in db_loan.loaned_items:
-        session.delete(li)
 
     session.delete(db_loan)
     session.commit()
@@ -141,6 +152,7 @@ def update_loaned_item(
     loaned_item_id: int,
     loaned_item_patch: LoanedItemPatch,
     session: Session = Depends(get_session),
+    _user=Depends(require_role(AccessLevel.CLAP)),
 ):
     statement = (
         select(LoanedItem)

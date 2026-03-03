@@ -25,6 +25,14 @@ class Settings(BaseSettings):
             )
         return self
 
+    CLA_HOST: str = ""
+    CLA_IDENTIFIER: str = ""
+    CLA_CALLBACK_URL: str = "http://localhost:5173/api/auth/cla/callback"
+
+    SESSION_COOKIE_NAME: str = "session_id"
+    SESSION_COOKIE_SECURE: bool = False
+    SESSION_TTL_DAYS: int = 30
+
     @field_validator("ALLOWED_ORIGINS")
     def parse_allowed_origins(cls, v: str) -> list[str]:
         return v.split(",") if v else []
