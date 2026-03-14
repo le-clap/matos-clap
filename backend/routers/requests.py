@@ -62,11 +62,16 @@ def get_request_by_id(
     "/",
     response_model=RequestPublic,
     status_code=status.HTTP_201_CREATED,
-    responses={404: {"description": "Borrower or catalog not found"}},
+    responses={
+        403: {"description": "Attempt to create request for another user"},
+        404: {"description": "Borrower or catalog not found"},
+    },
 )
 def create_request(
-    request_data: RequestPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.USER))
+    request_data: RequestPost, session: Session = Depends(get_session), user=Depends(require_role(AccessLevel.USER))
 ):
+    if user.id != request_data.borrower_id:
+        raise HTTPException(status_code=403, detail="You can not create requests for other users")
     if not session.get(User, request_data.borrower_id):
         raise HTTPException(status_code=404, detail=f"User with ID {request_data.borrower_id} not found")
 
