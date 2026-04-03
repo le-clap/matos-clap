@@ -1,4 +1,7 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import Date, func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 
@@ -41,6 +44,25 @@ def get_loans(
     elif active is False:
         statement = statement.where(Loan.actual_return_date.is_not(None))  # type: ignore[union-attr]
     return session.exec(statement).unique().all()
+
+
+@router.get(
+    "/summary",
+    response_model=list[LoanPublic],
+)
+def get_loan_summary(
+    summary_date: date, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
+):
+    effective_start = func.coalesce(Loan.actual_start_date, Loan.start_date)
+    effective_end = func.coalesce(Loan.actual_return_date, Loan.end_date)
+
+    statement = (
+        select(Loan)
+        .options(*_loan_load_options())
+        .where(func.cast(effective_start, Date) <= summary_date, func.cast(effective_end, Date) >= summary_date)
+    )
+    loans = session.exec(statement).unique().all()
+    return loans
 
 
 @router.get(
