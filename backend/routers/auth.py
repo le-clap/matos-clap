@@ -1,4 +1,7 @@
+"""Authentication endpoints."""
+
 from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
@@ -11,6 +14,9 @@ from models.models import User, UserSession
 from services.cla_auth import create_or_update_user, get_auth_url, validate_ticket
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# Dependency type aliases
+SessionDep = Annotated[Session, Depends(get_session)]
 
 
 def _create_session(db: Session, user: User) -> UserSession:
@@ -39,12 +45,12 @@ def _set_session_cookie(response: RedirectResponse, user_session: UserSession) -
 
 
 @router.get("/login")
-def cla_login():
+def cla_login() -> RedirectResponse:
     return RedirectResponse(url=get_auth_url())
 
 
 @router.get("/cla/callback")
-async def cla_callback(ticket: str, db: Session = Depends(get_session)):
+async def cla_callback(ticket: str, db: SessionDep) -> RedirectResponse:
     payload = await validate_ticket(ticket)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired ticket")
@@ -59,9 +65,9 @@ async def cla_callback(ticket: str, db: Session = Depends(get_session)):
 
 @router.post("/logout")
 def logout(
-    db: Session = Depends(get_session),
-    token: str | None = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
-):
+    db: SessionDep,
+    token: Annotated[str | None, Cookie(alias=settings.SESSION_COOKIE_NAME)] = None,
+) -> RedirectResponse:
     if token:
         user_session = db.exec(select(UserSession).where(UserSession.token == token)).first()
         if user_session:
@@ -76,7 +82,7 @@ def logout(
 if settings.DEBUG:
 
     @router.get("/dev/login")
-    def dev_login(db: Session = Depends(get_session)):
+    def dev_login(db: SessionDep) -> RedirectResponse:
         user = db.exec(select(User)).first()
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No users in database")

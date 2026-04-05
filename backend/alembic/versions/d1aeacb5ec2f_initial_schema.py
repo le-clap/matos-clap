@@ -168,6 +168,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("loan_id", sa.Integer(), nullable=False),
         sa.Column("item_id", sa.Integer(), nullable=False),
+        sa.Column("actual_return_date", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "return_condition",
             sa.Enum("NEW", "GOOD", "DEGRADED", name="condition", native_enum=False),

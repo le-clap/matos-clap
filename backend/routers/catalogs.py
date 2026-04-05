@@ -1,6 +1,9 @@
-from datetime import datetime
+"""Catalog management endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from datetime import datetime
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session, select
@@ -8,20 +11,22 @@ from sqlmodel import Session, select
 from db.database import get_session
 from dependencies.auth import require_role
 from models.enums import AccessLevel, Availability
-from models.models import Catalog, Category, Item, Loan, LoanedItem
+from models.models import Catalog, Category, Item
 from schemas.catalogs import CatalogPatch, CatalogPost, CatalogPublic
 from schemas.items import ItemAvailabilityResponse
+from services.inventory import find_busy_item_ids, item_load_options
 
-router = APIRouter(
-    prefix="/catalogs",
-    tags=["catalogs"],
-)
+router = APIRouter(prefix="/catalogs", tags=["catalogs"])
+
+# Dependency type aliases
+SessionDep = Annotated[Session, Depends(get_session)]
+ManagerDep = Annotated[None, Depends(require_role(AccessLevel.MANAGER))]
 
 
 @router.get("/", response_model=list[CatalogPublic])
-def get_catalogs(session: Session = Depends(get_session)):
+def get_catalogs(session: SessionDep) -> list[Catalog]:
     statement = select(Catalog).options(joinedload(Catalog.category))  # ty: ignore[invalid-argument-type]
-    return session.exec(statement).all()
+    return list(session.exec(statement).all())
 
 
 @router.get(
@@ -29,7 +34,10 @@ def get_catalogs(session: Session = Depends(get_session)):
     response_model=CatalogPublic,
     responses={404: {"description": "Catalog not found"}},
 )
-def get_catalog_by_id(catalog_id: int, session: Session = Depends(get_session)):
+def get_catalog_by_id(
+    catalog_id: Annotated[int, Path(ge=1)],
+    session: SessionDep,
+) -> Catalog:
     statement = (
         select(Catalog)
         .where(Catalog.id == catalog_id)
@@ -50,8 +58,10 @@ def get_catalog_by_id(catalog_id: int, session: Session = Depends(get_session)):
     responses={404: {"description": "Category not found"}},
 )
 def create_catalog(
-    catalog: CatalogPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
-):
+    catalog: CatalogPost,
+    session: SessionDep,
+    _user: ManagerDep,
+) -> Catalog:
     if not session.get(Category, catalog.category_id):
         raise HTTPException(status_code=404, detail=f"Category with ID {catalog.category_id} not found")
 
@@ -68,11 +78,11 @@ def create_catalog(
     responses={404: {"description": "Catalog or referenced category not found"}},
 )
 def update_catalog(
-    catalog_id: int,
+    catalog_id: Annotated[int, Path(ge=1)],
     catalog_patch: CatalogPatch,
-    session: Session = Depends(get_session),
-    _user=Depends(require_role(AccessLevel.MANAGER)),
-):
+    session: SessionDep,
+    _user: ManagerDep,
+) -> Catalog:
     db_catalog = session.get(Catalog, catalog_id)
     if not db_catalog:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
@@ -98,8 +108,10 @@ def update_catalog(
     },
 )
 def delete_catalog(
-    catalog_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
-):
+    catalog_id: Annotated[int, Path(ge=1)],
+    session: SessionDep,
+    _user: ManagerDep,
+) -> None:
     db_catalog = session.get(Catalog, catalog_id)
     if not db_catalog:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
@@ -115,12 +127,6 @@ def delete_catalog(
         ) from e
 
 
-def _item_load_options():
-    return [
-        joinedload(Item.catalog).joinedload(Catalog.category),  # ty: ignore[invalid-argument-type]
-    ]
-
-
 @router.get(
     "/{catalog_id}/available-items",
     response_model=ItemAvailabilityResponse,
@@ -130,11 +136,11 @@ def _item_load_options():
     },
 )
 def get_catalog_items_availability(
-    catalog_id: int,
-    start_date: datetime = Query(),
-    end_date: datetime = Query(),
-    session: Session = Depends(get_session),
-):
+    catalog_id: Annotated[int, Path(ge=1)],
+    session: SessionDep,
+    start_date: Annotated[datetime, Query()],
+    end_date: Annotated[datetime, Query()],
+) -> ItemAvailabilityResponse:
     """Return items split by availability for the requested date range.
 
     An item is **available** if it is not deleted, has availability status
@@ -152,27 +158,14 @@ def get_catalog_items_availability(
         session.exec(
             select(Item)
             .where(Item.catalog_id == catalog_id, Item.deleted_at == None)  # noqa: E711
-            .options(*_item_load_options())
+            .options(*item_load_options())
         )
         .unique()
         .all()
     )
 
-    # Item IDs with an overlapping active loan
-    item_ids = [item.id for item in all_items]
-    busy_ids: set[int] = set()
-    if item_ids:
-        busy_stmt = (
-            select(LoanedItem.item_id)
-            .join(Loan, LoanedItem.loan_id == Loan.id)  # ty: ignore[invalid-argument-type]
-            .where(
-                LoanedItem.item_id.in_(item_ids),  # type: ignore[union-attr]
-                Loan.actual_return_date.is_(None),  # type: ignore[union-attr]
-                Loan.start_date < end_date,
-                Loan.end_date > start_date,
-            )
-        )
-        busy_ids = set(session.exec(busy_stmt).all())
+    item_ids = [item.id for item in all_items if item.id is not None]
+    busy_ids = find_busy_item_ids(session, item_ids, start_date, end_date)
 
     available: list[Item] = []
     unavailable: list[Item] = []

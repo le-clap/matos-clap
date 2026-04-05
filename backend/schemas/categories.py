@@ -12,6 +12,8 @@ class CategoryPatch(BaseModel):
 
 
 class CategoryPublic(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: int
     name: str
     description: str | None = None

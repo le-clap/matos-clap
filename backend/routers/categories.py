@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+"""Category management endpoints."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -8,15 +12,16 @@ from models.enums import AccessLevel
 from models.models import Category
 from schemas.categories import CategoryPatch, CategoryPost, CategoryPublic
 
-router = APIRouter(
-    prefix="/categories",
-    tags=["categories"],
-)
+router = APIRouter(prefix="/categories", tags=["categories"])
+
+# Dependency type aliases
+SessionDep = Annotated[Session, Depends(get_session)]
+ManagerDep = Annotated[None, Depends(require_role(AccessLevel.MANAGER))]
 
 
 @router.get("/", response_model=list[CategoryPublic])
-def get_categories(session: Session = Depends(get_session)):
-    return session.exec(select(Category)).all()
+def get_categories(session: SessionDep) -> list[Category]:
+    return list(session.exec(select(Category)).all())
 
 
 @router.get(
@@ -24,7 +29,10 @@ def get_categories(session: Session = Depends(get_session)):
     response_model=CategoryPublic,
     responses={404: {"description": "Category not found"}},
 )
-def get_category_by_id(category_id: int, session: Session = Depends(get_session)):
+def get_category_by_id(
+    category_id: Annotated[int, Path(ge=1)],
+    session: SessionDep,
+) -> Category:
     category = session.get(Category, category_id)
     if not category:
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
@@ -33,8 +41,10 @@ def get_category_by_id(category_id: int, session: Session = Depends(get_session)
 
 @router.post("/", response_model=CategoryPublic, status_code=status.HTTP_201_CREATED)
 def create_category(
-    category: CategoryPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
-):
+    category: CategoryPost,
+    session: SessionDep,
+    _user: ManagerDep,
+) -> Category:
     db_category = Category(**category.model_dump())
     session.add(db_category)
     session.commit()
@@ -48,11 +58,11 @@ def create_category(
     responses={404: {"description": "Category not found"}},
 )
 def update_category(
-    category_id: int,
+    category_id: Annotated[int, Path(ge=1)],
     category_patch: CategoryPatch,
-    session: Session = Depends(get_session),
-    _user=Depends(require_role(AccessLevel.MANAGER)),
-):
+    session: SessionDep,
+    _user: ManagerDep,
+) -> Category:
     db_category = session.get(Category, category_id)
     if not db_category:
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
@@ -73,8 +83,10 @@ def update_category(
     },
 )
 def delete_category(
-    category_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.MANAGER))
-):
+    category_id: Annotated[int, Path(ge=1)],
+    session: SessionDep,
+    _user: ManagerDep,
+) -> None:
     db_category = session.get(Category, category_id)
     if not db_category:
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
