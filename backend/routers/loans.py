@@ -218,17 +218,12 @@ def create_loan(
                 )
             )
 
-    total_deposit_cents = (
-        payload.total_deposit_cents
-        if payload.total_deposit_cents is not None
-        else sum(item.deposit_cents for item in items)
-    )
     db_loan = Loan(
         borrower_id=payload.borrower_id,
         assignee_id=assignee_id,
         start_date=payload.start_date,
         end_date=payload.end_date,
-        total_deposit_cents=total_deposit_cents,
+        total_deposit_cents=payload.total_deposit_cents,
         request_id=payload.request_id,
         comments=payload.comments,
     )

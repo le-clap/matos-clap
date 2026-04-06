@@ -16,8 +16,8 @@ router = APIRouter(prefix="/users", tags=["users"])
 # Dependency type aliases
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
-ClapDep = Annotated[None, Depends(require_role(AccessLevel.CLAP))]
-AdminDep = Annotated[None, Depends(require_role(AccessLevel.ADMIN))]
+ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
+AdminDep = Annotated[User, Depends(require_role(AccessLevel.ADMIN))]
 
 
 @router.get("/", response_model=list[UserPublic])

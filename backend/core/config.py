@@ -32,6 +32,20 @@ class Settings(BaseSettings):
     SESSION_COOKIE_SECURE: bool = False
     SESSION_TTL_DAYS: int = 30
 
+    # Email settings
+    EMAIL_ENABLED: bool = False
+    SMTP_HOST: str = "localhost"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@matos.le-clap.fr"
+    SMTP_FROM_NAME: str = "Le CLAP"
+    SMTP_USE_TLS: bool = True
+
+    # Loan notification settings
+    LOAN_REMINDER_DAYS_BEFORE: int = 2
+    LOAN_NOTIFICATIONS_INTERVAL_HOURS: int = 24
+
     @field_validator("ALLOWED_ORIGINS")
     def parse_allowed_origins(cls, v: str) -> list[str]:
         return v.split(",") if v else []

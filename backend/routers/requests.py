@@ -29,7 +29,7 @@ router = APIRouter(prefix="/requests", tags=["requests"])
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
 UserDep = Annotated[User, Depends(require_role(AccessLevel.USER))]
-ClapDep = Annotated[None, Depends(require_role(AccessLevel.CLAP))]
+ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
 
 
 def _request_load_options():

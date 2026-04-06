@@ -29,7 +29,7 @@ def get_items(
     availability: Annotated[Availability | None, Query()] = None,
     condition: Annotated[Condition | None, Query()] = None,
 ) -> list[Item]:
-    statement = select(Item).options(*item_load_options()).where(Item.deleted_at == None)  # noqa: E711
+    statement = select(Item).options(*item_load_options()).where(Item.is_(None))  # ty: ignore[unresolved-attribute]
     if availability is not None:
         statement = statement.where(Item.availability == availability)
     if condition is not None:
@@ -56,6 +56,7 @@ def get_loaned_items(
     if start_date >= end_date:
         raise HTTPException(status_code=422, detail="start_date must be before end_date")
 
+    effective_start = func.coalesce(Loan.actual_start_date, Loan.start_date)
     effective_end = func.coalesce(LoanedItem.actual_return_date, Loan.actual_return_date, Loan.end_date)
 
     statement = (
@@ -68,10 +69,10 @@ def get_loaned_items(
         )
         .where(
             Item.deleted_at.is_(None),  # ty: ignore[unresolved-attribute]
-            Loan.start_date < end_date,
+            effective_start < end_date,
             effective_end > start_date,
         )
-        .order_by(Loan.start_date)  # ty: ignore[invalid-argument-type]
+        .order_by(effective_start)
     )
     loaned_items = session.exec(statement).unique().all()
 

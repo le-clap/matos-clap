@@ -21,7 +21,7 @@ class LoanPost(BaseModel):
     assignee_id: int | None = None
     start_date: datetime
     end_date: datetime
-    total_deposit_cents: int = 0
+    total_deposit_cents: int = Field(default=0, ge=0)
     request_id: int | None = None
     comments: str | None = None
     item_ids: list[int] = Field(min_length=1)
@@ -36,10 +36,10 @@ class LoanPost(BaseModel):
 class LoanPatch(BaseModel):
     start_date: datetime | None = None
     end_date: datetime | None = None
-    total_deposit_cents: int | None = None
+    total_deposit_cents: int | None = Field(default=None, ge=0)
     actual_start_date: datetime | None = None
     actual_return_date: datetime | None = None
-    retained_deposit_cents: int | None = None
+    retained_deposit_cents: int | None = Field(default=None, ge=0)
     comments: str | None = None
 
 
@@ -69,8 +69,8 @@ class LoanPartialReturnPost(BaseModel):
 
 
 class LoanReturnPost(BaseModel):
-    retained_deposit_cents: int
-    item_return_conditions: list[LoanReturnItemCondition]
+    retained_deposit_cents: int = Field(ge=0)
+    item_return_conditions: list[LoanReturnItemCondition] = Field(default_factory=list)
     comments: str | None = None
 
 
