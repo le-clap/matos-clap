@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: str = ""
 
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     @model_validator(mode="after")
     def build_database_url(self) -> Settings:
@@ -25,9 +25,8 @@ class Settings(BaseSettings):
             )
         return self
 
-    CLA_HOST: str = ""
-    CLA_IDENTIFIER: str = ""
-    CLA_CALLBACK_URL: str = "http://localhost:5173/api/auth/cla/callback"
+    CLA_HOST: str = "https://centralelilleassos.fr"
+    CLA_IDENTIFIER: str = "matos-clap"
 
     SESSION_COOKIE_NAME: str = "session_id"
     SESSION_COOKIE_SECURE: bool = False
@@ -39,8 +38,8 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    SMTP_FROM_EMAIL: str = "noreply@matos-clap.local"
-    SMTP_FROM_NAME: str = "Matos CLAP"
+    SMTP_FROM_EMAIL: str = "noreply@matos.le-clap.fr"
+    SMTP_FROM_NAME: str = "Le CLAP"
     SMTP_USE_TLS: bool = True
 
     # Loan notification settings
