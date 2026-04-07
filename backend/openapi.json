@@ -127,25 +127,6 @@
         }
       }
     },
-    "/api/auth/dev/login": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Dev Login",
-        "operationId": "auth_dev_login",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/categories/": {
       "get": {
         "tags": [
@@ -3263,7 +3244,8 @@
           "total_deposit_cents": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -3298,7 +3280,8 @@
           "retained_deposit_cents": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -3350,6 +3333,7 @@
           },
           "total_deposit_cents": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Total Deposit Cents",
             "default": 0
           },
@@ -3566,6 +3550,7 @@
         "properties": {
           "retained_deposit_cents": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Retained Deposit Cents"
           },
           "item_return_conditions": {
@@ -3589,8 +3574,7 @@
         },
         "type": "object",
         "required": [
-          "retained_deposit_cents",
-          "item_return_conditions"
+          "retained_deposit_cents"
         ],
         "title": "LoanReturnPost"
       },
@@ -3602,7 +3586,7 @@
           "returned"
         ],
         "title": "LoanStatus",
-        "description": "Status of a loan for timeline display."
+        "description": "Represents the status of a loan for timeline display."
       },
       "LoanTimelineEntry": {
         "properties": {
