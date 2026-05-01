@@ -22,7 +22,7 @@ from schemas.loans import (
     LoanReturnPost,
 )
 from schemas.timeline import LoanTimelineEntry, LoanTimelineResponse
-from schemas.utils import PaginatedResponse
+from schemas.utils import PaginatedResponse, PaginationParams
 from services.inventory import find_busy_item_ids
 
 router = APIRouter(prefix="/loans", tags=["loans"])
@@ -45,10 +45,9 @@ def _loan_load_options():
 def get_loans(
     session: SessionDep,
     current_user: CurrentUserDep,
+    pagination: Annotated[PaginationParams, Depends()],
     borrower_id: Annotated[int | None, Query()] = None,
     active: Annotated[bool | None, Query()] = None,
-    limit: Annotated[int, Query(gt=0, le=100)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
 ):
     effective_borrower_id = borrower_id
     if not has_role(current_user, AccessLevel.CLAP):
@@ -66,10 +65,15 @@ def get_loans(
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 
-    statement = base_statement.options(*_loan_load_options()).offset(offset).limit(limit)
+    statement = base_statement.options(*_loan_load_options()).offset(pagination.offset()).limit(pagination.limit)
     loans = session.exec(statement).unique().all()
 
-    return PaginatedResponse(items=list(loans), total=total, limit=limit, offset=offset)
+    return PaginatedResponse(
+        items=list(loans),
+        total=total,
+        limit=pagination.limit,
+        page=pagination.page,
+    )
 
 
 def _get_loan_status(loan: Loan) -> LoanStatus:

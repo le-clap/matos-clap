@@ -29,7 +29,9 @@ def get_items(
     availability: Annotated[Availability | None, Query()] = None,
     condition: Annotated[Condition | None, Query()] = None,
 ) -> list[Item]:
-    statement = select(Item).options(*item_load_options()).where(Item.is_(None))  # ty: ignore[unresolved-attribute]
+    statement = (
+        select(Item).options(*item_load_options()).where(Item.deleted_at.is_(None))  # ty: ignore[unresolved-attribute]
+    )
     if availability is not None:
         statement = statement.where(Item.availability == availability)
     if condition is not None:

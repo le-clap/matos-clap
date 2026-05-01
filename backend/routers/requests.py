@@ -20,7 +20,7 @@ from schemas.requests import (
     RequestRecommendationItem,
     RequestRecommendationsResponse,
 )
-from schemas.utils import PaginatedResponse
+from schemas.utils import PaginatedResponse, PaginationParams
 from services.inventory import find_busy_item_ids
 
 router = APIRouter(prefix="/requests", tags=["requests"])
@@ -45,10 +45,9 @@ def _request_load_options():
 def get_requests(
     session: SessionDep,
     current_user: CurrentUserDep,
+    pagination: Annotated[PaginationParams, Depends()],
     borrower_id: Annotated[int | None, Query()] = None,
     processed: Annotated[bool | None, Query()] = None,
-    limit: Annotated[int, Query(gt=0, le=100)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
 ):
     effective_borrower_id = borrower_id
     if not has_role(current_user, AccessLevel.CLAP):
@@ -65,11 +64,19 @@ def get_requests(
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 
     statement = (
-        base_statement.options(*_request_load_options()).order_by(asc(Request.start_date)).offset(offset).limit(limit)
+        base_statement.options(*_request_load_options())
+        .order_by(asc(Request.start_date))
+        .offset(pagination.offset())
+        .limit(pagination.limit)
     )
     requests = session.exec(statement).unique().all()
 
-    return PaginatedResponse(items=list(requests), total=total, limit=limit, offset=offset)
+    return PaginatedResponse(
+        items=list(requests),
+        total=total,
+        limit=pagination.limit,
+        page=pagination.page,
+    )
 
 
 @router.get(

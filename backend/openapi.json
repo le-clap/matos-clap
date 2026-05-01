@@ -1574,14 +1574,14 @@
             }
           },
           {
-            "name": "offset",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
               "minimum": 0,
               "default": 0,
-              "title": "Offset"
+              "title": "Page"
             }
           },
           {
@@ -2084,14 +2084,14 @@
             }
           },
           {
-            "name": "offset",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
               "minimum": 0,
               "default": 0,
-              "title": "Offset"
+              "title": "Page"
             }
           },
           {
@@ -3846,9 +3846,9 @@
             "type": "integer",
             "title": "Limit"
           },
-          "offset": {
+          "page": {
             "type": "integer",
-            "title": "Offset"
+            "title": "Page"
           }
         },
         "type": "object",
@@ -3856,7 +3856,7 @@
           "items",
           "total",
           "limit",
-          "offset"
+          "page"
         ],
         "title": "PaginatedResponse[LoanPublic]"
       },
@@ -3877,9 +3877,9 @@
             "type": "integer",
             "title": "Limit"
           },
-          "offset": {
+          "page": {
             "type": "integer",
-            "title": "Offset"
+            "title": "Page"
           }
         },
         "type": "object",
@@ -3887,7 +3887,7 @@
           "items",
           "total",
           "limit",
-          "offset"
+          "page"
         ],
         "title": "PaginatedResponse[RequestPublic]"
       },
