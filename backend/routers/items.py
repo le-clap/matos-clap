@@ -9,9 +9,9 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import Session, select
 
 from db.database import get_session
-from dependencies.auth import require_role
+from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel, Availability, Condition, LoanStatus
-from models.models import Catalog, Item, Loan, LoanedItem
+from models.models import Catalog, Item, Loan, LoanedItem, User
 from schemas.items import ItemPatch, ItemPost, ItemPublic, LoanedItemsResponse, LoanedItemWithLoan
 from services.inventory import item_load_options
 
@@ -19,13 +19,15 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 # Dependency type aliases
 SessionDep = Annotated[Session, Depends(get_session)]
-ManagerDep = Annotated[None, Depends(require_role(AccessLevel.MANAGER))]
-ClapDep = Annotated[None, Depends(require_role(AccessLevel.CLAP))]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
+ManagerDep = Annotated[User, Depends(require_role(AccessLevel.MANAGER))]
 
 
 @router.get("/", response_model=list[ItemPublic])
 def get_items(
     session: SessionDep,
+    _user: CurrentUserDep,
     availability: Annotated[Availability | None, Query()] = None,
     condition: Annotated[Condition | None, Query()] = None,
 ) -> list[Item]:
@@ -115,6 +117,7 @@ def get_loaned_items(
 )
 def get_item_by_id(
     session: SessionDep,
+    _user: CurrentUserDep,
     item_id: Annotated[int, Path(ge=1)],
 ) -> Item:
     statement = select(Item).where(Item.id == item_id).options(*item_load_options())
@@ -131,9 +134,9 @@ def get_item_by_id(
     responses={404: {"description": "Referenced catalog not found"}},
 )
 def create_item(
-    item: ItemPost,
     session: SessionDep,
     _user: ManagerDep,
+    item: ItemPost,
 ) -> Item:
     if not session.get(Catalog, item.catalog_id):
         raise HTTPException(status_code=404, detail=f"Catalog with ID {item.catalog_id} not found")
@@ -151,10 +154,10 @@ def create_item(
     responses={404: {"description": "Item or referenced catalog not found"}},
 )
 def update_item(
-    item_id: Annotated[int, Path(ge=1)],
-    item_patch: ItemPatch,
     session: SessionDep,
     _user: ManagerDep,
+    item_id: Annotated[int, Path(ge=1)],
+    item_patch: ItemPatch,
 ) -> Item:
     db_item = session.get(Item, item_id)
     if not db_item:
@@ -177,9 +180,9 @@ def update_item(
     responses={404: {"description": "Item not found"}},
 )
 def soft_delete_item(
-    item_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ManagerDep,
+    item_id: Annotated[int, Path(ge=1)],
 ) -> None:
     item = session.get(Item, item_id)
     if not item:

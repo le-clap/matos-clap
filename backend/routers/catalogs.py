@@ -9,9 +9,9 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import Session, select
 
 from db.database import get_session
-from dependencies.auth import require_role
+from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel, Availability
-from models.models import Catalog, Category, Item
+from models.models import Catalog, Category, Item, User
 from schemas.catalogs import CatalogPatch, CatalogPost, CatalogPublic
 from schemas.items import ItemAvailabilityResponse
 from services.inventory import find_busy_item_ids, item_load_options
@@ -20,11 +20,12 @@ router = APIRouter(prefix="/catalogs", tags=["catalogs"])
 
 # Dependency type aliases
 SessionDep = Annotated[Session, Depends(get_session)]
-ManagerDep = Annotated[None, Depends(require_role(AccessLevel.MANAGER))]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+ManagerDep = Annotated[User, Depends(require_role(AccessLevel.MANAGER))]
 
 
 @router.get("/", response_model=list[CatalogPublic])
-def get_catalogs(session: SessionDep) -> list[Catalog]:
+def get_catalogs(session: SessionDep, _user: CurrentUserDep) -> list[Catalog]:
     statement = select(Catalog).options(joinedload(Catalog.category))  # ty: ignore[invalid-argument-type]
     return list(session.exec(statement).all())
 
@@ -35,8 +36,9 @@ def get_catalogs(session: SessionDep) -> list[Catalog]:
     responses={404: {"description": "Catalog not found"}},
 )
 def get_catalog_by_id(
-    catalog_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
+    _user: CurrentUserDep,
+    catalog_id: Annotated[int, Path(ge=1)],
 ) -> Catalog:
     statement = (
         select(Catalog)
@@ -58,9 +60,9 @@ def get_catalog_by_id(
     responses={404: {"description": "Category not found"}},
 )
 def create_catalog(
-    catalog: CatalogPost,
     session: SessionDep,
     _user: ManagerDep,
+    catalog: CatalogPost,
 ) -> Catalog:
     if not session.get(Category, catalog.category_id):
         raise HTTPException(status_code=404, detail=f"Category with ID {catalog.category_id} not found")
@@ -78,10 +80,10 @@ def create_catalog(
     responses={404: {"description": "Catalog or referenced category not found"}},
 )
 def update_catalog(
-    catalog_id: Annotated[int, Path(ge=1)],
-    catalog_patch: CatalogPatch,
     session: SessionDep,
     _user: ManagerDep,
+    catalog_id: Annotated[int, Path(ge=1)],
+    catalog_patch: CatalogPatch,
 ) -> Catalog:
     db_catalog = session.get(Catalog, catalog_id)
     if not db_catalog:
@@ -108,9 +110,9 @@ def update_catalog(
     },
 )
 def delete_catalog(
-    catalog_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ManagerDep,
+    catalog_id: Annotated[int, Path(ge=1)],
 ) -> None:
     db_catalog = session.get(Catalog, catalog_id)
     if not db_catalog:
@@ -136,8 +138,9 @@ def delete_catalog(
     },
 )
 def get_catalog_items_availability(
-    catalog_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
+    _user: CurrentUserDep,
+    catalog_id: Annotated[int, Path(ge=1)],
     start_date: Annotated[datetime, Query()],
     end_date: Annotated[datetime, Query()],
 ) -> ItemAvailabilityResponse:

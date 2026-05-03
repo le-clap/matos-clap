@@ -7,20 +7,21 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from db.database import get_session
-from dependencies.auth import require_role
+from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel
-from models.models import Category
+from models.models import Category, User
 from schemas.categories import CategoryPatch, CategoryPost, CategoryPublic
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 # Dependency type aliases
 SessionDep = Annotated[Session, Depends(get_session)]
-ManagerDep = Annotated[None, Depends(require_role(AccessLevel.MANAGER))]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+ManagerDep = Annotated[User, Depends(require_role(AccessLevel.MANAGER))]
 
 
 @router.get("/", response_model=list[CategoryPublic])
-def get_categories(session: SessionDep) -> list[Category]:
+def get_categories(session: SessionDep, _user: CurrentUserDep) -> list[Category]:
     return list(session.exec(select(Category)).all())
 
 
@@ -30,8 +31,9 @@ def get_categories(session: SessionDep) -> list[Category]:
     responses={404: {"description": "Category not found"}},
 )
 def get_category_by_id(
-    category_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
+    _user: CurrentUserDep,
+    category_id: Annotated[int, Path(ge=1)],
 ) -> Category:
     category = session.get(Category, category_id)
     if not category:
@@ -41,9 +43,9 @@ def get_category_by_id(
 
 @router.post("/", response_model=CategoryPublic, status_code=status.HTTP_201_CREATED)
 def create_category(
-    category: CategoryPost,
     session: SessionDep,
     _user: ManagerDep,
+    category: CategoryPost,
 ) -> Category:
     db_category = Category(**category.model_dump())
     session.add(db_category)
@@ -58,10 +60,10 @@ def create_category(
     responses={404: {"description": "Category not found"}},
 )
 def update_category(
-    category_id: Annotated[int, Path(ge=1)],
-    category_patch: CategoryPatch,
     session: SessionDep,
     _user: ManagerDep,
+    category_id: Annotated[int, Path(ge=1)],
+    category_patch: CategoryPatch,
 ) -> Category:
     db_category = session.get(Category, category_id)
     if not db_category:
@@ -83,9 +85,9 @@ def update_category(
     },
 )
 def delete_category(
-    category_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ManagerDep,
+    category_id: Annotated[int, Path(ge=1)],
 ) -> None:
     db_category = session.get(Category, category_id)
     if not db_category:

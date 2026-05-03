@@ -149,9 +149,9 @@ def get_loans_timeline(
     responses={404: {"description": "Loan not found"}},
 )
 def get_loan_by_id(
-    loan_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     current_user: CurrentUserDep,
+    loan_id: Annotated[int, Path(ge=1)],
 ) -> Loan:
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
     loan = session.exec(statement).unique().first()
@@ -172,9 +172,9 @@ def get_loan_by_id(
     },
 )
 def create_loan(
-    payload: LoanPost,
     session: SessionDep,
     current_user: ClapDep,
+    payload: LoanPost,
 ) -> LoanPostResponse:
     if not session.get(User, payload.borrower_id):
         raise HTTPException(status_code=404, detail=f"Borrower with ID {payload.borrower_id} not found")
@@ -263,10 +263,10 @@ def create_loan(
     },
 )
 def partial_return_loan_items(
-    loan_id: Annotated[int, Path(ge=1)],
-    partial_return_data: LoanPartialReturnPost,
     session: SessionDep,
     _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
+    partial_return_data: LoanPartialReturnPost,
 ) -> Loan:
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
     db_loan = session.exec(statement).unique().first()
@@ -332,10 +332,10 @@ def partial_return_loan_items(
     },
 )
 def return_loan(
-    loan_id: Annotated[int, Path(ge=1)],
-    return_data: LoanReturnPost,
     session: SessionDep,
     _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
+    return_data: LoanReturnPost,
 ) -> Loan:
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
     db_loan = session.exec(statement).unique().first()
@@ -402,10 +402,10 @@ def return_loan(
     responses={404: {"description": "Loan not found"}},
 )
 def update_loan(
-    loan_id: Annotated[int, Path(ge=1)],
-    loan_patch: LoanPatch,
     session: SessionDep,
     _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
+    loan_patch: LoanPatch,
 ) -> Loan:
     db_loan = session.get(Loan, loan_id)
     if not db_loan:
@@ -424,9 +424,9 @@ def update_loan(
     responses={404: {"description": "Loan not found"}},
 )
 def delete_loan(
-    loan_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
 ) -> None:
     db_loan = session.get(Loan, loan_id)
     if not db_loan:

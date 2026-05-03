@@ -36,9 +36,9 @@ def get_me(user: CurrentUserDep) -> User:
     responses={404: {"description": "User not found"}},
 )
 def get_user_by_id(
-    user_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ClapDep,
+    user_id: Annotated[int, Path(ge=1)],
 ) -> User:
     user = session.get(User, user_id)
     if not user:
@@ -52,10 +52,10 @@ def get_user_by_id(
     responses={404: {"description": "User not found"}},
 )
 def update_user(
-    user_id: Annotated[int, Path(ge=1)],
-    user_patch: UserPatch,
     session: SessionDep,
     _user: AdminDep,
+    user_id: Annotated[int, Path(ge=1)],
+    user_patch: UserPatch,
 ) -> User:
     db_user = session.get(User, user_id)
     if not db_user:

@@ -28,7 +28,6 @@ router = APIRouter(prefix="/requests", tags=["requests"])
 # Dependency type aliases
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
-UserDep = Annotated[User, Depends(require_role(AccessLevel.USER))]
 ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
 
 
@@ -85,9 +84,9 @@ def get_requests(
     responses={404: {"description": "Request not found"}},
 )
 def get_request_recommendations(
-    request_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
 ) -> RequestRecommendationsResponse:
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
     db_request = session.exec(statement).unique().first()
@@ -180,9 +179,9 @@ def get_request_recommendations(
     responses={404: {"description": "Request not found"}},
 )
 def get_request_by_id(
-    request_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
 ) -> Request:
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
     db_request = session.exec(statement).unique().first()
@@ -201,9 +200,9 @@ def get_request_by_id(
     },
 )
 def create_request(
-    request_data: RequestPost,
     session: SessionDep,
-    current_user: UserDep,
+    current_user: CurrentUserDep,
+    request_data: RequestPost,
 ) -> Request:
     if current_user.id != request_data.borrower_id:
         raise HTTPException(status_code=403, detail="You can not create requests for other users")
@@ -246,10 +245,10 @@ def create_request(
     responses={404: {"description": "Request not found"}},
 )
 def update_request(
-    request_id: Annotated[int, Path(ge=1)],
-    request_patch: RequestPatch,
     session: SessionDep,
     _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
+    request_patch: RequestPatch,
 ) -> Request:
     db_request = session.get(Request, request_id)
     if not db_request:
@@ -268,9 +267,9 @@ def update_request(
     responses={404: {"description": "Request not found"}},
 )
 def delete_request(
-    request_id: Annotated[int, Path(ge=1)],
     session: SessionDep,
     _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
 ) -> None:
     db_request = session.get(Request, request_id)
     if not db_request:
