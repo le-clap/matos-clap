@@ -25,3 +25,11 @@ class Availability(StrEnum):
     AVAILABLE = "available"
     MAINTENANCE = "maintenance"
     RETIRED = "retired"
+
+
+class LoanStatus(StrEnum):
+    """Represents the status of a loan for timeline display."""
+
+    SCHEDULED = "scheduled"
+    ACTIVE = "active"
+    RETURNED = "returned"

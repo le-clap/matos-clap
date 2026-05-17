@@ -1,8 +1,22 @@
-from pydantic import BaseModel, Field
+from fastapi import Query
+from pydantic import BaseModel
 
 
-class FilterParams(BaseModel):
-    limit: int = Field(100, gt=0, le=100)
-    offset: int = Field(0, ge=0)
-    order_by: str | None = None
-    search: str | None = None
+class PaginationParams(BaseModel):
+    """Common pagination parameters for list endpoints."""
+
+    limit: int = Query(50, gt=0, le=100, description="Maximum number of items to return")
+    page: int = Query(0, ge=0, description="Page number")
+
+    def offset(self) -> int:
+        """Calculate offset from page number."""
+        return self.page * self.limit
+
+
+class PaginatedResponse[T](BaseModel):
+    """Generic paginated response wrapper."""
+
+    items: list[T]
+    total: int
+    limit: int
+    page: int

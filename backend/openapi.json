@@ -134,6 +134,40 @@
         ],
         "summary": "Get Categories",
         "operationId": "categories_get_categories",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -148,6 +182,16 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       },
@@ -158,6 +202,22 @@
         "summary": "Create Category",
         "operationId": "categories_create_category",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "session_id",
             "in": "cookie",
@@ -223,7 +283,40 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Category Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -266,7 +359,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Category Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -335,7 +445,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Category Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -385,6 +512,40 @@
         ],
         "summary": "Get Catalogs",
         "operationId": "catalogs_get_catalogs",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -399,6 +560,16 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       },
@@ -409,6 +580,22 @@
         "summary": "Create Catalog",
         "operationId": "catalogs_create_catalog",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "session_id",
             "in": "cookie",
@@ -477,7 +664,40 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -520,7 +740,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -589,7 +826,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -647,6 +901,7 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Catalog Id"
             }
           },
@@ -668,6 +923,38 @@
               "type": "string",
               "format": "date-time",
               "title": "End Date"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -730,6 +1017,38 @@
               ],
               "title": "Condition"
             }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
           }
         ],
         "responses": {
@@ -766,6 +1085,22 @@
         "summary": "Create Item",
         "operationId": "items_create_item",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "session_id",
             "in": "cookie",
@@ -820,6 +1155,89 @@
         }
       }
     },
+    "/api/items/loaned": {
+      "get": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Get Loaned Items",
+        "description": "Get all items that are loaned out during a date range.\n\nReturns items with their associated loan information, useful for\nseeing what equipment is out at any given time.",
+        "operationId": "items_get_loaned_items",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start of the date range",
+              "title": "Start Date"
+            },
+            "description": "Start of the date range"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End of the date range",
+              "title": "End Date"
+            },
+            "description": "End of the date range"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanedItemsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid date range"
+          }
+        }
+      }
+    },
     "/api/items/{item_id}": {
       "get": {
         "tags": [
@@ -834,7 +1252,40 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Item Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
             }
           }
         ],
@@ -877,7 +1328,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Item Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -946,7 +1414,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Item Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -994,6 +1479,22 @@
         "summary": "Get Users",
         "operationId": "users_get_users",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "session_id",
             "in": "cookie",
@@ -1047,6 +1548,22 @@
         "summary": "Get Me",
         "operationId": "users_get_me",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "session_id",
             "in": "cookie",
@@ -1102,7 +1619,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1161,7 +1695,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1259,6 +1810,45 @@
             }
           },
           {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "exclusiveMinimum": 0,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
             "name": "session_id",
             "in": "cookie",
             "required": false,
@@ -1281,11 +1871,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RequestPublic"
-                  },
-                  "title": "Response Requests Get Requests"
+                  "$ref": "#/components/schemas/PaginatedResponse_RequestPublic_"
                 }
               }
             }
@@ -1309,6 +1895,22 @@
         "summary": "Create Request",
         "operationId": "requests_create_request",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "session_id",
             "in": "cookie",
@@ -1347,8 +1949,89 @@
               }
             }
           },
+          "403": {
+            "description": "Attempt to create request for another user"
+          },
           "404": {
             "description": "Borrower or catalog not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests/{request_id}/recommendations": {
+      "get": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Get Request Recommendations",
+        "operationId": "requests_get_request_recommendations",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecommendationsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request not found"
           },
           "422": {
             "description": "Validation Error",
@@ -1377,7 +2060,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1436,7 +2136,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1505,7 +2222,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1586,6 +2320,45 @@
             }
           },
           {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "exclusiveMinimum": 0,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
             "name": "session_id",
             "in": "cookie",
             "required": false,
@@ -1608,11 +2381,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoanPublic"
-                  },
-                  "title": "Response Loans Get Loans"
+                  "$ref": "#/components/schemas/PaginatedResponse_LoanPublic_"
                 }
               }
             }
@@ -1636,6 +2405,22 @@
         "summary": "Create Loan",
         "operationId": "loans_create_loan",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
           {
             "name": "session_id",
             "in": "cookie",
@@ -1669,7 +2454,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoanPublic"
+                  "$ref": "#/components/schemas/LoanPostResponse"
                 }
               }
             }
@@ -1678,14 +2463,90 @@
             "description": "Referenced user, request, or item not found"
           },
           "422": {
-            "description": "Validation Error",
+            "description": "Invalid payload"
+          }
+        }
+      }
+    },
+    "/api/loans/timeline": {
+      "get": {
+        "tags": [
+          "loans"
+        ],
+        "summary": "Get Loans Timeline",
+        "description": "Get all loans overlapping a date range for calendar/timeline display.\n\nReturns loans that have any overlap with [start_date, end_date], including:\n- Loans that start before and end during the range\n- Loans entirely within the range\n- Loans that start during and end after the range\n- Loans that span the entire range",
+        "operationId": "loans_get_loans_timeline",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start of the date range",
+              "title": "Start Date"
+            },
+            "description": "Start of the date range"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End of the date range",
+              "title": "End Date"
+            },
+            "description": "End of the date range"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/LoanTimelineResponse"
                 }
               }
             }
+          },
+          "422": {
+            "description": "Invalid date range"
           }
         }
       }
@@ -1704,7 +2565,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Loan Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1763,7 +2641,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Loan Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1832,7 +2727,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Loan Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1872,13 +2784,13 @@
         }
       }
     },
-    "/api/loans/{loan_id}/items/{loaned_item_id}": {
-      "patch": {
+    "/api/loans/{loan_id}/partial-return": {
+      "post": {
         "tags": [
           "loans"
         ],
-        "summary": "Update Loaned Item",
-        "operationId": "loans_update_loaned_item",
+        "summary": "Partial Return Loan Items",
+        "operationId": "loans_partial_return_loan_items",
         "parameters": [
           {
             "name": "loan_id",
@@ -1886,16 +2798,24 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "title": "Loan Id"
             }
           },
           {
-            "name": "loaned_item_id",
-            "in": "path",
-            "required": true,
+            "name": "authorization",
+            "in": "header",
+            "required": false,
             "schema": {
-              "type": "integer",
-              "title": "Loaned Item Id"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
             }
           },
           {
@@ -1920,7 +2840,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoanedItemPatch"
+                "$ref": "#/components/schemas/LoanPartialReturnPost"
               }
             }
           }
@@ -1931,23 +2851,103 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoanedItemPublic"
+                  "$ref": "#/components/schemas/LoanPublic"
                 }
               }
             }
           },
           "404": {
-            "description": "Loan or loaned item not found"
+            "description": "Loan not found"
+          },
+          "409": {
+            "description": "Loan not started or already returned"
           },
           "422": {
-            "description": "Validation Error",
+            "description": "Invalid partial return payload"
+          }
+        }
+      }
+    },
+    "/api/loans/{loan_id}/return": {
+      "post": {
+        "tags": [
+          "loans"
+        ],
+        "summary": "Return Loan",
+        "operationId": "loans_return_loan",
+        "parameters": [
+          {
+            "name": "loan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Loan Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanReturnPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/LoanPublic"
                 }
               }
             }
+          },
+          "404": {
+            "description": "Loan not found"
+          },
+          "409": {
+            "description": "Loan not started or already returned"
+          },
+          "422": {
+            "description": "Invalid return payload"
           }
         }
       }
@@ -2399,9 +3399,17 @@
             "type": "integer",
             "title": "Deposit Cents"
           },
-          "deleted": {
-            "type": "boolean",
-            "title": "Deleted"
+          "deleted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
           }
         },
         "type": "object",
@@ -2411,10 +3419,49 @@
           "catalog",
           "condition",
           "availability",
-          "deposit_cents",
-          "deleted"
+          "deposit_cents"
         ],
         "title": "ItemPublic"
+      },
+      "LoanPartialReturnItem": {
+        "properties": {
+          "item_id": {
+            "type": "integer",
+            "title": "Item Id"
+          },
+          "return_condition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Condition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id"
+        ],
+        "title": "LoanPartialReturnItem"
+      },
+      "LoanPartialReturnPost": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LoanPartialReturnItem"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "LoanPartialReturnPost"
       },
       "LoanPatch": {
         "properties": {
@@ -2445,7 +3492,8 @@
           "total_deposit_cents": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -2480,7 +3528,8 @@
           "retained_deposit_cents": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -2510,7 +3559,14 @@
             "title": "Borrower Id"
           },
           "assignee_id": {
-            "type": "integer",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Assignee Id"
           },
           "start_date": {
@@ -2525,6 +3581,7 @@
           },
           "total_deposit_cents": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Total Deposit Cents",
             "default": 0
           },
@@ -2550,23 +3607,72 @@
             ],
             "title": "Comments"
           },
-          "loaned_items": {
+          "item_ids": {
             "items": {
-              "$ref": "#/components/schemas/LoanedItemPost"
+              "type": "integer"
             },
             "type": "array",
-            "title": "Loaned Items"
+            "minItems": 1,
+            "title": "Item Ids"
           }
         },
         "type": "object",
         "required": [
           "borrower_id",
-          "assignee_id",
           "start_date",
           "end_date",
-          "loaned_items"
+          "item_ids"
         ],
         "title": "LoanPost"
+      },
+      "LoanPostResponse": {
+        "properties": {
+          "loan": {
+            "$ref": "#/components/schemas/LoanPublic"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/LoanPostWarning"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loan",
+          "warnings"
+        ],
+        "title": "LoanPostResponse"
+      },
+      "LoanPostWarning": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "LoanPostWarning"
       },
       "LoanPublic": {
         "properties": {
@@ -2671,34 +3777,163 @@
         ],
         "title": "LoanPublic"
       },
-      "LoanedItemPatch": {
-        "properties": {
-          "return_condition": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Condition"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "title": "LoanedItemPatch"
-      },
-      "LoanedItemPost": {
+      "LoanReturnItemCondition": {
         "properties": {
           "item_id": {
             "type": "integer",
             "title": "Item Id"
+          },
+          "return_condition": {
+            "$ref": "#/components/schemas/Condition"
           }
         },
         "type": "object",
         "required": [
-          "item_id"
+          "item_id",
+          "return_condition"
         ],
-        "title": "LoanedItemPost"
+        "title": "LoanReturnItemCondition"
+      },
+      "LoanReturnPost": {
+        "properties": {
+          "retained_deposit_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Retained Deposit Cents"
+          },
+          "item_return_conditions": {
+            "items": {
+              "$ref": "#/components/schemas/LoanReturnItemCondition"
+            },
+            "type": "array",
+            "title": "Item Return Conditions"
+          },
+          "comments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "retained_deposit_cents"
+        ],
+        "title": "LoanReturnPost"
+      },
+      "LoanStatus": {
+        "type": "string",
+        "enum": [
+          "scheduled",
+          "active",
+          "returned"
+        ],
+        "title": "LoanStatus",
+        "description": "Represents the status of a loan for timeline display."
+      },
+      "LoanTimelineEntry": {
+        "properties": {
+          "loan_id": {
+            "type": "integer",
+            "title": "Loan Id"
+          },
+          "borrower": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "assignee": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Date"
+          },
+          "actual_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Start Date"
+          },
+          "actual_return_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Return Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LoanStatus"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemBrief"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loan_id",
+          "borrower",
+          "assignee",
+          "start_date",
+          "end_date",
+          "status",
+          "items"
+        ],
+        "title": "LoanTimelineEntry",
+        "description": "A loan entry for calendar/timeline display."
+      },
+      "LoanTimelineResponse": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Date"
+          },
+          "loans": {
+            "items": {
+              "$ref": "#/components/schemas/LoanTimelineEntry"
+            },
+            "type": "array",
+            "title": "Loans"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "end_date",
+          "loans"
+        ],
+        "title": "LoanTimelineResponse",
+        "description": "Response for loans timeline query."
       },
       "LoanedItemPublic": {
         "properties": {
@@ -2708,6 +3943,18 @@
           },
           "item": {
             "$ref": "#/components/schemas/ItemBrief"
+          },
+          "actual_return_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Return Date"
           },
           "return_condition": {
             "anyOf": [
@@ -2726,6 +3973,171 @@
           "item"
         ],
         "title": "LoanedItemPublic"
+      },
+      "LoanedItemWithLoan": {
+        "properties": {
+          "item_id": {
+            "type": "integer",
+            "title": "Item Id"
+          },
+          "item_name": {
+            "type": "string",
+            "title": "Item Name"
+          },
+          "catalog_name": {
+            "type": "string",
+            "title": "Catalog Name"
+          },
+          "loan_id": {
+            "type": "integer",
+            "title": "Loan Id"
+          },
+          "borrower_name": {
+            "type": "string",
+            "title": "Borrower Name"
+          },
+          "loan_start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Loan Start Date"
+          },
+          "loan_end_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Loan End Date"
+          },
+          "actual_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Start Date"
+          },
+          "actual_return_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Return Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LoanStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "item_name",
+          "catalog_name",
+          "loan_id",
+          "borrower_name",
+          "loan_start_date",
+          "loan_end_date",
+          "status"
+        ],
+        "title": "LoanedItemWithLoan",
+        "description": "An item that is currently loaned out, with loan details."
+      },
+      "LoanedItemsResponse": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Date"
+          },
+          "loaned_items": {
+            "items": {
+              "$ref": "#/components/schemas/LoanedItemWithLoan"
+            },
+            "type": "array",
+            "title": "Loaned Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "end_date",
+          "loaned_items"
+        ],
+        "title": "LoanedItemsResponse",
+        "description": "Response for querying items that are loaned out during a date range."
+      },
+      "PaginatedResponse_LoanPublic_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LoanPublic"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "page"
+        ],
+        "title": "PaginatedResponse[LoanPublic]"
+      },
+      "PaginatedResponse_RequestPublic_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RequestPublic"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "page"
+        ],
+        "title": "PaginatedResponse[RequestPublic]"
       },
       "RequestPatch": {
         "properties": {
@@ -2873,10 +4285,10 @@
             ],
             "title": "Reason"
           },
-          "creation_date": {
+          "created_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Creation Date"
+            "title": "Created At"
           },
           "processed": {
             "type": "boolean",
@@ -2897,11 +4309,82 @@
           "phone_number",
           "start_date",
           "end_date",
-          "creation_date",
+          "created_at",
           "processed",
           "requested_catalogs"
         ],
         "title": "RequestPublic"
+      },
+      "RequestRecommendationItem": {
+        "properties": {
+          "item_id": {
+            "type": "integer",
+            "title": "Item Id"
+          },
+          "item_name": {
+            "type": "string",
+            "title": "Item Name"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/Availability"
+          },
+          "has_date_conflict": {
+            "type": "boolean",
+            "title": "Has Date Conflict"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "item_name",
+          "availability",
+          "has_date_conflict"
+        ],
+        "title": "RequestRecommendationItem"
+      },
+      "RequestRecommendationsResponse": {
+        "properties": {
+          "request_id": {
+            "type": "integer",
+            "title": "Request Id"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Date"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RequestedCatalogRecommendation"
+            },
+            "type": "array",
+            "title": "Recommendations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "start_date",
+          "end_date",
+          "recommendations"
+        ],
+        "title": "RequestRecommendationsResponse"
       },
       "RequestedCatalogPost": {
         "properties": {
@@ -2947,6 +4430,51 @@
           "quantity"
         ],
         "title": "RequestedCatalogPublic"
+      },
+      "RequestedCatalogRecommendation": {
+        "properties": {
+          "requested_catalog_id": {
+            "type": "integer",
+            "title": "Requested Catalog Id"
+          },
+          "catalog": {
+            "$ref": "#/components/schemas/CatalogBrief"
+          },
+          "requested_quantity": {
+            "type": "integer",
+            "title": "Requested Quantity"
+          },
+          "recommended_item_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Recommended Item Ids"
+          },
+          "candidate_items": {
+            "items": {
+              "$ref": "#/components/schemas/RequestRecommendationItem"
+            },
+            "type": "array",
+            "title": "Candidate Items"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requested_catalog_id",
+          "catalog",
+          "requested_quantity",
+          "recommended_item_ids",
+          "candidate_items"
+        ],
+        "title": "RequestedCatalogRecommendation"
       },
       "UserBrief": {
         "properties": {

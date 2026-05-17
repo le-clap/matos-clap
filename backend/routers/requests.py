@@ -1,17 +1,34 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+"""Request management endpoints."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, asc, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, has_role, require_role
-from models.enums import AccessLevel
-from models.models import Catalog, Request, RequestedCatalog, User
-from schemas.requests import RequestPatch, RequestPost, RequestPublic
-
-router = APIRouter(
-    prefix="/requests",
-    tags=["requests"],
+from models.enums import AccessLevel, Availability
+from models.models import Catalog, Item, Request, RequestedCatalog, User
+from schemas.catalogs import CatalogBrief
+from schemas.requests import (
+    RequestedCatalogRecommendation,
+    RequestPatch,
+    RequestPost,
+    RequestPublic,
+    RequestRecommendationItem,
+    RequestRecommendationsResponse,
 )
+from schemas.utils import PaginatedResponse, PaginationParams
+from services.inventory import find_busy_item_ids
+
+router = APIRouter(prefix="/requests", tags=["requests"])
+
+# Dependency type aliases
+SessionDep = Annotated[Session, Depends(get_session)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
 
 
 def _request_load_options():
@@ -23,24 +40,137 @@ def _request_load_options():
     ]
 
 
-@router.get("/", response_model=list[RequestPublic])
+@router.get("/", response_model=PaginatedResponse[RequestPublic])
 def get_requests(
-    borrower_id: int | None = None,
-    processed: bool | None = None,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    pagination: Annotated[PaginationParams, Depends()],
+    borrower_id: Annotated[int | None, Query()] = None,
+    processed: Annotated[bool | None, Query()] = None,
 ):
+    effective_borrower_id = borrower_id
     if not has_role(current_user, AccessLevel.CLAP):
-        borrower_id = current_user.id
-    if borrower_id is not None and not session.get(User, borrower_id):
-        raise HTTPException(status_code=404, detail=f"User with ID {borrower_id} not found")
-    statement = select(Request).options(*_request_load_options()).order_by(asc(Request.start_date))
-    if borrower_id is not None:
-        statement = statement.where(Request.borrower_id == borrower_id)
-    if processed is not None:
-        statement = statement.where(Request.processed == processed)
+        effective_borrower_id = current_user.id
+    if effective_borrower_id is not None and not session.get(User, effective_borrower_id):
+        raise HTTPException(status_code=404, detail=f"User with ID {effective_borrower_id} not found")
 
-    return session.exec(statement).unique().all()
+    base_statement = select(Request)
+    if effective_borrower_id is not None:
+        base_statement = base_statement.where(Request.borrower_id == effective_borrower_id)
+    if processed is not None:
+        base_statement = base_statement.where(Request.processed == processed)
+
+    total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
+
+    statement = (
+        base_statement.options(*_request_load_options())
+        .order_by(asc(Request.start_date))
+        .offset(pagination.offset())
+        .limit(pagination.limit)
+    )
+    requests = session.exec(statement).unique().all()
+
+    return PaginatedResponse(
+        items=list(requests),
+        total=total,
+        limit=pagination.limit,
+        page=pagination.page,
+    )
+
+
+@router.get(
+    "/{request_id}/recommendations",
+    response_model=RequestRecommendationsResponse,
+    responses={404: {"description": "Request not found"}},
+)
+def get_request_recommendations(
+    session: SessionDep,
+    _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
+) -> RequestRecommendationsResponse:
+    statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
+    db_request = session.exec(statement).unique().first()
+    if not db_request:
+        raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
+
+    recommendations: list[RequestedCatalogRecommendation] = []
+    if db_request.id is None:
+        raise HTTPException(status_code=500, detail="Invalid request ID")
+
+    for requested_catalog in db_request.requested_catalogs:
+        if requested_catalog.id is None:
+            raise HTTPException(status_code=500, detail="Invalid requested catalog ID")
+        items = session.exec(
+            select(Item)
+            .where(
+                Item.catalog_id == requested_catalog.catalog_id,
+                Item.deleted_at.is_(None),  # ty: ignore[unresolved-attribute]
+            )
+            .order_by(asc(Item.id))
+        ).all()
+
+        item_ids = [item.id for item in items if item.id is not None]
+        busy_item_ids = find_busy_item_ids(session, item_ids, db_request.start_date, db_request.end_date)
+
+        candidate_items: list[RequestRecommendationItem] = []
+        recommended_item_ids: list[int] = []
+        for item in items:
+            has_date_conflict = item.id in busy_item_ids
+            warning: str | None = None
+            if item.availability != Availability.AVAILABLE and has_date_conflict:
+                warning = "Item is not marked available and conflicts with another active loan"
+            elif item.availability != Availability.AVAILABLE:
+                warning = "Item is not marked available"
+            elif has_date_conflict:
+                warning = "Item conflicts with another active loan for the requested dates"
+            else:
+                if item.id is not None and len(recommended_item_ids) < requested_catalog.quantity:
+                    recommended_item_ids.append(item.id)
+
+            if item.id is None:
+                continue
+
+            candidate_items.append(
+                RequestRecommendationItem(
+                    item_id=item.id,
+                    item_name=item.name,
+                    availability=item.availability,
+                    has_date_conflict=has_date_conflict,
+                    warning=warning,
+                )
+            )
+
+        warnings: list[str] = []
+        if len(recommended_item_ids) < requested_catalog.quantity:
+            warnings.append(
+                f"Only {len(recommended_item_ids)} recommended item(s) found for requested quantity "
+                f"{requested_catalog.quantity}"
+            )
+
+        if requested_catalog.catalog.id is None:
+            raise HTTPException(status_code=500, detail="Invalid catalog reference found in request")
+
+        recommendations.append(
+            RequestedCatalogRecommendation(
+                requested_catalog_id=requested_catalog.id,
+                catalog=CatalogBrief(
+                    id=requested_catalog.catalog.id,
+                    name=requested_catalog.catalog.name,
+                    image_path=requested_catalog.catalog.image_path,
+                ),
+                requested_quantity=requested_catalog.quantity,
+                recommended_item_ids=recommended_item_ids,
+                candidate_items=candidate_items,
+                warnings=warnings,
+            )
+        )
+
+    return RequestRecommendationsResponse(
+        request_id=db_request.id,
+        start_date=db_request.start_date,
+        end_date=db_request.end_date,
+        recommendations=recommendations,
+    )
 
 
 @router.get(
@@ -49,8 +179,10 @@ def get_requests(
     responses={404: {"description": "Request not found"}},
 )
 def get_request_by_id(
-    request_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
-):
+    session: SessionDep,
+    _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
+) -> Request:
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
     db_request = session.exec(statement).unique().first()
     if not db_request:
@@ -68,10 +200,10 @@ def get_request_by_id(
     },
 )
 def create_request(
+    session: SessionDep,
+    current_user: CurrentUserDep,
     request_data: RequestPost,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(require_role(AccessLevel.USER)),
-):
+) -> Request:
     if current_user.id != request_data.borrower_id:
         raise HTTPException(status_code=403, detail="You can not create requests for other users")
     if not session.get(User, request_data.borrower_id):
@@ -91,7 +223,8 @@ def create_request(
     session.add(db_request)
     session.flush()
 
-    assert db_request.id is not None
+    if db_request.id is None:
+        raise HTTPException(status_code=500, detail="Failed to create request")
 
     for rc in request_data.requested_catalogs:
         db_rc = RequestedCatalog(
@@ -112,11 +245,11 @@ def create_request(
     responses={404: {"description": "Request not found"}},
 )
 def update_request(
-    request_id: int,
+    session: SessionDep,
+    _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
     request_patch: RequestPatch,
-    session: Session = Depends(get_session),
-    _user=Depends(require_role(AccessLevel.CLAP)),
-):
+) -> Request:
     db_request = session.get(Request, request_id)
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
@@ -134,8 +267,10 @@ def update_request(
     responses={404: {"description": "Request not found"}},
 )
 def delete_request(
-    request_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
-):
+    session: SessionDep,
+    _user: ClapDep,
+    request_id: Annotated[int, Path(ge=1)],
+) -> None:
     db_request = session.get(Request, request_id)
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")

@@ -166,6 +166,7 @@ class LoanedItem(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     loan_id: int = Field(foreign_key="loan.id", index=True, ondelete="CASCADE")
     item_id: int = Field(foreign_key="item.id", index=True, ondelete="RESTRICT")
+    actual_return_date: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     return_condition: Condition | None = Field(
         default=None,
         sa_column=Column(Enum(Condition, name="condition", native_enum=False), nullable=True),

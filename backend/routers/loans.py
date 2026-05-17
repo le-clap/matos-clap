@@ -1,20 +1,36 @@
-from datetime import date
+"""Loan management endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import Date, func
+from datetime import UTC, datetime
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, has_role, require_role
-from models.enums import AccessLevel
+from models.enums import AccessLevel, Condition, LoanStatus
 from models.models import Item, Loan, LoanedItem, Request, User
-from schemas.loans import LoanedItemPatch, LoanedItemPublic, LoanPatch, LoanPost, LoanPublic
-
-router = APIRouter(
-    prefix="/loans",
-    tags=["loans"],
+from schemas.loans import (
+    LoanPartialReturnPost,
+    LoanPatch,
+    LoanPost,
+    LoanPostResponse,
+    LoanPostWarning,
+    LoanPublic,
+    LoanReturnPost,
 )
+from schemas.timeline import LoanTimelineEntry, LoanTimelineResponse
+from schemas.utils import PaginatedResponse, PaginationParams
+from services.inventory import find_busy_item_ids
+
+router = APIRouter(prefix="/loans", tags=["loans"])
+
+# Dependency type aliases
+SessionDep = Annotated[Session, Depends(get_session)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
 
 
 def _loan_load_options():
@@ -25,44 +41,106 @@ def _loan_load_options():
     ]
 
 
-@router.get("/", response_model=list[LoanPublic])
+@router.get("/", response_model=PaginatedResponse[LoanPublic])
 def get_loans(
-    borrower_id: int | None = None,
-    active: bool | None = None,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    pagination: Annotated[PaginationParams, Depends()],
+    borrower_id: Annotated[int | None, Query()] = None,
+    active: Annotated[bool | None, Query()] = None,
 ):
+    effective_borrower_id = borrower_id
     if not has_role(current_user, AccessLevel.CLAP):
-        borrower_id = current_user.id
-    if borrower_id is not None and not session.get(User, borrower_id):
-        raise HTTPException(status_code=404, detail=f"User with ID {borrower_id} not found")
-    statement = select(Loan).options(*_loan_load_options())
-    if borrower_id is not None:
-        statement = statement.where(Loan.borrower_id == borrower_id)
+        effective_borrower_id = current_user.id
+    if effective_borrower_id is not None and not session.get(User, effective_borrower_id):
+        raise HTTPException(status_code=404, detail=f"User with ID {effective_borrower_id} not found")
+
+    base_statement = select(Loan)
+    if effective_borrower_id is not None:
+        base_statement = base_statement.where(Loan.borrower_id == effective_borrower_id)
     if active is True:
-        statement = statement.where(Loan.actual_return_date.is_(None))  # type: ignore[union-attr]
+        base_statement = base_statement.where(Loan.actual_return_date.is_(None))  # ty: ignore[unresolved-attribute]
     elif active is False:
-        statement = statement.where(Loan.actual_return_date.is_not(None))  # type: ignore[union-attr]
-    return session.exec(statement).unique().all()
+        base_statement = base_statement.where(Loan.actual_return_date.is_not(None))  # ty: ignore[unresolved-attribute]
+
+    total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
+
+    statement = base_statement.options(*_loan_load_options()).offset(pagination.offset()).limit(pagination.limit)
+    loans = session.exec(statement).unique().all()
+
+    return PaginatedResponse(
+        items=list(loans),
+        total=total,
+        limit=pagination.limit,
+        page=pagination.page,
+    )
+
+
+def _get_loan_status(loan: Loan) -> LoanStatus:
+    """Determine the status of a loan for timeline display."""
+    if loan.actual_return_date is not None:
+        return LoanStatus.RETURNED
+    if loan.actual_start_date is not None:
+        return LoanStatus.ACTIVE
+    return LoanStatus.SCHEDULED
 
 
 @router.get(
-    "/summary",
-    response_model=list[LoanPublic],
+    "/timeline",
+    response_model=LoanTimelineResponse,
+    responses={422: {"description": "Invalid date range"}},
 )
-def get_loan_summary(
-    summary_date: date, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
-):
+def get_loans_timeline(
+    session: SessionDep,
+    _user: ClapDep,
+    start_date: Annotated[datetime, Query(description="Start of the date range")],
+    end_date: Annotated[datetime, Query(description="End of the date range")],
+) -> LoanTimelineResponse:
+    """Get all loans overlapping a date range for calendar/timeline display.
+
+    Returns loans that have any overlap with [start_date, end_date], including:
+    - Loans that start before and end during the range
+    - Loans entirely within the range
+    - Loans that start during and end after the range
+    - Loans that span the entire range
+    """
+    if start_date >= end_date:
+        raise HTTPException(status_code=422, detail="start_date must be before end_date")
+
     effective_start = func.coalesce(Loan.actual_start_date, Loan.start_date)
     effective_end = func.coalesce(Loan.actual_return_date, Loan.end_date)
 
     statement = (
         select(Loan)
         .options(*_loan_load_options())
-        .where(func.cast(effective_start, Date) <= summary_date, func.cast(effective_end, Date) >= summary_date)
+        .where(
+            effective_start < end_date,
+            effective_end > start_date,
+        )
+        .order_by(effective_start)
     )
     loans = session.exec(statement).unique().all()
-    return loans
+
+    timeline_entries = [
+        LoanTimelineEntry(
+            loan_id=loan.id,  # ty: ignore[invalid-argument-type]
+            borrower=loan.borrower,  # ty: ignore[invalid-argument-type]
+            assignee=loan.assignee,  # ty: ignore[invalid-argument-type]
+            start_date=loan.start_date,
+            end_date=loan.end_date,
+            actual_start_date=loan.actual_start_date,
+            actual_return_date=loan.actual_return_date,
+            status=_get_loan_status(loan),
+            items=[item.item for item in loan.loaned_items],  # ty: ignore[invalid-argument-type]
+        )
+        for loan in loans
+    ]
+
+    return LoanTimelineResponse(
+        start_date=start_date,
+        end_date=end_date,
+        loans=timeline_entries,
+    )
 
 
 @router.get(
@@ -71,8 +149,10 @@ def get_loan_summary(
     responses={404: {"description": "Loan not found"}},
 )
 def get_loan_by_id(
-    loan_id: int, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)
-):
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    loan_id: Annotated[int, Path(ge=1)],
+) -> Loan:
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
     loan = session.exec(statement).unique().first()
     if not loan:
@@ -84,45 +164,233 @@ def get_loan_by_id(
 
 @router.post(
     "/",
-    response_model=LoanPublic,
+    response_model=LoanPostResponse,
     status_code=status.HTTP_201_CREATED,
-    responses={404: {"description": "Referenced user, request, or item not found"}},
+    responses={
+        404: {"description": "Referenced user, request, or item not found"},
+        422: {"description": "Invalid payload"},
+    },
 )
 def create_loan(
-    loan_data: LoanPost, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
-):
-    if not session.get(User, loan_data.borrower_id):
-        raise HTTPException(status_code=404, detail=f"Borrower with ID {loan_data.borrower_id} not found")
-    if not session.get(User, loan_data.assignee_id):
-        raise HTTPException(status_code=404, detail=f"Assignee with ID {loan_data.assignee_id} not found")
-    if loan_data.request_id is not None and not session.get(Request, loan_data.request_id):
-        raise HTTPException(status_code=404, detail=f"Request with ID {loan_data.request_id} not found")
+    session: SessionDep,
+    current_user: ClapDep,
+    payload: LoanPost,
+) -> LoanPostResponse:
+    if not session.get(User, payload.borrower_id):
+        raise HTTPException(status_code=404, detail=f"Borrower with ID {payload.borrower_id} not found")
 
-    for li in loan_data.loaned_items:
-        if not session.get(Item, li.item_id):
-            raise HTTPException(status_code=404, detail=f"Item with ID {li.item_id} not found")
+    assignee_id = payload.assignee_id or current_user.id
+    if assignee_id is None:
+        raise HTTPException(status_code=500, detail="Unable to infer assignee_id from current user")
+    if not session.get(User, assignee_id):
+        raise HTTPException(status_code=404, detail=f"Assignee with ID {assignee_id} not found")
+
+    db_request: Request | None = None
+    if payload.request_id is not None:
+        db_request = session.get(Request, payload.request_id)
+        if not db_request:
+            raise HTTPException(status_code=404, detail=f"Request with ID {payload.request_id} not found")
+        if db_request.borrower_id != payload.borrower_id:
+            raise HTTPException(
+                status_code=422,
+                detail="request_id borrower does not match borrower_id",
+            )
+
+    unique_item_ids = list(dict.fromkeys(payload.item_ids))
+    if len(unique_item_ids) != len(payload.item_ids):
+        raise HTTPException(status_code=422, detail="Duplicate item IDs are not allowed")
+
+    items = session.exec(select(Item).where(Item.id.in_(unique_item_ids))).all()  # ty: ignore[unresolved-attribute]
+    item_by_id = {item.id: item for item in items if item.id is not None}
+    missing_item_ids = [item_id for item_id in unique_item_ids if item_id not in item_by_id]
+    if missing_item_ids:
+        raise HTTPException(status_code=404, detail=f"Item(s) not found: {missing_item_ids}")
+
+    deleted_item_ids = [item.id for item in items if item.id is not None and item.deleted_at is not None]
+    if deleted_item_ids:
+        raise HTTPException(status_code=422, detail=f"Deleted item(s) cannot be assigned: {deleted_item_ids}")
+
+    warnings: list[LoanPostWarning] = []
+    busy_item_ids = find_busy_item_ids(session, unique_item_ids, payload.start_date, payload.end_date)
+    for item_id in unique_item_ids:
+        if item_id in busy_item_ids:
+            warnings.append(
+                LoanPostWarning(
+                    code="ITEM_DATE_CONFLICT",
+                    message=f"Item {item_id} overlaps with another active loan for this date range",
+                    item_id=item_id,
+                )
+            )
 
     db_loan = Loan(
-        borrower_id=loan_data.borrower_id,
-        assignee_id=loan_data.assignee_id,
-        start_date=loan_data.start_date,
-        end_date=loan_data.end_date,
-        total_deposit_cents=loan_data.total_deposit_cents,
-        request_id=loan_data.request_id,
-        comments=loan_data.comments,
+        borrower_id=payload.borrower_id,
+        assignee_id=assignee_id,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        total_deposit_cents=payload.total_deposit_cents,
+        request_id=payload.request_id,
+        comments=payload.comments,
     )
     session.add(db_loan)
     session.flush()
+    if db_loan.id is None:
+        raise HTTPException(status_code=500, detail="Failed to create loan")
 
-    assert db_loan.id is not None
+    for item_id in unique_item_ids:
+        session.add(LoanedItem(loan_id=db_loan.id, item_id=item_id))
 
-    for li in loan_data.loaned_items:
-        db_li = LoanedItem(
-            loan_id=db_loan.id,
-            item_id=li.item_id,
+    if db_request is not None:
+        db_request.processed = True
+        session.add(db_request)
+
+    session.commit()
+
+    created_loan = (
+        session.exec(select(Loan).where(Loan.id == db_loan.id).options(*_loan_load_options())).unique().first()
+    )
+    if not created_loan:
+        raise HTTPException(status_code=500, detail="Loan was created but could not be reloaded")
+    return LoanPostResponse(loan=created_loan, warnings=warnings)  # ty: ignore[invalid-argument-type]
+
+
+@router.post(
+    "/{loan_id}/partial-return",
+    response_model=LoanPublic,
+    responses={
+        404: {"description": "Loan not found"},
+        409: {"description": "Loan not started or already returned"},
+        422: {"description": "Invalid partial return payload"},
+    },
+)
+def partial_return_loan_items(
+    session: SessionDep,
+    _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
+    partial_return_data: LoanPartialReturnPost,
+) -> Loan:
+    statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
+    db_loan = session.exec(statement).unique().first()
+    if not db_loan:
+        raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    if db_loan.actual_start_date is None:
+        raise HTTPException(status_code=409, detail=f"Loan with ID {loan_id} has not been started yet")
+    if db_loan.actual_return_date is not None:
+        raise HTTPException(status_code=409, detail=f"Loan with ID {loan_id} is already returned")
+
+    payload_item_ids = [item.item_id for item in partial_return_data.items]
+    unique_item_ids = list(dict.fromkeys(payload_item_ids))
+    if len(unique_item_ids) != len(payload_item_ids):
+        raise HTTPException(status_code=422, detail="Duplicate item_id values are not allowed")
+
+    loaned_item_by_item_id = {loaned_item.item_id: loaned_item for loaned_item in db_loan.loaned_items}
+    unknown_item_ids = [item_id for item_id in unique_item_ids if item_id not in loaned_item_by_item_id]
+    if unknown_item_ids:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Some items are not present in this loan: {unknown_item_ids}",
         )
-        session.add(db_li)
 
+    already_returned_ids = [
+        item_id for item_id in unique_item_ids if loaned_item_by_item_id[item_id].actual_return_date is not None
+    ]
+    if already_returned_ids:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Some items were already partially returned: {already_returned_ids}",
+        )
+
+    returned_at = datetime.now(UTC)
+    if returned_at < db_loan.actual_start_date:
+        raise HTTPException(status_code=422, detail="Partial return date cannot be before actual_start_date")
+
+    for item in partial_return_data.items:
+        db_loaned_item = loaned_item_by_item_id[item.item_id]
+        db_loaned_item.actual_return_date = returned_at
+        if item.return_condition is not None:
+            db_loaned_item.return_condition = item.return_condition
+        session.add(db_loaned_item)
+
+    remaining_items = [loaned_item for loaned_item in db_loan.loaned_items if loaned_item.actual_return_date is None]
+    if not remaining_items:
+        raise HTTPException(
+            status_code=422,
+            detail="Partial return must leave at least one loaned item still active",
+        )
+
+    session.commit()
+    session.refresh(db_loan)
+    return db_loan
+
+
+@router.post(
+    "/{loan_id}/return",
+    response_model=LoanPublic,
+    responses={
+        404: {"description": "Loan not found"},
+        409: {"description": "Loan not started or already returned"},
+        422: {"description": "Invalid return payload"},
+    },
+)
+def return_loan(
+    session: SessionDep,
+    _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
+    return_data: LoanReturnPost,
+) -> Loan:
+    statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
+    db_loan = session.exec(statement).unique().first()
+    if not db_loan:
+        raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    if db_loan.actual_start_date is None:
+        raise HTTPException(status_code=409, detail=f"Loan with ID {loan_id} has not been started yet")
+    if db_loan.actual_return_date is not None:
+        raise HTTPException(status_code=409, detail=f"Loan with ID {loan_id} is already returned")
+    if return_data.retained_deposit_cents > db_loan.total_deposit_cents:
+        raise HTTPException(status_code=422, detail="retained_deposit_cents cannot exceed total_deposit_cents")
+
+    if return_data.item_return_conditions:
+        condition_by_item_id: dict[int, Condition] = {}
+        for item_condition in return_data.item_return_conditions:
+            if item_condition.item_id in condition_by_item_id:
+                raise HTTPException(status_code=422, detail=f"Duplicate item_id in payload: {item_condition.item_id}")
+            condition_by_item_id[item_condition.item_id] = item_condition.return_condition
+
+        loaned_item_by_item_id = {loaned_item.item_id: loaned_item for loaned_item in db_loan.loaned_items}
+        unknown_item_ids = [item_id for item_id in condition_by_item_id if item_id not in loaned_item_by_item_id]
+        if unknown_item_ids:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Some item_return_conditions refer to items not present in this loan: {unknown_item_ids}",
+            )
+
+        for item_id, condition in condition_by_item_id.items():
+            db_loaned_item = loaned_item_by_item_id[item_id]
+            db_loaned_item.return_condition = condition
+            session.add(db_loaned_item)
+
+    returned_at = datetime.now(UTC)
+    if returned_at < db_loan.actual_start_date:
+        raise HTTPException(status_code=422, detail="Return date cannot be before actual_start_date")
+
+    for loaned_item in db_loan.loaned_items:
+        if loaned_item.actual_return_date is not None and loaned_item.actual_return_date > returned_at:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Loaned item {loaned_item.item_id} has actual_return_date after loan return date, "
+                    "which violates return ordering"
+                ),
+            )
+        if loaned_item.actual_return_date is None:
+            loaned_item.actual_return_date = returned_at
+            session.add(loaned_item)
+
+    db_loan.actual_return_date = returned_at
+    db_loan.retained_deposit_cents = return_data.retained_deposit_cents
+    if return_data.comments is not None:
+        db_loan.comments = return_data.comments
+
+    session.add(db_loan)
     session.commit()
     session.refresh(db_loan)
     return db_loan
@@ -134,11 +402,11 @@ def create_loan(
     responses={404: {"description": "Loan not found"}},
 )
 def update_loan(
-    loan_id: int,
+    session: SessionDep,
+    _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
     loan_patch: LoanPatch,
-    session: Session = Depends(get_session),
-    _user=Depends(require_role(AccessLevel.CLAP)),
-):
+) -> Loan:
     db_loan = session.get(Loan, loan_id)
     if not db_loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
@@ -155,40 +423,14 @@ def update_loan(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={404: {"description": "Loan not found"}},
 )
-def delete_loan(loan_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))):
+def delete_loan(
+    session: SessionDep,
+    _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
+) -> None:
     db_loan = session.get(Loan, loan_id)
     if not db_loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
 
     session.delete(db_loan)
     session.commit()
-
-
-@router.patch(
-    "/{loan_id}/items/{loaned_item_id}",
-    response_model=LoanedItemPublic,
-    responses={404: {"description": "Loan or loaned item not found"}},
-)
-def update_loaned_item(
-    loan_id: int,
-    loaned_item_id: int,
-    loaned_item_patch: LoanedItemPatch,
-    session: Session = Depends(get_session),
-    _user=Depends(require_role(AccessLevel.CLAP)),
-):
-    statement = (
-        select(LoanedItem)
-        .where(LoanedItem.id == loaned_item_id, LoanedItem.loan_id == loan_id)
-        .options(
-            joinedload(LoanedItem.item),  # ty: ignore[invalid-argument-type]
-        )
-    )
-    db_li = session.exec(statement).first()
-    if not db_li:
-        raise HTTPException(status_code=404, detail=f"Loaned item {loaned_item_id} not found in loan {loan_id}")
-
-    db_li.sqlmodel_update(loaned_item_patch.model_dump(exclude_unset=True))
-    session.add(db_li)
-    session.commit()
-    session.refresh(db_li)
-    return db_li

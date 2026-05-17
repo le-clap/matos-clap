@@ -25,9 +25,8 @@ class Settings(BaseSettings):
             )
         return self
 
-    CLA_HOST: str = ""
-    CLA_IDENTIFIER: str = ""
-    CLA_CALLBACK_URL: str = "http://localhost:5173/api/auth/cla/callback"
+    CLA_HOST: str = "https://centralelilleassos.fr"
+    CLA_IDENTIFIER: str = "matos-clap"
 
     SESSION_COOKIE_NAME: str = "session_id"
     SESSION_COOKIE_SECURE: bool = False

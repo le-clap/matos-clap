@@ -11,18 +11,20 @@ def get_auth_url() -> str:
 
 async def validate_ticket(ticket: str) -> dict | None:
     url = f"{settings.CLA_HOST}/authentification/{settings.CLA_IDENTIFIER}/{ticket}"
-
-    try:
-        async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        try:
             response = await client.get(url)
-
-        if response.status_code != 200:
+        except httpx.HTTPError:
             return None
 
-        data = response.json()
-        return data["payload"] if data.get("success") else None
-    except Exception:
+    if response.status_code != 200:
         return None
+
+    data = response.json()
+    payload = data.get("payload")
+    if data.get("success") and isinstance(payload, dict):
+        return payload
+    return None
 
 
 def create_or_update_user(session, cla_data: dict) -> User:

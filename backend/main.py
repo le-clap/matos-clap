@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from core.config import settings
-from db.seed import seed_data
 from routers import catalogs, categories, items, loans, requests, users
 from routers.auth import router as auth_router
 
@@ -19,7 +18,6 @@ def _unique_id(route: APIRoute) -> str:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     print("Starting up...")
-    seed_data()
 
     yield
 
@@ -36,7 +34,7 @@ app = FastAPI(
 )
 
 app.add_middleware(
-    CORSMiddleware,  # ty: ignore[invalid-argument-type]
+    CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],

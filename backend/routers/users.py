@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+"""User management endpoints."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlmodel import Session, select
 
 from db.database import get_session
@@ -7,19 +11,22 @@ from models.enums import AccessLevel
 from models.models import User
 from schemas.users import UserPatch, UserPublic
 
-router = APIRouter(
-    prefix="/users",
-    tags=["users"],
-)
+router = APIRouter(prefix="/users", tags=["users"])
+
+# Dependency type aliases
+SessionDep = Annotated[Session, Depends(get_session)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
+AdminDep = Annotated[User, Depends(require_role(AccessLevel.ADMIN))]
 
 
 @router.get("/", response_model=list[UserPublic])
-def get_users(session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))):
-    return session.exec(select(User)).all()
+def get_users(session: SessionDep, _user: ClapDep) -> list[User]:
+    return list(session.exec(select(User)).all())
 
 
 @router.get("/me", response_model=UserPublic)
-def get_me(user: User = Depends(get_current_user)):
+def get_me(user: CurrentUserDep) -> User:
     return user
 
 
@@ -29,8 +36,10 @@ def get_me(user: User = Depends(get_current_user)):
     responses={404: {"description": "User not found"}},
 )
 def get_user_by_id(
-    user_id: int, session: Session = Depends(get_session), _user=Depends(require_role(AccessLevel.CLAP))
-):
+    session: SessionDep,
+    _user: ClapDep,
+    user_id: Annotated[int, Path(ge=1)],
+) -> User:
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
@@ -43,11 +52,11 @@ def get_user_by_id(
     responses={404: {"description": "User not found"}},
 )
 def update_user(
-    user_id: int,
+    session: SessionDep,
+    _user: AdminDep,
+    user_id: Annotated[int, Path(ge=1)],
     user_patch: UserPatch,
-    session: Session = Depends(get_session),
-    _user=Depends(require_role(AccessLevel.ADMIN)),
-):
+) -> User:
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")

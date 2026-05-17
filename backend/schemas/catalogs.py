@@ -4,6 +4,8 @@ from schemas.categories import CategoryPublic
 
 
 class CatalogBrief(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: int
     name: str
     image_path: str | None = None
@@ -24,6 +26,8 @@ class CatalogPatch(BaseModel):
 
 
 class CatalogPublic(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: int
     name: str
     description: str | None = None
