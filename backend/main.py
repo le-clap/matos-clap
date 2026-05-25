@@ -25,7 +25,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    # lifespan=lifespan,
+    lifespan=lifespan,
     title="MATOS CLAP",
     version="0.1.0",
     docs_url="/docs",

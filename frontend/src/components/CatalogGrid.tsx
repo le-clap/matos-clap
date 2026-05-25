@@ -1,4 +1,3 @@
-import type {CatalogItem} from "@/types/CatalogItem.ts";
 import clapLogo from "@/assets/logos/Logo CLAP.png";
 import type {FC} from "react";
 
@@ -9,9 +8,10 @@ import {
   ItemTitle,
 } from "@/components/ui/item"
 import {Spinner} from "@/components/ui/spinner.tsx";
+import type {CatalogPublic} from "@/client";
 
 export interface CatalogGridProps {
-  items: CatalogItem[] | undefined;
+  items: CatalogPublic[] | undefined;
   isLoading: boolean;
   error?: Error;
 }
@@ -39,7 +39,7 @@ const CatalogGrid: FC<CatalogGridProps> = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {/* Boucle pour afficher les items */}
-      {items?.map((item: CatalogItem) => (
+      {items?.map((item: CatalogPublic) => (
         <div key={item.id} className="flex flex-col bg-secondary text-secondary-foreground p-4 rounded-lg gap-3 justify-between">
           <h2 className="text-xl font-bold">{item.name}</h2>
           <p className="text-muted-foreground">{item.description}</p>
