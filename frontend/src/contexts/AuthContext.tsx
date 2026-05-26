@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = () => {
     // Redirige vers la route backend qui gère le SSO/CLA
-    window.location.href = '/api/auth/dev/login';
+    window.location.href = '/api/auth/dev/login'; // TODO : Remplacer par auth/login quand le endpoint authentification/matos-clap existera chez CLA
   };
 
   const logout = async () => {

@@ -1,20 +1,10 @@
 import {Github, Instagram, Linkedin} from 'lucide-react';
 import clapLogo from '@/assets/logos/Logo CLAP.png';
 import RezoleoLogoBlack from '@/assets/logos/LogoRezoleoBlack.svg';
-import React from 'react';
-import {useNavigate} from 'react-router-dom';
-
+import {useHandleNavigation} from "@/hooks/useHandleNavigation.ts";
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const navigate = useNavigate();
-
-  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
-    if (path.startsWith('/')) { // Ne se déclenche que si le chemin est interne. Sinon, laisse faire le navigateur
-    e.preventDefault(); // Bloque le rechargement standard du navigateur
-    navigate(path);     // Utilise le routeur React
-    window.scrollTo(0, 0); // Remonte en haut de page après le clic
-    }
-  };
+  const handleNavigation = useHandleNavigation();
 
   return (
     <footer className="w-full border-t border-muted-foreground bg-secondary">

@@ -127,6 +127,25 @@
         }
       }
     },
+    "/api/auth/dev/login": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Dev Login",
+        "operationId": "auth_dev_login",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories/": {
       "get": {
         "tags": [
@@ -3798,7 +3817,6 @@
         "properties": {
           "retained_deposit_cents": {
             "type": "integer",
-            "minimum": 0.0,
             "title": "Retained Deposit Cents"
           },
           "item_return_conditions": {
@@ -3822,7 +3840,8 @@
         },
         "type": "object",
         "required": [
-          "retained_deposit_cents"
+          "retained_deposit_cents",
+          "item_return_conditions"
         ],
         "title": "LoanReturnPost"
       },

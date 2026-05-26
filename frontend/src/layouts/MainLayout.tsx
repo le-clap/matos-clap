@@ -1,5 +1,6 @@
-import {Outlet, useNavigate} from 'react-router-dom';
+import {Outlet} from 'react-router-dom';
 import Footer from "@/components/Footer";
+import {useHandleNavigation} from "@/hooks/useHandleNavigation.ts";
 
 // import CardNav from "@/components/ui/CardNav";
 import NavMenu, {type NavMenuItem} from "@/components/NavMenu.tsx";
@@ -33,7 +34,7 @@ const MainLayout = () => {
       ]
     }
   ];
-  const navigate = useNavigate();
+  const handleNavigation = useHandleNavigation();
 
   return (
 
@@ -43,10 +44,7 @@ const MainLayout = () => {
       <div className="fixed z-3 flex gap-3 p-3 px-3 justify-between w-full border-foreground border-b bg-transparent backdrop-blur-xl">
         <div className="left-menu flex">
           <div className="flex items-center gap-3">
-            <a onClick={(e) => {
-              e.preventDefault();
-              navigate('/');
-            }} href='/'>
+            <a onClick={handleNavigation('/')} href='/'>
               <img src={clapLogo} alt="Logo CLAP" className="h-10 w-auto"/>
             </a>
             <div className="h-6 w-0.5 rounded-full bg-foreground "></div>

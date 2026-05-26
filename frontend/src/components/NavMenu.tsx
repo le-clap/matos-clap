@@ -5,12 +5,13 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 
-import {useNavigate} from "react-router-dom";
-import React from "react";
 import type {FC} from "react";
+import React from "react";
 
+import {useHandleNavigation} from "@/hooks/useHandleNavigation.ts";
 
 type NavMenuLink = {
   label: string;
@@ -21,8 +22,7 @@ type NavMenuLink = {
 
 export type NavMenuItem = {
   label: string;
-  links: NavMenuLink[];
-};
+  links: NavMenuLink[]; };
 
 export interface NavMenuProps {
   items: NavMenuItem[];
@@ -34,33 +34,44 @@ const NavMenu: FC<NavMenuProps> = ({
                                      className,
                                    }) => {
 
-  const navigate = useNavigate();
-
-  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
-    if (path.startsWith('/')) { // Ne se déclenche que si le chemin est interne. Sinon, laisse faire le navigateur
-      e.preventDefault(); // Bloque le rechargement standard du navigateur
-      navigate(path);     // Utilise le routeur React
-      window.scrollTo(0, 0); // Remonte en haut de page après le clic
-    }
-  };
+  const handleNavigation = useHandleNavigation();
 
   return (
     <div className={`flex ${className}`}>
       <NavigationMenu>
         <NavigationMenuList>
-          {items?.map((item, idx) => (
-            <NavigationMenuItem key={idx}>
-              <NavigationMenuTrigger className={'bg-transparent'}>{item.label}</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="w-max flex flex-row gap-3">
-                  {item.links?.map((link) => (
-                    <ListItem href={link.href} key={link.href} title={link.label}
-                                        onClick={handleNavigation(link.href)}>{link.desc}</ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          ))}
+          {items?.map((item, idx) => {
+            if (item.links && item.links.length > 1) {
+              return (
+                <NavigationMenuItem key={idx}>
+                  <NavigationMenuTrigger className={'bg-transparent'}>{item.label}</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="w-max flex flex-row gap-3">
+                      {item.links?.map((link) => (
+                        <ListItem href={link.href} key={link.href} title={link.label}
+                                  onClick={handleNavigation(link.href)}>{link.desc}</ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              );
+            }
+            if (item.links) {
+              return (
+                <NavigationMenuItem key={idx}>
+                  <NavigationMenuLink
+                    href={item.links[0].href}
+                    onClick={handleNavigation(item.links[0].href)}
+                    className={`${navigationMenuTriggerStyle()} bg-transparent`}
+                  >
+                    {item.label}
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              );
+            }
+
+            return null;
+          })}
         </NavigationMenuList>
       </NavigationMenu>
     </div>
