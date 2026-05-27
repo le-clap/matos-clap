@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MATOS CLAP",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "paths": {
     "/": {
@@ -3817,6 +3817,7 @@
         "properties": {
           "retained_deposit_cents": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Retained Deposit Cents"
           },
           "item_return_conditions": {
@@ -3840,8 +3841,7 @@
         },
         "type": "object",
         "required": [
-          "retained_deposit_cents",
-          "item_return_conditions"
+          "retained_deposit_cents"
         ],
         "title": "LoanReturnPost"
       },

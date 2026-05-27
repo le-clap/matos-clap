@@ -1,5 +1,3 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
@@ -15,19 +13,9 @@ def _unique_id(route: APIRoute) -> str:
     return tag + route.name
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    print("Starting up...")
-
-    yield
-
-    print("Shutting down...")
-
-
 app = FastAPI(
-    lifespan=lifespan,
     title="MATOS CLAP",
-    version="0.1.0",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     generate_unique_id_function=_unique_id,
