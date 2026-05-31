@@ -15,7 +15,8 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: str = ""
 
-    DEBUG: bool = True
+    DEBUG: bool = False
+    ENABLE_DEV_LOGIN: bool = False
 
     @model_validator(mode="after")
     def build_database_url(self) -> Settings:

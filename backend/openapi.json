@@ -127,25 +127,6 @@
         }
       }
     },
-    "/api/auth/dev/login": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Dev Login",
-        "operationId": "auth_dev_login",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/categories/": {
       "get": {
         "tags": [

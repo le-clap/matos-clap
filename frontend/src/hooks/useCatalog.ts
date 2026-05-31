@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import type {CatalogsGetCatalogsResponses} from "@/client";
+import type {CatalogsGetCatalogsResponse} from "@/client";
 
 
-const fetchCatalog = async (): Promise<CatalogsGetCatalogsResponses> => {
+const fetchCatalog = async (): Promise<CatalogsGetCatalogsResponse> => {
   const response = await fetch("/api/catalogs");
   if (!response.ok) {
     throw new Error("Erreur réseau");

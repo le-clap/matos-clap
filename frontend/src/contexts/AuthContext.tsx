@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import {createContext, type ReactNode, useContext, useEffect, useState} from 'react';
 import type {UserPublic} from '@/client';
 
 interface AuthContextType {
@@ -34,13 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = () => {
-    // Redirige vers la route backend qui gère le SSO/CLA
-    window.location.href = '/api/auth/dev/login'; // TODO : Remplacer par auth/login quand le endpoint authentification/matos-clap existera chez CLA
+    const devLoginEnabled = import.meta.env.VITE_ENABLE_DEV_LOGIN === 'true';
+    window.location.href = devLoginEnabled ? '/api/auth/dev-login' : '/api/auth/login';
   };
 
   const logout = async () => {
     try {
-      // Appelle la route POST /logout de FastAPI
       await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
     } catch (error) {
