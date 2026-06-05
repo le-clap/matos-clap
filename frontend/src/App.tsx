@@ -11,33 +11,43 @@ import Cart from "@/pages/Cart"
 import Error from "@/pages/Error"
 
 import {ThemeProvider} from "@/components/ThemeProvider"
-
-// Create placeholder components for pages you haven't built yet
+import ProtectedRoute from "@/components/ProtectedRoute"
+// import {AccessLevel} from "@/client";
+import {AuthProvider} from "@/contexts/AuthContext.tsx";
 
 const Admin = () => <div className="p-20 min-h-screen text-white">Page Gestion (1.5)</div>
 
 const App = () => {
   return (
     <ThemeProvider defaultTheme={"dark"} storageKey="vite-ui-theme">
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Parent Route uses the Layout */}
+            <Route path="/" element={<MainLayout/>}>
 
-      <BrowserRouter>
-        <Routes>
-          {/* Parent Route uses the Layout */}
-          <Route path="/" element={<MainLayout/>}>
+              {/* Child Routes render inside the Layout's <Outlet /> */}
+              <Route index element={<Home/>}/>
 
-            {/* Child Routes render inside the Layout's <Outlet /> */}
-            <Route index element={<Home/>}/>
-            <Route path="inventory" element={<Inventory/>}/>
-            <Route path="my-loans" element={<MyLoans/>}/>
-            <Route path="new-loan" element={<NewLoan/>}/>
-            <Route path="cart" element={<Cart/>}/>
-            <Route path="admin" element={<Admin/>}/>
+              <Route element={<ProtectedRoute/>}>
+                <Route path="inventory" element={<Inventory/>}/>
+                <Route path="my-loans" element={<MyLoans/>}/>
+                <Route path="new-loan" element={<NewLoan/>}/>
+                <Route path="cart" element={<Cart/>}/>
+              </Route>
 
-            {/* Fallback for 404 */}
-            <Route path="*" element={<Error/>}/>
-          </Route>
-        </Routes>
-      </BrowserRouter>
+              <Route element={<ProtectedRoute allowedRoles={["admin"]}/>}>
+                <Route path="admin" element={<Admin/>}/>
+              </Route>
+
+              {/* Fallback for 404 */}
+              <Route path="*" element={<Error/>}/>
+            </Route>
+          </Routes>
+        </BrowserRouter>
+
+      </AuthProvider>
+
 
     </ThemeProvider>
   )

@@ -79,9 +79,9 @@ def logout(
     return response
 
 
-if settings.DEBUG:
+if settings.ENABLE_DEV_LOGIN:
 
-    @router.get("/dev/login")
+    @router.get("/dev-login", include_in_schema=False)
     def dev_login(db: SessionDep) -> RedirectResponse:
         user = db.exec(select(User)).first()
         if not user:

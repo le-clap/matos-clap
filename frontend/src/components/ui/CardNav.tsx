@@ -149,7 +149,7 @@ const CardNav: React.FC<CardNavProps> = ({
 
   return (
     <div
-      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-200 z-50 top-[1.2em] md:top-[2.5em] ${className}`}
+      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-200 z-50 top-[0.9em] md:top-[1.1em] ${className}`}
     >
       <nav
         ref={navRef}
@@ -227,7 +227,7 @@ const CardNav: React.FC<CardNavProps> = ({
             <div
               key={idx}
               ref={setCardRef(idx)}
-              className="nav-card relative flex flex-col gap-2 p-4 rounded-lg flex-1 min-h-15"
+              className="nav-card relative flex flex-col gap-2 p-4 rounded-lg flex-1 md:min-h-15"
               style={{backgroundColor: item.bgColor, color: item.textColor}}
             >
               <div className="font-medium text-lg">{item.label}</div>
