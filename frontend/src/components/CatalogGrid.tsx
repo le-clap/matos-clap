@@ -13,7 +13,7 @@ import type {CatalogPublic} from "@/client";
 export interface CatalogGridProps {
   items: CatalogPublic[] | undefined;
   isLoading: boolean;
-  error?: Error;
+  error?: Error | null;
 }
 
 const CatalogGrid: FC<CatalogGridProps> = ({

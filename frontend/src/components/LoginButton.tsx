@@ -11,7 +11,6 @@ const LoginButton = () => {
     <div>
       <Button>
         <Spinner/>
-        <span className="sr-only">Chargement</span>
       </Button>
     </div>
   );
@@ -20,11 +19,9 @@ const LoginButton = () => {
     <div className="logout-button flex flex-row-reverse gap-3">
       <Button onClick={logout} variant="outline" size="icon">
         <LogOut />
-        <span className="sr-only">Se déconnecter</span>
       </Button>
       <Button variant="outline" size="icon">
         <User/> {/* TODO : Add a Me route in frontend */}
-        <span className="sr-only">Profil</span>
       </Button>
     </div>
   );
@@ -33,7 +30,6 @@ const LoginButton = () => {
     <div className="login-button">
       <Button onClick={login} variant="outline" size="icon">
         <LogIn />
-        <span className="sr-only">Se connecter</span>
       </Button>
     </div>
   )

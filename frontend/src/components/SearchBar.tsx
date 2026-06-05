@@ -7,31 +7,29 @@ import {
 } from "@/components/ui/input-group"
 
 import {Search} from "lucide-react";
-import {useState} from "react";
-import {number} from "motion";
+import type {FC} from "react";
 
-const SearchBar = () => {
+export interface SearchBarProps {
+  value: string;
+  onChange: (value: string) => void;
+  matchCount: number;
+}
 
-  const [search, setSearch] = useState<string>("");
-  const [array, setArray] = useState<Array<string>>([]);
-
-  const debounce = (func, delay:number) => {
-    return (...args) => {
-      let timeoutId:number
-      timeoutId = setTimeout(() => func(...args), delay)
-    }
-  }
+const SearchBar: FC<SearchBarProps> = ({value, onChange, matchCount}) => {
 
   return (
     <div>
-        <InputGroup >
+        <InputGroup>
           <InputGroupInput placeholder="Rechercher..."
-          onChange={(e) => setSearch(e.target.value)}
+                           value={value}
+                           onChange={(e) => onChange(e.target.value)}
           />
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>
-          <InputGroupAddon align="inline-end">2 Résultats</InputGroupAddon>
+          {matchCount > 0 && (
+          <InputGroupAddon align="inline-end">{matchCount} {matchCount === 1 ? 'élément trouvé' : 'éléments trouvés'}</InputGroupAddon>
+          )}
         </InputGroup>
     </div>
   )

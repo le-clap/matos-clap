@@ -48,7 +48,7 @@ const NavMenu: FC<NavMenuProps> = ({
                   <NavigationMenuContent>
                     <ul className="w-max flex flex-row gap-3">
                       {item.links?.map((link) => (
-                        <ListItem href={link.href} key={link.href} title={link.label} ariaLabel={link.ariaLabel}
+                        <ListItem href={link.href} key={link.href} title={link.label}
                                   onClick={handleNavigation(link.href)}>{link.desc}</ListItem>
                       ))}
                     </ul>
@@ -62,7 +62,6 @@ const NavMenu: FC<NavMenuProps> = ({
                   <NavigationMenuLink
                     href={item.links[0].href}
                     onClick={handleNavigation(item.links[0].href)}
-                    aria-label={item.links[0].ariaLabel}
                     className={`${navigationMenuTriggerStyle()} bg-transparent`}
                   >
                     {item.label}
@@ -83,13 +82,12 @@ function ListItem({
   title,
   children,
   href,
-  ariaLabel,
   ...props
-}: React.ComponentPropsWithoutRef<"li"> & { href: string; ariaLabel?: string }) {
+}: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
   return (
     <li {...props}>
       <NavigationMenuLink asChild>
-        <a href={href} aria-label={ariaLabel}>
+        <a href={href}>
           <div className="flex flex-col gap-1 text-sm">
             <div className="leading-none font-medium">{title}</div>
             <div className="line-clamp-2 text-muted-foreground">{children}</div>

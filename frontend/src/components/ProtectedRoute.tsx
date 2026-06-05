@@ -17,12 +17,12 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
 
   // L'utilisateur n'est pas connecté
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Vérification des permissions si des rôles spécifiques sont requis
   if (allowedRoles && !allowedRoles.includes(user.access_level)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
   // L'utilisateur est autorisé, on affiche la page enfant
