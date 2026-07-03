@@ -23,8 +23,7 @@ INSERT INTO matos_user (id, username, name, email, access_level, created_at, upd
     (6, 'user_zoe', 'Zoe Richard', 'zoe.richard@etu.univ.fr', 'USER', NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day'),
     (7, 'user_hugo', 'Hugo Garcia', 'hugo.garcia@etu.univ.fr', 'USER', NOW() - INTERVAL '95 days', NOW() - INTERVAL '6 days'),
     (8, 'user_lina', 'Lina Moreau', 'lina.moreau@etu.univ.fr', 'USER', NOW() - INTERVAL '70 days', NOW() - INTERVAL '5 days'),
-    (9, 'user_noah', 'Noah Simon', 'noah.simon@etu.univ.fr', 'USER', NOW() - INTERVAL '40 days', NOW() - INTERVAL '2 days'),
-    (10, 'visitor_test', 'Visitor Test', 'visitor.test@extern.fr', 'UNAUTHENTICATED', NOW() - INTERVAL '10 days', NOW() - INTERVAL '10 days');
+    (9, 'user_noah', 'Noah Simon', 'noah.simon@etu.univ.fr', 'USER', NOW() - INTERVAL '40 days', NOW() - INTERVAL '2 days');
 
 -- Sessions: active + expired; usable for cookie or bearer-token flows
 INSERT INTO user_session (id, token, user_id, expires_at, created_at, updated_at) VALUES
@@ -81,11 +80,11 @@ INSERT INTO item (id, name, catalog_id, condition, availability, deposit_cents, 
     (24, 'GRP-RS3-03', 8, 'GOOD', 'AVAILABLE', 75000, NULL, NOW() - INTERVAL '147 days', NOW() - INTERVAL '2 days');
 
 -- Borrowing requests: pending, processed+linked, oversized request, in-flight request
-INSERT INTO "request" (id, borrower_id, phone_number, start_date, end_date, reason, processed, created_at, updated_at) VALUES
-    (1, 6, '+33612345678', NOW() + INTERVAL '3 days', NOW() + INTERVAL '6 days', 'Court metrage de fin d etudes', FALSE, NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
-    (2, 7, '+33623456789', NOW() - INTERVAL '15 days', NOW() - INTERVAL '12 days', 'Captation interview documentaire', TRUE, NOW() - INTERVAL '18 days', NOW() - INTERVAL '12 days'),
-    (3, 8, '+33634567890', NOW() + INTERVAL '7 days', NOW() + INTERVAL '9 days', 'Clip musical multi-cameras', FALSE, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'),
-    (4, 9, '+33645678901', NOW() - INTERVAL '2 days', NOW() + INTERVAL '4 days', 'Tournage evenement associatif', TRUE, NOW() - INTERVAL '4 days', NOW() - INTERVAL '2 days');
+INSERT INTO "request" (id, borrower_id, phone_number, start_date, end_date, reason, status, created_at, updated_at) VALUES
+    (1, 6, '+33612345678', NOW() + INTERVAL '3 days', NOW() + INTERVAL '6 days', 'Court metrage de fin d etudes', 'PENDING', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
+    (2, 7, '+33623456789', NOW() - INTERVAL '15 days', NOW() - INTERVAL '12 days', 'Captation interview documentaire', 'APPROVED', NOW() - INTERVAL '18 days', NOW() - INTERVAL '12 days'),
+    (3, 8, '+33634567890', NOW() + INTERVAL '7 days', NOW() + INTERVAL '9 days', 'Clip musical multi-cameras', 'REFUSED', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'),
+    (4, 9, '+33645678901', NOW() - INTERVAL '2 days', NOW() + INTERVAL '4 days', 'Tournage evenement associatif', 'APPROVED', NOW() - INTERVAL '4 days', NOW() - INTERVAL '2 days');
 
 INSERT INTO requested_catalog (id, request_id, catalog_id, quantity) VALUES
     (1, 1, 1, 1),

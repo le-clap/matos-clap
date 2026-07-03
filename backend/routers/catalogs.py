@@ -1,13 +1,16 @@
 """Catalog management endpoints."""
 
-from datetime import datetime
+import uuid
+from pathlib import Path as FilePath
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, status
+from pydantic import AwareDatetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session, select
 
+from core.config import settings
 from db.database import get_session
 from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel, Availability
@@ -22,6 +25,15 @@ router = APIRouter(prefix="/catalogs", tags=["catalogs"])
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
 ManagerDep = Annotated[User, Depends(require_role(AccessLevel.MANAGER))]
+
+# Allowed image content types mapped to their file extension.
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
 @router.get("/", response_model=list[CatalogPublic])
@@ -94,7 +106,58 @@ def update_catalog(
     if "category_id" in update_data and not session.get(Category, update_data["category_id"]):
         raise HTTPException(status_code=404, detail=f"Category with ID {update_data['category_id']} not found")
 
+    # If the image is being replaced or cleared, remove the previous file.
+    if "image_path" in update_data:
+        previous = db_catalog.image_path
+        if previous and previous != update_data["image_path"] and previous.startswith("/media/catalogs/"):
+            (FilePath(settings.MEDIA_DIR) / "catalogs" / FilePath(previous).name).unlink(missing_ok=True)
+
     db_catalog.sqlmodel_update(update_data)
+    session.add(db_catalog)
+    session.commit()
+    session.refresh(db_catalog)
+    return db_catalog
+
+
+@router.post(
+    "/{catalog_id}/image",
+    response_model=CatalogPublic,
+    responses={
+        404: {"description": "Catalog not found"},
+        422: {"description": "Unsupported or oversized image"},
+    },
+)
+async def upload_catalog_image(
+    session: SessionDep,
+    _user: ManagerDep,
+    catalog_id: Annotated[int, Path(ge=1)],
+    file: Annotated[UploadFile, File()],
+) -> Catalog:
+    """Upload (or replace) the illustrative image of a catalog reference."""
+    db_catalog = session.get(Catalog, catalog_id)
+    if not db_catalog:
+        raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
+
+    extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
+    if extension is None:
+        raise HTTPException(status_code=422, detail="Unsupported image type (use JPEG, PNG, WebP or GIF)")
+
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=422, detail="Image exceeds the 5 MB size limit")
+
+    catalogs_media_dir = FilePath(settings.MEDIA_DIR) / "catalogs"
+    catalogs_media_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = f"{uuid.uuid4().hex}{extension}"
+    (catalogs_media_dir / filename).write_bytes(contents)
+
+    # Best-effort removal of the previously stored image to avoid orphans.
+    previous = db_catalog.image_path
+    if previous and previous.startswith("/media/catalogs/"):
+        (catalogs_media_dir / FilePath(previous).name).unlink(missing_ok=True)
+
+    db_catalog.image_path = f"/media/catalogs/{filename}"
     session.add(db_catalog)
     session.commit()
     session.refresh(db_catalog)
@@ -141,8 +204,8 @@ def get_catalog_items_availability(
     session: SessionDep,
     _user: CurrentUserDep,
     catalog_id: Annotated[int, Path(ge=1)],
-    start_date: Annotated[datetime, Query()],
-    end_date: Annotated[datetime, Query()],
+    start_date: Annotated[AwareDatetime, Query()],
+    end_date: Annotated[AwareDatetime, Query()],
 ) -> ItemAvailabilityResponse:
     """Return items split by availability for the requested date range.
 

@@ -40,7 +40,7 @@ def upgrade() -> None:
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
         sa.Column(
             "access_level",
-            sa.Enum("UNAUTHENTICATED", "USER", "CLAP", "MANAGER", "ADMIN", name="access_level", native_enum=False),
+            sa.Enum("USER", "CLAP", "MANAGER", "ADMIN", name="access_level", native_enum=False),
             nullable=False,
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
@@ -74,7 +74,11 @@ def upgrade() -> None:
         sa.Column("start_date", sa.DateTime(timezone=True), nullable=False),
         sa.Column("end_date", sa.DateTime(timezone=True), nullable=False),
         sa.Column("reason", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True),
-        sa.Column("processed", sa.Boolean(), nullable=False),
+        sa.Column(
+            "status",
+            sa.Enum("PENDING", "REFUSED", "APPROVED", name="request_status", native_enum=False),
+            nullable=False,
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(["borrower_id"], ["matos_user.id"], ondelete="RESTRICT"),

@@ -1,5 +1,6 @@
 """Request management endpoints."""
 
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
@@ -9,7 +10,7 @@ from sqlmodel import Session, asc, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, has_role, require_role
-from models.enums import AccessLevel, Availability
+from models.enums import AccessLevel, Availability, RequestStatus
 from models.models import Catalog, Item, Request, RequestedCatalog, User
 from schemas.catalogs import CatalogBrief
 from schemas.requests import (
@@ -31,9 +32,15 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
 
 
+def _ensure_aware(dt: datetime) -> datetime:
+    """Normalize a potentially naive datetime to UTC."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
+
+
 def _request_load_options():
     return [
         joinedload(Request.borrower),  # ty: ignore[invalid-argument-type]
+        selectinload(Request.loan),  # ty: ignore[invalid-argument-type]
         selectinload(Request.requested_catalogs).joinedload(  # ty: ignore[invalid-argument-type]
             RequestedCatalog.catalog  # ty: ignore[invalid-argument-type]
         ),
@@ -58,7 +65,13 @@ def get_requests(
     if effective_borrower_id is not None:
         base_statement = base_statement.where(Request.borrower_id == effective_borrower_id)
     if processed is not None:
-        base_statement = base_statement.where(Request.processed == processed)
+        processed_statuses = {
+            True: [RequestStatus.APPROVED, RequestStatus.REFUSED],
+            False: [RequestStatus.PENDING],
+        }
+        base_statement = base_statement.where(
+            Request.status.in_(processed_statuses[processed])  # ty: ignore[unresolved-attribute]
+        )
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 
@@ -242,17 +255,37 @@ def create_request(
 @router.patch(
     "/{request_id}",
     response_model=RequestPublic,
-    responses={404: {"description": "Request not found"}},
+    responses={
+        403: {"description": "Not allowed to edit this request"},
+        404: {"description": "Request not found"},
+        409: {"description": "Request can no longer be edited"},
+    },
 )
 def update_request(
     session: SessionDep,
-    _user: ClapDep,
+    current_user: CurrentUserDep,
     request_id: Annotated[int, Path(ge=1)],
     request_patch: RequestPatch,
 ) -> Request:
-    db_request = session.get(Request, request_id)
+    statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
+    db_request = session.exec(statement).unique().first()
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
+
+    # A borrower may edit their own request only while it is still pending.
+    if not has_role(current_user, AccessLevel.CLAP):
+        if db_request.borrower_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only edit your own requests")
+        if db_request.processed:
+            raise HTTPException(status_code=409, detail="A processed request can no longer be edited")
+        if request_patch.status is not None:
+            raise HTTPException(status_code=403, detail="You cannot change the status")
+
+    # The resulting period must stay valid even when only one bound is patched.
+    new_start = request_patch.start_date or db_request.start_date
+    new_end = request_patch.end_date or db_request.end_date
+    if _ensure_aware(new_start) >= _ensure_aware(new_end):
+        raise HTTPException(status_code=422, detail="start_date must be before end_date")
 
     db_request.sqlmodel_update(request_patch.model_dump(exclude_unset=True))
     session.add(db_request)
@@ -264,16 +297,27 @@ def update_request(
 @router.delete(
     "/{request_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={404: {"description": "Request not found"}},
+    responses={
+        403: {"description": "Not allowed to delete this request"},
+        404: {"description": "Request not found"},
+        409: {"description": "Request can no longer be deleted"},
+    },
 )
 def delete_request(
     session: SessionDep,
-    _user: ClapDep,
+    current_user: CurrentUserDep,
     request_id: Annotated[int, Path(ge=1)],
 ) -> None:
     db_request = session.get(Request, request_id)
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
+
+    # A borrower may delete their own request only while it is still pending.
+    if not has_role(current_user, AccessLevel.CLAP):
+        if db_request.borrower_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only delete your own requests")
+        if db_request.processed:
+            raise HTTPException(status_code=409, detail="A processed request can no longer be deleted")
 
     session.delete(db_request)
     session.commit()

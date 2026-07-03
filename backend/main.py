@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
+from fastapi.staticfiles import StaticFiles
 
 from core.config import settings
-from routers import catalogs, categories, items, loans, requests, users
+from routers import catalogs, categories, data_io, items, loans, requests, users
 from routers.auth import router as auth_router
 
 
@@ -30,8 +33,16 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-def read_root():
+media_dir = Path(settings.MEDIA_DIR)
+media_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=media_dir), name="media")
+
+
+app.frontend("/", directory="../frontend/dist")
+
+
+@app.get("/health")
+def health_check():
     return {"status": "System Online"}
 
 
@@ -42,6 +53,7 @@ app.include_router(items.router, prefix=settings.API_PREFIX)
 app.include_router(users.router, prefix=settings.API_PREFIX)
 app.include_router(requests.router, prefix=settings.API_PREFIX)
 app.include_router(loans.router, prefix=settings.API_PREFIX)
+app.include_router(data_io.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn

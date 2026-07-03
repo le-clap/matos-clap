@@ -1,116 +1,75 @@
 # Matos CLAP
 
-Site d'emprunt de matériel du CLAP.
+Application de prêt de matériel du CLAP (Centrale Lille Audiovisuel Production).
+Les membres parcourent le catalogue et déposent une demande ; le CLAP la traite
+depuis un backoffice — création de prêts, retours, inventaire, planning et
+gestion des utilisateurs.
 
-## Installation locale
+Le backend est une API FastAPI (Python, gérée avec `uv`) adossée à PostgreSQL. Le
+frontend est une SPA React / Vite / TypeScript qui consomme un client TypeScript
+généré automatiquement depuis le schéma OpenAPI du backend.
 
-### Serveur API
+## Lancer en local
 
-Le projet utilise un backend FastAPI pour gérer les requêtes des utilisateurs.
-Pour installer les dépendances et lancer le serveur :
-
-- [Installer uv](https://docs.astral.sh/uv/getting-started/installation/) si ce n'est pas déjà fait
-- Avoir une instance PostgreSQL accessible et créer un fichier `backend/.env` avec les variables suivantes :
+Le backend a besoin de [`uv`](https://docs.astral.sh/uv/) et d'une base
+PostgreSQL. Renseignez `backend/.env` :
 
 ```dotenv
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=database
-DB_USER=username
-DB_PASSWORD=password
+DB_NAME=matos
+DB_USER=postgres
+DB_PASSWORD=postgres
 ```
 
-- Exécuter les commandes suivantes :
-
-```commandline
-cd backend/
+```bash
+cd backend
 uv sync
 uv run alembic upgrade head
-uv run ./main.py
+uv run ./main.py            # API sur http://localhost:8000 — doc interactive : /docs
 ```
 
-Puis aller à [cette adresse](http://localhost:8000/docs) pour voir la doc de l'API
+Le frontend a besoin de Node.js :
 
-### Application React
-
-Le projet utilise un frontend écrit en React-Typescript-TailwindCSS, basé sur le framework [Vite](https://vitejs.fr/).
-Le projet utilise également [shadcn](https://ui.shadcn.com/) pour la gestion des composants graphiques.
-
-Pour installer les dépendances et lancer le serveur :
-
-- [Installer Node.js et npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) sur votre machine
-- Exécuter les commandes suivantes :
-
-```commandline
-cd frontend/
+```bash
+cd frontend
 npm install
-npm run dev
+npm run dev                 # http://localhost:5173 — /api et /media sont proxifiés vers :8000
 ```
 
-Puis aller à [cette adresse](http://localhost:5173) pour aller voir la page d'accueil.
+L'authentification passe par le SSO de Centrale Lille Assos. En développement on
+peut la court-circuiter : lancez le backend avec `ENABLE_DEV_LOGIN=true` et créez
+`frontend/.env.local` contenant `VITE_ENABLE_DEV_LOGIN=true`. Le bouton de
+connexion ouvre alors une session admin sur le premier utilisateur en base.
 
-### Migrations de base de données (Alembic)
+## Docker
 
-Le projet utilise [Alembic](https://alembic.sqlalchemy.org/) pour gérer les migrations de schéma de la base de données PostgreSQL.
-
-Depuis `backend/` :
-
-```commandline
-# Appliquer toutes les migrations en attente
-uv run alembic upgrade head
-
-# Créer une nouvelle migration (autogénérée depuis les modèles)
-uv run alembic revision --autogenerate -m "description"
-
-# Revenir à une révision précédente
-uv run alembic downgrade -1
-```
-
----
-
-## Qualité de code
-
-### Backend (ruff + ty + pre-commit)
-
-Depuis `backend/` :
-
-```commandline
-uv sync
-uv run ruff check .
-uv run ruff format --check .
-uv run ty check
-```
-
-#### Pre-commit
-
-Pour installer les hooks pre-commit :
-
-```commandline
-cd backend/
-uv sync
-uv run pre-commit install
-uv run pre-commit run --all-files
-```
-
-Les hooks s'exécutent automatiquement avant chaque commit.
-
----
-
-## Exécution avec Docker
-
-Une stack Docker est disponible pour lancer backend + frontend :
-
-```commandline
+```bash
 docker compose up --build
 ```
 
-- Frontend : [http://localhost:3000](http://localhost:3000)
-- Backend/API docs : [http://localhost:8000/docs](http://localhost:8000/docs)
+Frontend sur `http://localhost:3000`, API sur `http://localhost:8000`. Nginx sert
+le frontend et relaie `/api/` et `/media/` vers le backend.
 
-Le frontend (Nginx) reverse-proxy les routes `/api/` vers le service backend.
+## Base de données
 
----
+Le schéma est versionné avec Alembic. Depuis `backend/` :
 
-## CI
+```bash
+uv run alembic upgrade head                            # appliquer les migrations
+uv run alembic revision --autogenerate -m "message"    # en générer une nouvelle
+uv run alembic downgrade -1                            # revenir en arrière
+```
 
-Un workflow GitHub Actions (`.github/workflows/lint.yml`) vérifie sur push/PR vers `main`.
+## Vérifications
+
+- Backend, depuis `backend/` : `uv run ruff check .`, `uv run ty check`, `uv run pytest`.
+- Frontend, depuis `frontend/` : `npm run lint`, `npm run build`.
+
+`uv run pre-commit install` (dans `backend/`) branche les hooks ruff + ty, et la
+CI GitHub Actions rejoue le lint sur les PR vers `main`.
+
+## Organisation
+
+- `backend/` — API FastAPI, modèles SQLModel, migrations Alembic, tests pytest.
+- `frontend/` — la SPA React ; voir [`frontend/README.md`](../../../Downloads/matos-clap/matos-clap/frontend/README.md) pour les détails (stack, scripts, arborescence, rôles).

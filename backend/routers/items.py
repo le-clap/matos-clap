@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from pydantic import AwareDatetime
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session, select
@@ -12,7 +13,14 @@ from db.database import get_session
 from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel, Availability, Condition, LoanStatus
 from models.models import Catalog, Item, Loan, LoanedItem, User
-from schemas.items import ItemPatch, ItemPost, ItemPublic, LoanedItemsResponse, LoanedItemWithLoan
+from schemas.items import (
+    ItemHistoryEntry,
+    ItemPatch,
+    ItemPost,
+    ItemPublic,
+    LoanedItemsResponse,
+    LoanedItemWithLoan,
+)
 from services.inventory import item_load_options
 
 router = APIRouter(prefix="/items", tags=["items"])
@@ -49,8 +57,8 @@ def get_items(
 def get_loaned_items(
     session: SessionDep,
     _user: ClapDep,
-    start_date: Annotated[datetime, Query(description="Start of the date range")],
-    end_date: Annotated[datetime, Query(description="End of the date range")],
+    start_date: Annotated[AwareDatetime, Query(description="Start of the date range")],
+    end_date: Annotated[AwareDatetime, Query(description="End of the date range")],
 ) -> LoanedItemsResponse:
     """Get all items that are loaned out during a date range.
 
@@ -125,6 +133,59 @@ def get_item_by_id(
     if not item:
         raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
     return item
+
+
+@router.get(
+    "/{item_id}/history",
+    response_model=list[ItemHistoryEntry],
+    responses={404: {"description": "Item not found"}},
+)
+def get_item_history(
+    session: SessionDep,
+    _user: ClapDep,
+    item_id: Annotated[int, Path(ge=1)],
+) -> list[ItemHistoryEntry]:
+    """Custody history of an item: every loan it was part of, most recent first."""
+    if not session.get(Item, item_id):
+        raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
+
+    effective_start = func.coalesce(Loan.actual_start_date, Loan.start_date)
+    statement = (
+        select(LoanedItem)
+        .join(Loan, LoanedItem.loan_id == Loan.id)  # ty: ignore[invalid-argument-type]
+        .where(LoanedItem.item_id == item_id)
+        .options(
+            joinedload(LoanedItem.loan).joinedload(Loan.borrower),  # ty: ignore[invalid-argument-type]
+            joinedload(LoanedItem.loan).joinedload(Loan.assignee),  # ty: ignore[invalid-argument-type]
+        )
+        .order_by(effective_start.desc())
+    )
+    loaned_items = session.exec(statement).unique().all()
+
+    entries: list[ItemHistoryEntry] = []
+    for li in loaned_items:
+        loan = li.loan
+        returned_at = li.actual_return_date or loan.actual_return_date
+        if returned_at is not None:
+            status = LoanStatus.RETURNED
+        elif loan.actual_start_date is not None:
+            status = LoanStatus.ACTIVE
+        else:
+            status = LoanStatus.SCHEDULED
+        entries.append(
+            ItemHistoryEntry(
+                loan_id=loan.id,  # ty: ignore[invalid-argument-type]
+                borrower=loan.borrower,  # ty: ignore[invalid-argument-type]
+                assignee=loan.assignee,  # ty: ignore[invalid-argument-type]
+                start_date=loan.start_date,
+                end_date=loan.end_date,
+                actual_start_date=loan.actual_start_date,
+                actual_return_date=returned_at,
+                return_condition=li.return_condition,
+                status=status,
+            )
+        )
+    return entries
 
 
 @router.post(
