@@ -47,29 +47,6 @@ class ItemAvailabilityResponse(BaseModel):
     unavailable: list[ItemPublic]
 
 
-class LoanedItemWithLoan(BaseModel):
-    """An item that is currently loaned out, with loan details."""
-
-    item_id: int
-    item_name: str
-    catalog_name: str
-    loan_id: int
-    borrower_name: str
-    loan_start_date: datetime
-    loan_end_date: datetime
-    actual_start_date: datetime | None = None
-    actual_return_date: datetime | None = None
-    status: LoanStatus
-
-
-class LoanedItemsResponse(BaseModel):
-    """Response for querying items that are loaned out during a date range."""
-
-    start_date: datetime
-    end_date: datetime
-    loaned_items: list[LoanedItemWithLoan]
-
-
 class ItemHistoryEntry(BaseModel):
     """One stint of an item in a borrower's hands, derived from a loan."""
 
