@@ -1,56 +1,87 @@
-import {BrowserRouter, Routes, Route} from 'react-router-dom'
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import MainLayout from '@/layouts/MainLayout'
+import { useAuth } from "@/auth/AuthContext";
+import { RequireAuth, RequireRole } from "@/components/RouteGuards";
+import { CartProvider } from "@/features/cart/CartContext";
+import { AppLayout } from "@/layouts/AppLayout";
+import { AdminLayout } from "@/layouts/AdminLayout";
 
-import Home from '@/pages/Home'
-import Inventory from '@/pages/Inventory'
-import MyLoans from "@/pages/MyLoans.tsx"
-import NewLoan from "@/pages/NewLoan.tsx"
-import Cart from "@/pages/Cart"
+import { LoginPage } from "@/pages/Login";
+import { NotFound } from "@/pages/NotFound";
+import { CatalogPage } from "@/pages/Catalog";
+import { CatalogDetailPage } from "@/pages/CatalogDetail";
+import { RequestBuilderPage } from "@/pages/RequestBuilder";
+import { MyRequestsPage } from "@/pages/MyRequests";
+import { MyLoansPage } from "@/pages/MyLoans";
 
-import Error from "@/pages/Error"
+import { DashboardPage } from "@/pages/admin/Dashboard";
+import { AdminRequestsPage } from "@/pages/admin/Requests";
+import { AdminRequestDetailPage } from "@/pages/admin/RequestDetail";
+import { AdminLoansPage } from "@/pages/admin/Loans";
+import { AdminLoanDetailPage } from "@/pages/admin/LoanDetail";
+import { AdminNewLoanPage } from "@/pages/admin/NewLoan";
+import { AdminTimelinePage } from "@/pages/admin/Timeline";
+import { AdminInventoryPage } from "@/pages/admin/Inventory";
+import { AdminUsersPage } from "@/pages/admin/Users";
 
-import {ThemeProvider} from "@/components/ThemeProvider"
-import ProtectedRoute from "@/components/ProtectedRoute"
-// import {AccessLevel} from "@/client";
-import {AuthProvider} from "@/contexts/AuthContext.tsx";
-
-const Admin = () => <div className="p-20 min-h-screen text-white">Page Gestion (1.5)</div>
-
-const App = () => {
-  return (
-    <ThemeProvider defaultTheme={"dark"} storageKey="vite-ui-theme">
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Parent Route uses the Layout */}
-            <Route path="/" element={<MainLayout/>}>
-
-              {/* Child Routes render inside the Layout's <Outlet /> */}
-              <Route index element={<Home/>}/>
-
-              <Route element={<ProtectedRoute/>}>
-                <Route path="inventory" element={<Inventory/>}/>
-                <Route path="my-loans" element={<MyLoans/>}/>
-                <Route path="new-loan" element={<NewLoan/>}/>
-                <Route path="cart" element={<Cart/>}/>
-              </Route>
-
-              <Route element={<ProtectedRoute allowedRoles={["admin"]}/>}>
-                <Route path="admin" element={<Admin/>}/>
-              </Route>
-
-              {/* Fallback for 404 */}
-              <Route path="*" element={<Error/>}/>
-            </Route>
-          </Routes>
-        </BrowserRouter>
-
-      </AuthProvider>
-
-
-    </ThemeProvider>
-  )
+function HomeRedirect() {
+  const { hasRole } = useAuth();
+  return <Navigate to={hasRole("clap") ? "/admin" : "/catalog"} replace />;
 }
 
-export default App;
+export function App() {
+  return (
+    <CartProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* User-facing app */}
+        <Route
+          element={
+            <RequireAuth>
+              <AppLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<HomeRedirect />} />
+          <Route path="/catalog" element={<CatalogPage />} />
+          <Route path="/catalog/:id" element={<CatalogDetailPage />} />
+          <Route path="/request" element={<RequestBuilderPage />} />
+          <Route path="/my/requests" element={<MyRequestsPage />} />
+          <Route path="/my/loans" element={<MyLoansPage />} />
+        </Route>
+
+        {/* Backoffice */}
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth>
+              <RequireRole min="clap">
+                <AdminLayout />
+              </RequireRole>
+            </RequireAuth>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="requests" element={<AdminRequestsPage />} />
+          <Route path="requests/:id" element={<AdminRequestDetailPage />} />
+          <Route path="planning" element={<AdminTimelinePage />} />
+          <Route path="loans" element={<AdminLoansPage />} />
+          <Route path="loans/new" element={<AdminNewLoanPage />} />
+          <Route path="loans/:id" element={<AdminLoanDetailPage />} />
+          <Route
+            path="inventory"
+            element={
+              <RequireRole min="manager">
+                <AdminInventoryPage />
+              </RequireRole>
+            }
+          />
+          <Route path="users" element={<AdminUsersPage />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </CartProvider>
+  );
+}

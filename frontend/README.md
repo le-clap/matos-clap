@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# Matos CLAP — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web de la plateforme de prêt de matériel du **CLAP**.
+Application monopage (SPA) couvrant à la fois l'espace
+utilisateur (catalogue, demandes, prêts) et le **backoffice** de gestion
+(demandes, prêts, inventaire, utilisateurs).
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** + **Vite 7** + **TypeScript**
+- **TailwindCSS 4** — thème sombre « rouge / gris charbon » défini dans `src/index.css`
+- **TanStack Query** — état serveur et cache
+- **React Router 7** — routage
+- **SDK généré** via [`@hey-api/openapi-ts`](https://heyapi.dev) depuis `../backend/openapi.json`
+- **lucide-react** (icônes) · **date-fns** (dates)
 
-## React Compiler
+Aucune librairie d'UI lourde : les composants (`src/components/ui`) sont écrits
+sur mesure pour un rendu cohérent et léger.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Démarrage
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run generate   # régénère openapi.json (backend) + le client typé src/client
+npm run dev        # http://localhost:5173 (proxy /api -> http://localhost:8000)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Le backend doit tourner sur le port `8000`. En dev, l'authentification CLA peut
+être court-circuitée en lançant le backend avec `ENABLE_DEV_LOGIN=true` et en
+définissant `VITE_ENABLE_DEV_LOGIN=true` côté frontend.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Script | Rôle |
+| --- | --- |
+| `npm run dev` | Serveur de développement Vite |
+| `npm run build` | Vérification TypeScript + build de production (`dist/`) |
+| `npm run lint` | ESLint |
+| `npm run generate:client` | Régénère le SDK depuis `../backend/openapi.json` |
+| `npm run generate` | Régénère `openapi.json` puis le SDK |
+
+## Architecture
+
 ```
+src/
+  auth/            Contexte d'authentification (session via cookie httpOnly)
+  client/          SDK généré (ne pas éditer à la main)
+  components/      Chrome partagé + design system (components/ui)
+  features/        Logique métier (panier de demande, cartes catalogue)
+  hooks/           Hooks TanStack Query par ressource
+  layouts/         Coque utilisateur (AppLayout) et backoffice (AdminLayout)
+  lib/             Client API, helpers de format, rôles, query keys
+  pages/           Pages utilisateur + pages backoffice (pages/admin)
+```
+
+### Rôles
+
+`user < clap < manager < admin`. Les routes `/admin/*` exigent
+`clap`, la gestion de l'inventaire exige `manager`, et la modification des rôles
+utilisateurs exige `admin`.
