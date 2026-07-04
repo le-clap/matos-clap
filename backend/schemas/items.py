@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from models.enums import Availability, Condition, LoanStatus
 from schemas.catalogs import CatalogPublic
+from schemas.users import UserBrief
 
 
 class ItemBrief(BaseModel):
@@ -46,24 +47,15 @@ class ItemAvailabilityResponse(BaseModel):
     unavailable: list[ItemPublic]
 
 
-class LoanedItemWithLoan(BaseModel):
-    """An item that is currently loaned out, with loan details."""
+class ItemHistoryEntry(BaseModel):
+    """One stint of an item in a borrower's hands, derived from a loan."""
 
-    item_id: int
-    item_name: str
-    catalog_name: str
     loan_id: int
-    borrower_name: str
-    loan_start_date: datetime
-    loan_end_date: datetime
-    actual_start_date: datetime | None = None
-    actual_return_date: datetime | None = None
-    status: LoanStatus
-
-
-class LoanedItemsResponse(BaseModel):
-    """Response for querying items that are loaned out during a date range."""
-
+    borrower: UserBrief
+    assignee: UserBrief
     start_date: datetime
     end_date: datetime
-    loaned_items: list[LoanedItemWithLoan]
+    actual_start_date: datetime | None = None
+    actual_return_date: datetime | None = None
+    return_condition: Condition | None = None
+    status: LoanStatus

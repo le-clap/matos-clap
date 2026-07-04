@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
-from models.enums import Condition
+from models.enums import Condition, LoanStatus
 from schemas.items import ItemBrief
 from schemas.users import UserBrief
 
@@ -19,8 +19,8 @@ class LoanedItemPublic(BaseModel):
 class LoanPost(BaseModel):
     borrower_id: int
     assignee_id: int | None = None
-    start_date: datetime
-    end_date: datetime
+    start_date: AwareDatetime
+    end_date: AwareDatetime
     total_deposit_cents: int = Field(default=0, ge=0)
     request_id: int | None = None
     comments: str | None = None
@@ -34,13 +34,16 @@ class LoanPost(BaseModel):
 
 
 class LoanPatch(BaseModel):
-    start_date: datetime | None = None
-    end_date: datetime | None = None
+    borrower_id: int | None = None
+    start_date: AwareDatetime | None = None
+    end_date: AwareDatetime | None = None
     total_deposit_cents: int | None = Field(default=None, ge=0)
-    actual_start_date: datetime | None = None
-    actual_return_date: datetime | None = None
+    actual_start_date: AwareDatetime | None = None
+    actual_return_date: AwareDatetime | None = None
     retained_deposit_cents: int | None = Field(default=None, ge=0)
     comments: str | None = None
+    # Structural edits — only allowed while the loan has not started.
+    item_ids: list[int] | None = Field(default=None, min_length=1)
 
 
 class LoanPostWarning(BaseModel):
@@ -80,6 +83,7 @@ class LoanPublic(BaseModel):
     id: int
     borrower: UserBrief
     assignee: UserBrief
+    status: LoanStatus
     start_date: datetime
     end_date: datetime
     total_deposit_cents: int

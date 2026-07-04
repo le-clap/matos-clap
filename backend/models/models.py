@@ -6,7 +6,7 @@ from pydantic import EmailStr
 from sqlalchemy import Column, DateTime, Enum, Text
 from sqlmodel import Field, Relationship, SQLModel
 
-from models.enums import AccessLevel, Availability, Condition
+from models.enums import AccessLevel, Availability, Condition, LoanStatus, RequestStatus
 from models.timestamps import TimestampSQLModel
 
 # --- User ---
@@ -26,7 +26,9 @@ class User(TimestampSQLModel, table=True):
         sa_column=Column(Enum(AccessLevel, name="access_level", native_enum=False), nullable=False),
     )
 
-    sessions: list[UserSession] = Relationship(back_populates="user")
+    sessions: list[UserSession] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
     requests: list[Request] = Relationship(back_populates="borrower")
     loans_as_borrower: list[Loan] = Relationship(
         back_populates="borrower", sa_relationship_kwargs={"foreign_keys": "Loan.borrower_id"}
@@ -109,11 +111,31 @@ class Request(TimestampSQLModel, table=True):
     start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     end_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     reason: str | None = Field(default=None, max_length=255)
-    processed: bool = False
+    status: RequestStatus = Field(
+        default=RequestStatus.PENDING,
+        sa_column=Column(Enum(RequestStatus, name="request_status", native_enum=False), nullable=False),
+    )
 
     borrower: User = Relationship(back_populates="requests")
-    requested_catalogs: list[RequestedCatalog] = Relationship(back_populates="request")
+    requested_catalogs: list[RequestedCatalog] = Relationship(
+        back_populates="request", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
     loan: Optional["Loan"] = Relationship(back_populates="request")  # noqa UP045
+
+    @property
+    def loan_id(self) -> int | None:
+        """ID of the loan created from this request, if any."""
+        return self.loan.id if self.loan else None
+
+    @property
+    def processed(self) -> bool:
+        """Whether the request has been processed (approved or refused)."""
+        return self.status in {RequestStatus.APPROVED, RequestStatus.REFUSED}
+
+    @property
+    def refused(self) -> bool:
+        """Whether the request has been refused."""
+        return self.status == RequestStatus.REFUSED
 
 
 class RequestedCatalog(SQLModel, table=True):
@@ -155,7 +177,18 @@ class Loan(TimestampSQLModel, table=True):
         back_populates="loans_as_assignee", sa_relationship_kwargs={"foreign_keys": "Loan.assignee_id"}
     )
     request: Request | None = Relationship(back_populates="loan")
-    loaned_items: list[LoanedItem] = Relationship(back_populates="loan")
+    loaned_items: list[LoanedItem] = Relationship(
+        back_populates="loan", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+
+    @property
+    def status(self) -> LoanStatus:
+        """Lifecycle status derived from the actual start/return timestamps."""
+        if self.actual_return_date is not None:
+            return LoanStatus.RETURNED
+        if self.actual_start_date is not None:
+            return LoanStatus.ACTIVE
+        return LoanStatus.SCHEDULED
 
 
 class LoanedItem(SQLModel, table=True):

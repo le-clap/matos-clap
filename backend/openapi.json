@@ -5,10 +5,10 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/": {
+    "/health": {
       "get": {
-        "summary": "Read Root",
-        "operationId": "read_root",
+        "summary": "Health Check",
+        "operationId": "health_check",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -886,6 +886,88 @@
         }
       }
     },
+    "/api/catalogs/{catalog_id}/image": {
+      "post": {
+        "tags": [
+          "catalogs"
+        ],
+        "summary": "Upload Catalog Image",
+        "description": "Upload (or replace) the illustrative image of a catalog reference.",
+        "operationId": "catalogs_upload_catalog_image",
+        "parameters": [
+          {
+            "name": "catalog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_catalogs_upload_catalog_image"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogPublic"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Catalog not found"
+          },
+          "422": {
+            "description": "Unsupported or oversized image"
+          }
+        }
+      }
+    },
     "/api/catalogs/{catalog_id}/available-items": {
       "get": {
         "tags": [
@@ -1155,89 +1237,6 @@
         }
       }
     },
-    "/api/items/loaned": {
-      "get": {
-        "tags": [
-          "items"
-        ],
-        "summary": "Get Loaned Items",
-        "description": "Get all items that are loaned out during a date range.\n\nReturns items with their associated loan information, useful for\nseeing what equipment is out at any given time.",
-        "operationId": "items_get_loaned_items",
-        "parameters": [
-          {
-            "name": "start_date",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "description": "Start of the date range",
-              "title": "Start Date"
-            },
-            "description": "Start of the date range"
-          },
-          {
-            "name": "end_date",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "description": "End of the date range",
-              "title": "End Date"
-            },
-            "description": "End of the date range"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "session_id",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Session Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoanedItemsResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Invalid date range"
-          }
-        }
-      }
-    },
     "/api/items/{item_id}": {
       "get": {
         "tags": [
@@ -1454,6 +1453,89 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "404": {
+            "description": "Item not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/items/{item_id}/history": {
+      "get": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Get Item History",
+        "description": "Custody history of an item: every loan it was part of, most recent first.",
+        "operationId": "items_get_item_history",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Item Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemHistoryEntry"
+                  },
+                  "title": "Response Items Get Item History"
+                }
+              }
+            }
           },
           "404": {
             "description": "Item not found"
@@ -2194,8 +2276,14 @@
               }
             }
           },
+          "403": {
+            "description": "Not allowed to edit this request"
+          },
           "404": {
             "description": "Request not found"
+          },
+          "409": {
+            "description": "Request can no longer be edited"
           },
           "422": {
             "description": "Validation Error",
@@ -2263,8 +2351,14 @@
           "204": {
             "description": "Successful Response"
           },
+          "403": {
+            "description": "Not allowed to delete this request"
+          },
           "404": {
             "description": "Request not found"
+          },
+          "409": {
+            "description": "Request can no longer be deleted"
           },
           "422": {
             "description": "Validation Error",
@@ -2951,6 +3045,399 @@
           }
         }
       }
+    },
+    "/api/io/catalogs/export": {
+      "get": {
+        "tags": [
+          "import-export"
+        ],
+        "summary": "Export Catalogs",
+        "operationId": "import-export_export_catalogs",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/io/categories/export": {
+      "get": {
+        "tags": [
+          "import-export"
+        ],
+        "summary": "Export Categories",
+        "operationId": "import-export_export_categories",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/io/items/export": {
+      "get": {
+        "tags": [
+          "import-export"
+        ],
+        "summary": "Export Items",
+        "operationId": "import-export_export_items",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/io/categories/import": {
+      "post": {
+        "tags": [
+          "import-export"
+        ],
+        "summary": "Import Categories",
+        "operationId": "import-export_import_categories",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import-export_import_categories"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation errors (one message per faulty line)"
+          }
+        }
+      }
+    },
+    "/api/io/catalogs/import": {
+      "post": {
+        "tags": [
+          "import-export"
+        ],
+        "summary": "Import Catalogs",
+        "operationId": "import-export_import_catalogs",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import-export_import_catalogs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation errors (one message per faulty line)"
+          }
+        }
+      }
+    },
+    "/api/io/items/import": {
+      "post": {
+        "tags": [
+          "import-export"
+        ],
+        "summary": "Import Items",
+        "operationId": "import-export_import_items",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import-export_import_items"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation errors (one message per faulty line)"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2958,7 +3445,6 @@
       "AccessLevel": {
         "type": "string",
         "enum": [
-          "unauthenticated",
           "user",
           "clap",
           "manager",
@@ -2976,6 +3462,62 @@
         ],
         "title": "Availability",
         "description": "Represents the availability status of an item."
+      },
+      "Body_catalogs_upload_catalog_image": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_catalogs_upload_catalog_image"
+      },
+      "Body_import-export_import_catalogs": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import-export_import_catalogs"
+      },
+      "Body_import-export_import_categories": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import-export_import_categories"
+      },
+      "Body_import-export_import_items": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import-export_import_items"
       },
       "CatalogBrief": {
         "properties": {
@@ -3244,6 +3786,24 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "ImportResult": {
+        "properties": {
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created",
+          "updated"
+        ],
+        "title": "ImportResult"
+      },
       "ItemAvailabilityResponse": {
         "properties": {
           "available": {
@@ -3285,6 +3845,78 @@
           "name"
         ],
         "title": "ItemBrief"
+      },
+      "ItemHistoryEntry": {
+        "properties": {
+          "loan_id": {
+            "type": "integer",
+            "title": "Loan Id"
+          },
+          "borrower": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "assignee": {
+            "$ref": "#/components/schemas/UserBrief"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Date"
+          },
+          "actual_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Start Date"
+          },
+          "actual_return_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Return Date"
+          },
+          "return_condition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Condition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/LoanStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loan_id",
+          "borrower",
+          "assignee",
+          "start_date",
+          "end_date",
+          "status"
+        ],
+        "title": "ItemHistoryEntry",
+        "description": "One stint of an item in a borrower's hands, derived from a loan."
       },
       "ItemPatch": {
         "properties": {
@@ -3465,6 +4097,17 @@
       },
       "LoanPatch": {
         "properties": {
+          "borrower_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Borrower Id"
+          },
           "start_date": {
             "anyOf": [
               {
@@ -3547,6 +4190,21 @@
               }
             ],
             "title": "Comments"
+          },
+          "item_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Ids"
           }
         },
         "type": "object",
@@ -3686,6 +4344,9 @@
           "assignee": {
             "$ref": "#/components/schemas/UserBrief"
           },
+          "status": {
+            "$ref": "#/components/schemas/LoanStatus"
+          },
           "start_date": {
             "type": "string",
             "format": "date-time",
@@ -3770,6 +4431,7 @@
           "id",
           "borrower",
           "assignee",
+          "status",
           "start_date",
           "end_date",
           "total_deposit_cents",
@@ -3834,7 +4496,7 @@
           "returned"
         ],
         "title": "LoanStatus",
-        "description": "Represents the status of a loan for timeline display."
+        "description": "Represents the status of a loan."
       },
       "LoanTimelineEntry": {
         "properties": {
@@ -3974,109 +4636,6 @@
         ],
         "title": "LoanedItemPublic"
       },
-      "LoanedItemWithLoan": {
-        "properties": {
-          "item_id": {
-            "type": "integer",
-            "title": "Item Id"
-          },
-          "item_name": {
-            "type": "string",
-            "title": "Item Name"
-          },
-          "catalog_name": {
-            "type": "string",
-            "title": "Catalog Name"
-          },
-          "loan_id": {
-            "type": "integer",
-            "title": "Loan Id"
-          },
-          "borrower_name": {
-            "type": "string",
-            "title": "Borrower Name"
-          },
-          "loan_start_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Loan Start Date"
-          },
-          "loan_end_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Loan End Date"
-          },
-          "actual_start_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actual Start Date"
-          },
-          "actual_return_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actual Return Date"
-          },
-          "status": {
-            "$ref": "#/components/schemas/LoanStatus"
-          }
-        },
-        "type": "object",
-        "required": [
-          "item_id",
-          "item_name",
-          "catalog_name",
-          "loan_id",
-          "borrower_name",
-          "loan_start_date",
-          "loan_end_date",
-          "status"
-        ],
-        "title": "LoanedItemWithLoan",
-        "description": "An item that is currently loaned out, with loan details."
-      },
-      "LoanedItemsResponse": {
-        "properties": {
-          "start_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Start Date"
-          },
-          "end_date": {
-            "type": "string",
-            "format": "date-time",
-            "title": "End Date"
-          },
-          "loaned_items": {
-            "items": {
-              "$ref": "#/components/schemas/LoanedItemWithLoan"
-            },
-            "type": "array",
-            "title": "Loaned Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "start_date",
-          "end_date",
-          "loaned_items"
-        ],
-        "title": "LoanedItemsResponse",
-        "description": "Response for querying items that are loaned out during a date range."
-      },
       "PaginatedResponse_LoanPublic_": {
         "properties": {
           "items": {
@@ -4187,16 +4746,15 @@
             ],
             "title": "Reason"
           },
-          "processed": {
+          "status": {
             "anyOf": [
               {
-                "type": "boolean"
+                "$ref": "#/components/schemas/RequestStatus"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Processed"
+            ]
           }
         },
         "type": "object",
@@ -4294,6 +4852,24 @@
             "type": "boolean",
             "title": "Processed"
           },
+          "refused": {
+            "type": "boolean",
+            "title": "Refused"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RequestStatus"
+          },
+          "loan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loan Id"
+          },
           "requested_catalogs": {
             "items": {
               "$ref": "#/components/schemas/RequestedCatalogPublic"
@@ -4311,6 +4887,8 @@
           "end_date",
           "created_at",
           "processed",
+          "refused",
+          "status",
           "requested_catalogs"
         ],
         "title": "RequestPublic"
@@ -4385,6 +4963,16 @@
           "recommendations"
         ],
         "title": "RequestRecommendationsResponse"
+      },
+      "RequestStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "refused",
+          "approved"
+        ],
+        "title": "RequestStatus",
+        "description": "Represents the status of a request."
       },
       "RequestedCatalogPost": {
         "properties": {

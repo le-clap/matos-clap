@@ -1,5 +1,5 @@
 from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     DEBUG: bool = False
     ENABLE_DEV_LOGIN: bool = False
+
+    MEDIA_DIR: str = "data/media"
 
     @model_validator(mode="after")
     def build_database_url(self) -> Settings:
@@ -37,10 +39,11 @@ class Settings(BaseSettings):
     def parse_allowed_origins(cls, v: str) -> list[str]:
         return v.split(",") if v else []
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
 
 
 settings = Settings()

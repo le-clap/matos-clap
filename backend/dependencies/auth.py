@@ -31,7 +31,10 @@ def _get_user_from_token(session: Session, token: str | None) -> User:
     if not user_session:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session")
 
-    if user_session.expires_at < datetime.now(UTC):
+    expires_at = user_session.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=UTC)
+    if expires_at < datetime.now(UTC):
         session.delete(user_session)
         session.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired")

@@ -4,7 +4,6 @@ from enum import StrEnum
 class AccessLevel(StrEnum):
     """Represents the access level of a user."""
 
-    UNAUTHENTICATED = "unauthenticated"
     USER = "user"
     CLAP = "clap"
     MANAGER = "manager"
@@ -28,8 +27,16 @@ class Availability(StrEnum):
 
 
 class LoanStatus(StrEnum):
-    """Represents the status of a loan for timeline display."""
+    """Represents the status of a loan."""
 
     SCHEDULED = "scheduled"
     ACTIVE = "active"
     RETURNED = "returned"
+
+
+class RequestStatus(StrEnum):
+    """Represents the status of a request."""
+
+    PENDING = "pending"
+    REFUSED = "refused"
+    APPROVED = "approved"

@@ -12,7 +12,7 @@ from db.database import get_session
 from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel, Availability, Condition, LoanStatus
 from models.models import Catalog, Item, Loan, LoanedItem, User
-from schemas.items import ItemPatch, ItemPost, ItemPublic, LoanedItemsResponse, LoanedItemWithLoan
+from schemas.items import ItemHistoryEntry, ItemPatch, ItemPost, ItemPublic
 from services.inventory import item_load_options
 
 router = APIRouter(prefix="/items", tags=["items"])
@@ -42,75 +42,6 @@ def get_items(
 
 
 @router.get(
-    "/loaned",
-    response_model=LoanedItemsResponse,
-    responses={422: {"description": "Invalid date range"}},
-)
-def get_loaned_items(
-    session: SessionDep,
-    _user: ClapDep,
-    start_date: Annotated[datetime, Query(description="Start of the date range")],
-    end_date: Annotated[datetime, Query(description="End of the date range")],
-) -> LoanedItemsResponse:
-    """Get all items that are loaned out during a date range.
-
-    Returns items with their associated loan information, useful for
-    seeing what equipment is out at any given time.
-    """
-    if start_date >= end_date:
-        raise HTTPException(status_code=422, detail="start_date must be before end_date")
-
-    effective_start = func.coalesce(Loan.actual_start_date, Loan.start_date)
-    effective_end = func.coalesce(LoanedItem.actual_return_date, Loan.actual_return_date, Loan.end_date)
-
-    statement = (
-        select(LoanedItem)
-        .join(Loan, LoanedItem.loan_id == Loan.id)  # ty: ignore[invalid-argument-type]
-        .join(Item, LoanedItem.item_id == Item.id)  # ty: ignore[invalid-argument-type]
-        .options(
-            joinedload(LoanedItem.item).joinedload(Item.catalog),  # ty: ignore[invalid-argument-type]
-            joinedload(LoanedItem.loan).joinedload(Loan.borrower),  # ty: ignore[invalid-argument-type]
-        )
-        .where(
-            Item.deleted_at.is_(None),  # ty: ignore[unresolved-attribute]
-            effective_start < end_date,
-            effective_end > start_date,
-        )
-        .order_by(effective_start)
-    )
-    loaned_items = session.exec(statement).unique().all()
-
-    def get_status(loan: Loan) -> LoanStatus:
-        if loan.actual_return_date is not None:
-            return LoanStatus.RETURNED
-        if loan.actual_start_date is not None:
-            return LoanStatus.ACTIVE
-        return LoanStatus.SCHEDULED
-
-    items_with_loans = [
-        LoanedItemWithLoan(
-            item_id=li.item.id,  # ty: ignore[invalid-argument-type]
-            item_name=li.item.name,
-            catalog_name=li.item.catalog.name,
-            loan_id=li.loan.id,  # ty: ignore[invalid-argument-type]
-            borrower_name=li.loan.borrower.name,
-            loan_start_date=li.loan.start_date,
-            loan_end_date=li.loan.end_date,
-            actual_start_date=li.loan.actual_start_date,
-            actual_return_date=li.actual_return_date or li.loan.actual_return_date,
-            status=get_status(li.loan),
-        )
-        for li in loaned_items
-    ]
-
-    return LoanedItemsResponse(
-        start_date=start_date,
-        end_date=end_date,
-        loaned_items=items_with_loans,
-    )
-
-
-@router.get(
     "/{item_id}",
     response_model=ItemPublic,
     responses={404: {"description": "Item not found"}},
@@ -125,6 +56,59 @@ def get_item_by_id(
     if not item:
         raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
     return item
+
+
+@router.get(
+    "/{item_id}/history",
+    response_model=list[ItemHistoryEntry],
+    responses={404: {"description": "Item not found"}},
+)
+def get_item_history(
+    session: SessionDep,
+    _user: ClapDep,
+    item_id: Annotated[int, Path(ge=1)],
+) -> list[ItemHistoryEntry]:
+    """Custody history of an item: every loan it was part of, most recent first."""
+    if not session.get(Item, item_id):
+        raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
+
+    effective_start = func.coalesce(Loan.actual_start_date, Loan.start_date)
+    statement = (
+        select(LoanedItem)
+        .join(Loan, LoanedItem.loan_id == Loan.id)  # ty: ignore[invalid-argument-type]
+        .where(LoanedItem.item_id == item_id)
+        .options(
+            joinedload(LoanedItem.loan).joinedload(Loan.borrower),  # ty: ignore[invalid-argument-type]
+            joinedload(LoanedItem.loan).joinedload(Loan.assignee),  # ty: ignore[invalid-argument-type]
+        )
+        .order_by(effective_start.desc())
+    )
+    loaned_items = session.exec(statement).unique().all()
+
+    entries: list[ItemHistoryEntry] = []
+    for li in loaned_items:
+        loan = li.loan
+        returned_at = li.actual_return_date or loan.actual_return_date
+        if returned_at is not None:
+            status = LoanStatus.RETURNED
+        elif loan.actual_start_date is not None:
+            status = LoanStatus.ACTIVE
+        else:
+            status = LoanStatus.SCHEDULED
+        entries.append(
+            ItemHistoryEntry(
+                loan_id=loan.id,  # ty: ignore[invalid-argument-type]
+                borrower=loan.borrower,  # ty: ignore[invalid-argument-type]
+                assignee=loan.assignee,  # ty: ignore[invalid-argument-type]
+                start_date=loan.start_date,
+                end_date=loan.end_date,
+                actual_start_date=loan.actual_start_date,
+                actual_return_date=returned_at,
+                return_condition=li.return_condition,
+                status=status,
+            )
+        )
+    return entries
 
 
 @router.post(
