@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: str = ""
 
-    DEBUG: bool = False
+    ENV: str = "development"
     ENABLE_DEV_LOGIN: bool = False
 
     MEDIA_DIR: str = "data/media"
