@@ -37,8 +37,8 @@ media_dir = Path(settings.MEDIA_DIR)
 media_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=media_dir), name="media")
 
-
-app.frontend("/", directory="../frontend/dist")
+if settings.ENV == "production":
+    app.frontend("/", directory="../frontend/dist")
 
 
 @app.get("/health")
