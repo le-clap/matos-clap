@@ -24,8 +24,7 @@ def _loan_body(borrower_id: int, item_ids: list[int], **kwargs) -> dict:
 
 
 def test_create_loan_requires_clap(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     user = f_user(AccessLevel.USER)
     token = f_token(user)
@@ -35,8 +34,7 @@ def test_create_loan_requires_clap(client, session, f_user, f_token, f_category,
 
 
 def test_create_loan(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -51,8 +49,7 @@ def test_create_loan(client, session, f_user, f_token, f_category, f_catalog, f_
 
 
 def test_create_loan_warns_on_date_conflict(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -67,8 +64,7 @@ def test_create_loan_warns_on_date_conflict(client, session, f_user, f_token, f_
 
 
 def test_create_loan_fails_on_duplicate_item_ids(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -79,8 +75,7 @@ def test_create_loan_fails_on_duplicate_item_ids(client, session, f_user, f_toke
 
 
 def test_create_loan_fails_on_deleted_item(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     manager = f_user(AccessLevel.MANAGER)
     clap = f_user(AccessLevel.CLAP)
@@ -95,8 +90,7 @@ def test_create_loan_fails_on_deleted_item(client, session, f_user, f_token, f_c
 
 
 def test_create_loan_naive_datetime_returns_422(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -113,8 +107,7 @@ def test_create_loan_naive_datetime_returns_422(client, session, f_user, f_token
 
 
 def test_create_loan_marks_request_approved(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -145,8 +138,7 @@ def test_create_loan_marks_request_approved(client, session, f_user, f_token, f_
 
 
 def test_get_loans_user_sees_only_own(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item_a = f_item(catalog)
     item_b = f_item(catalog)
     borrower_a = f_user(AccessLevel.USER)
@@ -166,8 +158,7 @@ def test_get_loans_active_true_excludes_scheduled(
     client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
 ):
     """active=true → only started+unreturned. Scheduled loans must be excluded."""
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item_s = f_item(catalog)  # scheduled
     item_a = f_item(catalog)  # active
     item_r = f_item(catalog)  # returned
@@ -198,8 +189,7 @@ def test_get_loans_active_true_excludes_scheduled(
 def test_get_loans_active_false_returns_only_returned(
     client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
 ):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item_s = f_item(catalog)
     item_a = f_item(catalog)
     item_r = f_item(catalog)
@@ -220,8 +210,7 @@ def test_get_loans_active_false_returns_only_returned(
 
 
 def test_get_loans_no_filter_returns_all(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
     token = f_token(clap)
@@ -238,8 +227,7 @@ def test_get_loans_no_filter_returns_all(client, session, f_user, f_token, f_cat
 
 
 def test_return_loan(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -260,8 +248,7 @@ def test_return_loan(client, session, f_user, f_token, f_category, f_catalog, f_
 
 
 def test_return_loan_updates_deposit(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog, deposit_cents=10000)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -282,8 +269,7 @@ def test_return_loan_updates_deposit(client, session, f_user, f_token, f_categor
 def test_return_loan_retained_exceeds_total_returns_422(
     client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
 ):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -301,8 +287,7 @@ def test_return_loan_retained_exceeds_total_returns_422(
 
 
 def test_return_loan_not_started_returns_409(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -321,8 +306,7 @@ def test_return_loan_not_started_returns_409(client, session, f_user, f_token, f
 def test_return_loan_already_returned_returns_409(
     client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
 ):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -343,8 +327,7 @@ def test_return_loan_already_returned_returns_409(
 
 
 def test_partial_return_loan(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item_a = f_item(catalog)
     item_b = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
@@ -369,8 +352,7 @@ def test_partial_return_loan(client, session, f_user, f_token, f_category, f_cat
 
 def test_partial_return_all_items_is_rejected(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
     """Partial return must leave at least one item active."""
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -417,8 +399,7 @@ def test_get_timeline_naive_datetime_returns_422(client, session, f_user, f_toke
 def test_get_timeline_returns_overlapping_loans(
     client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
 ):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -442,8 +423,7 @@ def test_get_timeline_returns_overlapping_loans(
 
 
 def test_patch_loan_requires_clap(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -455,8 +435,7 @@ def test_patch_loan_requires_clap(client, session, f_user, f_token, f_category, 
 
 
 def test_patch_loan(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -471,8 +450,7 @@ def test_patch_loan(client, session, f_user, f_token, f_category, f_catalog, f_i
 def test_patch_loan_end_before_start_returns_422(
     client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
 ):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -485,8 +463,7 @@ def test_patch_loan_end_before_start_returns_422(
 
 
 def test_delete_loan(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -501,8 +478,7 @@ def test_delete_loan(client, session, f_user, f_token, f_category, f_catalog, f_
 
 
 def test_loan_response_exposes_status(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
     token = f_token(clap)
@@ -529,8 +505,7 @@ def test_loan_response_exposes_status(client, session, f_user, f_token, f_catego
 
 
 def test_second_loan_from_same_request_returns_409(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item_a = f_item(catalog)
     item_b = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
@@ -563,8 +538,7 @@ def test_second_loan_from_same_request_returns_409(client, session, f_user, f_to
 
 
 def test_cannot_create_loan_from_refused_request(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -588,8 +562,7 @@ def test_cannot_create_loan_from_refused_request(client, session, f_user, f_toke
 
 
 def test_edit_scheduled_loan_items(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item_a = f_item(catalog)
     item_b = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
@@ -605,8 +578,7 @@ def test_edit_scheduled_loan_items(client, session, f_user, f_token, f_category,
 
 
 def test_cannot_edit_items_of_started_loan(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item_a = f_item(catalog)
     item_b = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
@@ -624,8 +596,7 @@ def test_cannot_edit_items_of_started_loan(client, session, f_user, f_token, f_c
 
 
 def test_delete_loan_reopens_request(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)

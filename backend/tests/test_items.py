@@ -10,8 +10,7 @@ def test_get_items_requires_auth(client):
 
 
 def test_get_items(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     user = f_user(AccessLevel.USER)
     token = f_token(user)
@@ -23,8 +22,7 @@ def test_get_items(client, session, f_user, f_token, f_category, f_catalog, f_it
 
 
 def test_get_items_filter_by_availability(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     avail = f_item(catalog, availability=Availability.AVAILABLE)
     maint = f_item(catalog, availability=Availability.MAINTENANCE)
     user = f_user(AccessLevel.USER)
@@ -38,8 +36,7 @@ def test_get_items_filter_by_availability(client, session, f_user, f_token, f_ca
 
 
 def test_get_item_by_id(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     user = f_user(AccessLevel.USER)
     token = f_token(user)
@@ -58,8 +55,7 @@ def test_get_item_not_found(client, session, f_user, f_token):
 
 
 def test_create_item_requires_manager(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     clap = f_user(AccessLevel.CLAP)
     token = f_token(clap)
 
@@ -72,8 +68,7 @@ def test_create_item_requires_manager(client, session, f_user, f_token, f_catego
 
 
 def test_create_item(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     manager = f_user(AccessLevel.MANAGER)
     token = f_token(manager)
 
@@ -90,8 +85,7 @@ def test_create_item(client, session, f_user, f_token, f_category, f_catalog):
 
 
 def test_update_item(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog, condition=Condition.GOOD)
     manager = f_user(AccessLevel.MANAGER)
     token = f_token(manager)
@@ -102,8 +96,7 @@ def test_update_item(client, session, f_user, f_token, f_category, f_catalog, f_
 
 
 def test_soft_delete_item(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     manager = f_user(AccessLevel.MANAGER)
     token = f_token(manager)
@@ -113,8 +106,7 @@ def test_soft_delete_item(client, session, f_user, f_token, f_category, f_catalo
 
 
 def test_soft_deleted_item_excluded_from_list(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog)
     manager = f_user(AccessLevel.MANAGER)
     token = f_token(manager)

@@ -15,8 +15,7 @@ def _request_body(borrower_id: int, catalog_id: int, *, quantity: int = 1) -> di
 
 
 def test_create_request(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -29,8 +28,7 @@ def test_create_request(client, session, f_user, f_token, f_category, f_catalog)
 
 
 def test_create_request_for_other_user_is_forbidden(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     other = f_user(AccessLevel.USER)
     token = f_token(user)
@@ -48,8 +46,7 @@ def test_create_request_missing_catalog_returns_404(client, session, f_user, f_t
 
 
 def test_create_request_naive_datetime_returns_422(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -65,25 +62,29 @@ def test_create_request_naive_datetime_returns_422(client, session, f_user, f_to
 
 
 def test_get_requests_user_sees_only_own(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
-    user_a = f_user(AccessLevel.USER)
-    token_a = f_token(user_a)
+    catalog = f_catalog(f_category())
 
     # user_a creates a request
-    client.post("/api/requests", json=_request_body(user_a.id, catalog.id), headers=auth(token_a))
+    user_a = f_user(AccessLevel.USER)
+    token_a = f_token(user_a)
+    r_a = client.post("/api/requests", json=_request_body(user_a.id, catalog.id), headers=auth(token_a))
+    assert r_a.status_code == 201
 
-    # user_b has no requests but also create one for user_b via CLAP (direct insert)
+    # user_b creates a request
+    user_b = f_user(AccessLevel.USER)
+    r_b = client.post("/api/requests", json=_request_body(user_b.id, catalog.id), headers=auth(f_token(user_b)))
+    assert r_b.status_code == 201
+
     # We test from user_a's perspective
     r = client.get("/api/requests", headers=auth(token_a))
     assert r.status_code == 200
-    for req in r.json()["items"]:
-        assert req["borrower"]["id"] == user_a.id
+
+    borrower_ids = {req["borrower"]["id"] for req in r.json()["items"]}
+    assert borrower_ids == {user_a.id}
 
 
 def test_get_requests_clap_sees_all(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user_a = f_user(AccessLevel.USER)
     user_b = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -102,8 +103,7 @@ def test_get_requests_clap_sees_all(client, session, f_user, f_token, f_category
 
 
 def test_get_request_by_id_requires_clap(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -115,8 +115,7 @@ def test_get_request_by_id_requires_clap(client, session, f_user, f_token, f_cat
 
 
 def test_get_recommendations_requires_clap(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -128,8 +127,7 @@ def test_get_recommendations_requires_clap(client, session, f_user, f_token, f_c
 
 
 def test_get_recommendations_returns_available_items(client, session, f_user, f_token, f_category, f_catalog, f_item):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     item = f_item(catalog, availability=Availability.AVAILABLE)
     user = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -151,8 +149,7 @@ def test_get_recommendations_warns_if_insufficient_stock(
     client, session, f_user, f_token, f_category, f_catalog, f_item
 ):
     """Requesting qty=2 when only 1 item exists should warn."""
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     f_item(catalog, availability=Availability.AVAILABLE)
     user = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
@@ -170,8 +167,7 @@ def test_get_recommendations_warns_if_insufficient_stock(
 
 
 def test_update_request_requires_clap(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -183,8 +179,7 @@ def test_update_request_requires_clap(client, session, f_user, f_token, f_catego
 
 
 def test_delete_request_requires_clap(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
     token_user = f_token(user)
@@ -201,8 +196,7 @@ def test_delete_request_requires_clap(client, session, f_user, f_token, f_catego
 
 
 def test_owner_can_edit_pending_request(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -219,8 +213,7 @@ def test_owner_can_edit_pending_request(client, session, f_user, f_token, f_cate
 
 
 def test_owner_cannot_edit_other_users_request(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     owner = f_user(AccessLevel.USER)
     other = f_user(AccessLevel.USER)
     req_id = client.post(
@@ -232,8 +225,7 @@ def test_owner_cannot_edit_other_users_request(client, session, f_user, f_token,
 
 
 def test_owner_can_delete_pending_request(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
     req_id = client.post("/api/requests", json=_request_body(user.id, catalog.id), headers=auth(token)).json()["id"]
@@ -246,8 +238,7 @@ def test_owner_can_delete_pending_request(client, session, f_user, f_token, f_ca
 
 
 def test_refuse_and_reopen_request(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
     req_id = client.post("/api/requests", json=_request_body(user.id, catalog.id), headers=auth(f_token(user))).json()[
@@ -266,8 +257,7 @@ def test_refuse_and_reopen_request(client, session, f_user, f_token, f_category,
 
 
 def test_create_request_invalid_phone_returns_422(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -278,8 +268,7 @@ def test_create_request_invalid_phone_returns_422(client, session, f_user, f_tok
 
 
 def test_create_request_normalizes_phone(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -294,8 +283,7 @@ def test_create_request_normalizes_phone(client, session, f_user, f_token, f_cat
 
 
 def test_patch_request_end_before_start_returns_422(client, session, f_user, f_token, f_category, f_catalog):
-    cat = f_category()
-    catalog = f_catalog(cat)
+    catalog = f_catalog(f_category())
     user = f_user(AccessLevel.USER)
     token = f_token(user)
     # _request_body uses iso(3) → iso(10).
