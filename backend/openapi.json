@@ -1915,6 +1915,15 @@
             }
           },
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Search"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -2434,6 +2443,15 @@
               "minimum": 0,
               "default": 0,
               "title": "Page"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Search"
             }
           },
           {
@@ -4656,6 +4674,17 @@
           "page": {
             "type": "integer",
             "title": "Page"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
           }
         },
         "type": "object",
@@ -4663,7 +4692,8 @@
           "items",
           "total",
           "limit",
-          "page"
+          "page",
+          "search"
         ],
         "title": "PaginatedResponse[LoanPublic]"
       },
@@ -4687,6 +4717,17 @@
           "page": {
             "type": "integer",
             "title": "Page"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
           }
         },
         "type": "object",
@@ -4694,7 +4735,8 @@
           "items",
           "total",
           "limit",
-          "page"
+          "page",
+          "search"
         ],
         "title": "PaginatedResponse[RequestPublic]"
       },

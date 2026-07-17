@@ -64,6 +64,10 @@ def get_requests(
     base_statement = select(Request)
     if effective_borrower_id is not None:
         base_statement = base_statement.where(Request.borrower_id == effective_borrower_id)
+    elif pagination.search is not None:
+        base_statement = base_statement.join(Request.borrower).where(  # ty: ignore[invalid-argument-type]
+            func.lower(User.name).like(f"%{pagination.search.lower()}%")
+        )
     if processed is not None:
         processed_statuses = {
             True: [RequestStatus.APPROVED, RequestStatus.REFUSED],
@@ -88,6 +92,7 @@ def get_requests(
         total=total,
         limit=pagination.limit,
         page=pagination.page,
+        search=pagination.search,
     )
 
 

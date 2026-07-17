@@ -65,6 +65,10 @@ def get_loans(
     base_statement = select(Loan)
     if effective_borrower_id is not None:
         base_statement = base_statement.where(Loan.borrower_id == effective_borrower_id)
+    elif pagination.search is not None:
+        base_statement = base_statement.join(Loan.borrower).where(  # ty: ignore[invalid-argument-type]
+            func.lower(User.name).like(f"%{pagination.search.lower()}%")
+        )
     if active is True:
         base_statement = base_statement.where(
             Loan.actual_start_date.is_not(None),  # ty: ignore[unresolved-attribute]
@@ -83,6 +87,7 @@ def get_loans(
         total=total,
         limit=pagination.limit,
         page=pagination.page,
+        search=pagination.search,
     )
 
 
