@@ -18,8 +18,26 @@ def test_get_users_as_clap(client, session):
 
     r = client.get("/api/users", headers=auth(token))
     assert r.status_code == 200
-    assert isinstance(r.json(), list)
-    assert any(u["username"] == clap.username for u in r.json())
+    data = r.json()
+    assert data["total"] >= 1
+    assert data["items"]
+    assert any(u["username"] == clap.username for u in data["items"])
+    assert data["limit"] == 50
+    assert data["page"] == 0
+    assert data["search"] is None
+
+
+def test_get_users_filters_by_access_level(client, session):
+    make_user(session, AccessLevel.USER, 2)
+    manager = make_user(session, AccessLevel.MANAGER, 3)
+    clap = make_user(session, AccessLevel.CLAP, 4)
+    token = make_token(session, clap)
+
+    r = client.get("/api/users?access_level=manager", headers=auth(token))
+    assert r.status_code == 200
+    data = r.json()
+    assert all(u["access_level"] == "manager" for u in data["items"])
+    assert any(u["id"] == manager.id for u in data["items"])
 
 
 def test_get_me(client, session):

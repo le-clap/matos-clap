@@ -97,9 +97,31 @@ def test_get_requests_clap_sees_all(client, session, f_user, f_token, f_category
 
     r = client.get("/api/requests", headers=auth(token_clap))
     assert r.status_code == 200
-    borrower_ids = {req["borrower"]["id"] for req in r.json()["items"]}
+    data = r.json()
+    borrower_ids = {req["borrower"]["id"] for req in data["items"]}
     assert user_a.id in borrower_ids
     assert user_b.id in borrower_ids
+    assert data["search"] is None
+    assert data["page"] == 0
+    assert data["limit"] == 50
+
+
+def test_get_requests_search_filters_by_borrower_name(client, session, f_user, f_token, f_category, f_catalog):
+    catalog = f_catalog(f_category())
+    borrower_a = f_user(AccessLevel.USER)
+    borrower_b = f_user(AccessLevel.USER)
+    clap = f_user(AccessLevel.CLAP)
+
+    client.post("/api/requests", json=_request_body(borrower_a.id, catalog.id), headers=auth(f_token(borrower_a)))
+    client.post("/api/requests", json=_request_body(borrower_b.id, catalog.id), headers=auth(f_token(borrower_b)))
+
+    params = {"search": "user 0"}
+    r = client.get("/api/requests", params=params, headers=auth(f_token(clap)))
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 1
+    assert data["search"] == params["search"]
+    assert {req["borrower"]["id"] for req in data["items"]} == {borrower_a.id}
 
 
 def test_get_request_by_id_requires_clap(client, session, f_user, f_token, f_category, f_catalog):
