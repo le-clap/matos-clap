@@ -4,6 +4,7 @@ export default defineConfig({
   input: "../backend/openapi.json",
   output: {
     path: "src/client",
+    postProcess: ["prettier"],
   },
   plugins: [
     "@hey-api/client-fetch",
@@ -15,5 +16,4 @@ export default defineConfig({
       },
     },
   ],
-  postProcess: ["prettier"],
 });

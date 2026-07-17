@@ -27,7 +27,6 @@ jobs:
 
   frontend-lint:
     name: Frontend Lint & Build
-    if: false # Frontend CI disabled
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,5 +41,6 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - run: npm ci
+      - run: npm run generate:client
       - run: npm run lint
       - run: npm run build
