@@ -17,12 +17,13 @@ export interface RequestFilters {
   processed?: boolean;
   page?: number;
   limit?: number;
+  search?: string;
 }
 
 export function useRequests(filters: RequestFilters = {}) {
-  const { borrowerId, processed, page = 0, limit = 20 } = filters;
+  const { borrowerId, processed, page = 0, limit = 20, search } = filters;
   return useQuery({
-    queryKey: qk.requests({ borrowerId, processed, page, limit }),
+    queryKey: qk.requests({ borrowerId, processed, page, limit, search}),
     queryFn: () =>
       unwrap(
         RequestsService.requestsGetRequests({
@@ -31,6 +32,7 @@ export function useRequests(filters: RequestFilters = {}) {
             processed: processed ?? null,
             page,
             limit,
+            search,
           },
         }),
       ),

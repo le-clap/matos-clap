@@ -7,7 +7,7 @@ class PaginationParams(BaseModel):
 
     limit: int = Query(50, gt=0, le=100, description="Maximum number of items to return")
     page: int = Query(0, ge=0, description="Page number")
-    search: str = Query(None, description="Search term")
+    search: str | None = Query(None, description="Search term")
 
     def offset(self) -> int:
         """Calculate offset from page number."""
