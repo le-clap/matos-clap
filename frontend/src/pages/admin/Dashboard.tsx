@@ -29,7 +29,7 @@ export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const pending = useRequests({ processed: false, limit: 5 });
-  const activeLoans = useLoans({ active: true, limit: 100 });
+  const activeLoans = useLoans({ status: "active", limit: 100 });
   const recentLoans = useLoans({ limit: 5 });
   const catalogs = useCatalogs();
   const items = useItems();

@@ -2465,19 +2465,19 @@
             }
           },
           {
-            "name": "active",
+            "name": "status",
             "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/LoanStatus"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Active"
+              "title": "Status"
             }
           },
           {

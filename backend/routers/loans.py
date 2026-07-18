@@ -11,7 +11,7 @@ from sqlmodel import Session, asc, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, has_role, require_role
-from models.enums import AccessLevel, Condition, RequestStatus
+from models.enums import AccessLevel, Condition, LoanStatus, RequestStatus
 from models.models import Item, Loan, LoanedItem, Request, User
 from schemas.loans import (
     LoanPartialReturnPost,
@@ -54,7 +54,7 @@ def get_loans(
     current_user: CurrentUserDep,
     pagination: Annotated[PaginationParams, Depends()],
     borrower_id: Annotated[int | None, Query()] = None,
-    active: Annotated[bool | None, Query()] = None,
+    status: Annotated[LoanStatus | None, Query()] = None,
 ):
     effective_borrower_id = borrower_id
     if not has_role(current_user, AccessLevel.CLAP):
@@ -69,13 +69,8 @@ def get_loans(
         base_statement = base_statement.join(Loan.borrower).where(  # ty: ignore[invalid-argument-type]
             col(User.name).ilike(f"%{pagination.search}%")
         )
-    if active is True:
-        base_statement = base_statement.where(
-            col(Loan.actual_start_date).is_not(None),
-            col(Loan.actual_return_date).is_(None),
-        )
-    elif active is False:
-        base_statement = base_statement.where(col(Loan.actual_return_date).is_not(None))
+    if status is not None:
+        base_statement = base_statement.where(Loan.status == status)
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 

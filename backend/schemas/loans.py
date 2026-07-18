@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import AwareDatetime, BaseModel, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from models.enums import Condition, LoanStatus
 from schemas.items import ItemBrief
@@ -8,7 +8,7 @@ from schemas.users import UserBrief
 
 
 class LoanedItemPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     item: ItemBrief
@@ -42,7 +42,7 @@ class LoanPatch(BaseModel):
     actual_return_date: AwareDatetime | None = None
     retained_deposit_cents: int | None = Field(default=None, ge=0)
     comments: str | None = None
-    # Structural edits — only allowed while the loan has not started.
+    # Structural edits: only allowed while the loan has not started.
     item_ids: list[int] | None = Field(default=None, min_length=1)
 
 
@@ -78,7 +78,7 @@ class LoanReturnPost(BaseModel):
 
 
 class LoanPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     borrower: UserBrief
