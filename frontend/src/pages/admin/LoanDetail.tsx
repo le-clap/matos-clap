@@ -238,7 +238,7 @@ export function AdminLoanDetailPage() {
           loan={loan}
           scheduled={status === "scheduled"}
           items={allItems ?? []}
-          users={users ?? []}
+          users={users?.items ?? []}
           onClose={() => setModal(null)}
           onSave={async (body) => {
             try {

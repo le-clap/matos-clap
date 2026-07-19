@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -37,6 +38,7 @@ export function useLoans(filters: LoanFilters = {}) {
           },
         }),
       ),
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -36,6 +37,7 @@ export function useRequests(filters: RequestFilters = {}) {
           },
         }),
       ),
+    placeholderData: keepPreviousData,
   });
 }
 

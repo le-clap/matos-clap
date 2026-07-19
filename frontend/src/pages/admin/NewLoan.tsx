@@ -106,7 +106,7 @@ export function AdminNewLoanPage() {
                 }
               >
                 <option value="">— Choisir —</option>
-                {users?.map((u) => (
+                {users?.items?.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name} ({u.username})
                   </option>

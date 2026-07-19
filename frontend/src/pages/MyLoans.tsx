@@ -33,7 +33,7 @@ export function MyLoansPage() {
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-[var(--radius-card)]" />
+            <Skeleton key={i} className="h-32 rounded-card" />
           ))}
         </div>
       ) : !data || data.items.length === 0 ? (

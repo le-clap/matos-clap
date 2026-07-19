@@ -31,17 +31,17 @@ export function AdminUsersPage() {
 
   const canEdit = hasRole("admin");
 
-  const rows = useMemo(() => {
-    if (!data) return [];
+  const rows = useMemo<UserPublic[]>((() => {
+    if (!data?.items) return [];
     const q = search.trim().toLowerCase();
-    if (!q) return data;
-    return data.filter(
-      (u) =>
+    if (!q) return data.items;
+    return data.items.filter(
+      (u: UserPublic) =>
         u.name.toLowerCase().includes(q) ||
         u.username.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q),
     );
-  }, [data, search]);
+  }), [data, search]);
 
   return (
     <div>
