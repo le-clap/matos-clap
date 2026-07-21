@@ -154,59 +154,29 @@ def test_get_loans_user_sees_only_own(client, session, f_user, f_token, f_catego
         assert loan["borrower"]["id"] == borrower_a.id
 
 
-def test_get_loans_active_true_excludes_scheduled(
-    client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
-):
-    """active=true → only started+unreturned. Scheduled loans must be excluded."""
+def test_get_loans_filters_loans_by_status(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
     catalog = f_catalog(f_category())
-    item_s = f_item(catalog)  # scheduled
-    item_a = f_item(catalog)  # active
-    item_r = f_item(catalog)  # returned
     borrower = f_user(AccessLevel.USER)
     clap = f_user(AccessLevel.CLAP)
     token = f_token(clap)
     now = datetime.now(UTC)
 
-    f_loan(borrower, clap, [item_s])  # no actual_start → scheduled
-    f_loan(borrower, clap, [item_a], actual_start=now - timedelta(hours=1))  # started, not returned
-    f_loan(
-        borrower,
-        clap,
-        [item_r],
-        actual_start=now - timedelta(days=2),
-        actual_return=now - timedelta(hours=1),
-    )  # returned
+    loan_scheduled = f_loan(borrower, clap, [f_item(catalog)])
+    loan_active = f_loan(borrower, clap, [f_item(catalog)], actual_start=now - timedelta(hours=1))
+    loan_returned = f_loan(
+        borrower, clap, [f_item(catalog)], actual_start=now - timedelta(days=2), actual_return=now - timedelta(hours=1)
+    )
 
-    r = client.get("/api/loans?active=true", headers=auth(token))
-    assert r.status_code == 200
-    data = r.json()
-    assert data["total"] == 1
-    loan = data["items"][0]
-    assert loan["actual_start_date"] is not None
-    assert loan["actual_return_date"] is None
-
-
-def test_get_loans_active_false_returns_only_returned(
-    client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
-):
-    catalog = f_catalog(f_category())
-    item_s = f_item(catalog)
-    item_a = f_item(catalog)
-    item_r = f_item(catalog)
-    borrower = f_user(AccessLevel.USER)
-    clap = f_user(AccessLevel.CLAP)
-    token = f_token(clap)
-    now = datetime.now(UTC)
-
-    f_loan(borrower, clap, [item_s])
-    f_loan(borrower, clap, [item_a], actual_start=now - timedelta(hours=1))
-    f_loan(borrower, clap, [item_r], actual_start=now - timedelta(days=2), actual_return=now - timedelta(hours=1))
-
-    r = client.get("/api/loans?active=false", headers=auth(token))
-    assert r.status_code == 200
-    data = r.json()
-    assert data["total"] == 1
-    assert data["items"][0]["actual_return_date"] is not None
+    for status, expected_count, loan in [
+        ("scheduled", 1, loan_scheduled),
+        ("active", 1, loan_active),
+        ("returned", 1, loan_returned),
+    ]:
+        r = client.get(f"/api/loans?status={status}", headers=auth(token))
+        assert r.status_code == 200
+        data = r.json()
+        assert data["total"] == expected_count
+        assert data["items"][0]["id"] == loan.id
 
 
 def test_get_loans_no_filter_returns_all(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
