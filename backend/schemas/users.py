@@ -1,10 +1,10 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from models.models import AccessLevel
 
 
 class UserBrief(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     username: str
@@ -17,7 +17,7 @@ class UserPatch(BaseModel):
 
 
 class UserPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     username: str

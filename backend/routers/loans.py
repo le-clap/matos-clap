@@ -55,7 +55,7 @@ def get_loans(
     pagination: Annotated[PaginationParams, Depends()],
     borrower_id: Annotated[int | None, Query()] = None,
     status: Annotated[LoanStatus | None, Query()] = None,
-):
+) -> PaginatedResponse[Loan]:
     effective_borrower_id = borrower_id
     if not has_role(current_user, AccessLevel.CLAP):
         effective_borrower_id = current_user.id

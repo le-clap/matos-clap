@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from models.enums import Availability, Condition, LoanStatus
 from schemas.catalogs import CatalogPublic
@@ -8,7 +8,7 @@ from schemas.users import UserBrief
 
 
 class ItemBrief(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
@@ -31,7 +31,7 @@ class ItemPatch(BaseModel):
 
 
 class ItemPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str

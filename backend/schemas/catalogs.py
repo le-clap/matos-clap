@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from schemas.categories import CategoryPublic
 
 
 class CatalogBrief(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
@@ -26,7 +26,7 @@ class CatalogPatch(BaseModel):
 
 
 class CatalogPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
