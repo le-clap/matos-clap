@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "generate:openapi": "cd ../backend && uv run python generate_openapi.py",
     "generate:client": "openapi-ts",
     "generate": "npm run generate:openapi && npm run generate:client"
