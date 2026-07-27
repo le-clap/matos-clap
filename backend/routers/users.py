@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import func
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, require_role
@@ -33,6 +33,9 @@ def get_users(
 
     if access_level is not None:
         base_statement = base_statement.where(User.access_level == access_level)
+
+    if pagination.search is not None:
+        base_statement = base_statement.where(col(User.name).ilike(f"%{pagination.search}%"))
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 

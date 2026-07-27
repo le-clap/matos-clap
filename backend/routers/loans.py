@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import AwareDatetime
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, has_role, require_role
@@ -67,20 +67,20 @@ def get_loans(
         base_statement = base_statement.where(Loan.borrower_id == effective_borrower_id)
     elif pagination.search is not None:
         base_statement = base_statement.join(Loan.borrower).where(  # ty: ignore[invalid-argument-type]
-            func.lower(User.name).like(f"%{pagination.search.lower()}%")
+            col(User.name).ilike(f"%{pagination.search}%")
         )
     if active is True:
         base_statement = base_statement.where(
-            Loan.actual_start_date.is_not(None),  # ty: ignore[unresolved-attribute]
-            Loan.actual_return_date.is_(None),  # ty: ignore[unresolved-attribute]
+            col(Loan.actual_start_date).is_not(None),
+            col(Loan.actual_return_date).is_(None),
         )
     elif active is False:
-        base_statement = base_statement.where(Loan.actual_return_date.is_not(None))  # ty: ignore[unresolved-attribute]
+        base_statement = base_statement.where(col(Loan.actual_return_date).is_not(None))
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 
     statement = base_statement.options(*_loan_load_options()).offset(pagination.offset()).limit(pagination.limit)
-    loans = session.exec(statement).unique().all()
+    loans = session.exec(statement).all()
 
     return PaginatedResponse(
         items=list(loans),
@@ -125,7 +125,7 @@ def get_loans_timeline(
         )
         .order_by(effective_start)
     )
-    loans = session.exec(statement).unique().all()
+    loans = session.exec(statement).all()
 
     timeline_entries = [
         LoanTimelineEntry(
@@ -160,7 +160,7 @@ def get_loan_by_id(
     loan_id: Annotated[int, Path(ge=1)],
 ) -> Loan:
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
-    loan = session.exec(statement).unique().first()
+    loan = session.exec(statement).first()
     if not loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
     if not has_role(current_user, AccessLevel.CLAP) and loan.borrower_id != current_user.id:
@@ -216,7 +216,7 @@ def create_loan(
     if len(unique_item_ids) != len(payload.item_ids):
         raise HTTPException(status_code=422, detail="Duplicate item IDs are not allowed")
 
-    items = session.exec(select(Item).where(Item.id.in_(unique_item_ids))).all()  # ty: ignore[unresolved-attribute]
+    items = session.exec(select(Item).where(col(Item.id).in_(unique_item_ids))).all()
     item_by_id = {item.id: item for item in items if item.id is not None}
     missing_item_ids = [item_id for item_id in unique_item_ids if item_id not in item_by_id]
     if missing_item_ids:
@@ -261,9 +261,7 @@ def create_loan(
 
     session.commit()
 
-    created_loan = (
-        session.exec(select(Loan).where(Loan.id == db_loan.id).options(*_loan_load_options())).unique().first()
-    )
+    created_loan = session.exec(select(Loan).where(Loan.id == db_loan.id).options(*_loan_load_options())).first()
     if not created_loan:
         raise HTTPException(status_code=500, detail="Loan was created but could not be reloaded")
     return LoanPostResponse(loan=created_loan, warnings=warnings)  # ty: ignore[invalid-argument-type]
@@ -285,7 +283,7 @@ def partial_return_loan_items(
     partial_return_data: LoanPartialReturnPost,
 ) -> Loan:
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
-    db_loan = session.exec(statement).unique().first()
+    db_loan = session.exec(statement).first()
     if not db_loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
     if db_loan.actual_start_date is None:
@@ -354,7 +352,7 @@ def return_loan(
     return_data: LoanReturnPost,
 ) -> Loan:
     statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
-    db_loan = session.exec(statement).unique().first()
+    db_loan = session.exec(statement).first()
     if not db_loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
     if db_loan.actual_start_date is None:
@@ -423,7 +421,7 @@ def update_loan(
     loan_id: Annotated[int, Path(ge=1)],
     loan_patch: LoanPatch,
 ) -> Loan:
-    db_loan = session.exec(select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())).unique().first()
+    db_loan = session.exec(select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())).first()
     if not db_loan:
         raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
 
@@ -452,7 +450,7 @@ def update_loan(
         if len(unique_item_ids) != len(new_item_ids):
             raise HTTPException(status_code=422, detail="Duplicate item IDs are not allowed")
 
-        items = session.exec(select(Item).where(Item.id.in_(unique_item_ids))).all()  # ty: ignore[unresolved-attribute]
+        items = session.exec(select(Item).where(col(Item.id).in_(unique_item_ids))).all()
         found_ids = {item.id for item in items}
         missing = [item_id for item_id in unique_item_ids if item_id not in found_ids]
         if missing:
@@ -473,7 +471,7 @@ def update_loan(
     session.add(db_loan)
     session.commit()
 
-    reloaded = session.exec(select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())).unique().first()
+    reloaded = session.exec(select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())).first()
     return reloaded  # ty: ignore[invalid-return-type]
 
 

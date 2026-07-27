@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, require_role
@@ -31,14 +31,12 @@ def get_items(
     availability: Annotated[Availability | None, Query()] = None,
     condition: Annotated[Condition | None, Query()] = None,
 ) -> list[Item]:
-    statement = (
-        select(Item).options(*item_load_options()).where(Item.deleted_at.is_(None))  # ty: ignore[unresolved-attribute]
-    )
+    statement = select(Item).options(*item_load_options()).where(col(Item.deleted_at).is_(None))
     if availability is not None:
         statement = statement.where(Item.availability == availability)
     if condition is not None:
         statement = statement.where(Item.condition == condition)
-    return list(session.exec(statement).unique().all())
+    return list(session.exec(statement).all())
 
 
 @router.get(
@@ -83,7 +81,7 @@ def get_item_history(
         )
         .order_by(effective_start.desc())
     )
-    loaned_items = session.exec(statement).unique().all()
+    loaned_items = session.exec(statement).all()
 
     entries: list[ItemHistoryEntry] = []
     for li in loaned_items:

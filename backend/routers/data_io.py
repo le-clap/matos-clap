@@ -14,7 +14,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import joinedload
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from db.database import get_session
 from dependencies.auth import require_role
@@ -120,9 +120,7 @@ def export_categories(session: SessionDep, _user: ManagerDep) -> Response:
 @router.get("/items/export")
 def export_items(session: SessionDep, _user: ManagerDep) -> Response:
     items = session.exec(
-        select(Item)
-        .where(Item.deleted_at.is_(None))  # ty: ignore[unresolved-attribute]
-        .options(joinedload(Item.catalog))  # ty: ignore[invalid-argument-type]
+        select(Item).where(col(Item.deleted_at).is_(None)).options(joinedload(Item.catalog))  # ty: ignore[invalid-argument-type]
     ).all()
 
     output = io.StringIO()
@@ -332,9 +330,7 @@ async def import_items(
 
     catalogs_by_name = _index_by_name(list(session.exec(select(Catalog)).all()))
     existing = {
-        i.id: i
-        for i in session.exec(select(Item).where(Item.deleted_at.is_(None))).all()  # ty: ignore[unresolved-attribute]
-        if i.id is not None
+        i.id: i for i in session.exec(select(Item).where(col(Item.deleted_at).is_(None))).all() if i.id is not None
     }
 
     has_availability = "availability" in header

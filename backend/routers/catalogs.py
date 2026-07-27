@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, Upload
 from pydantic import AwareDatetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from core.config import settings
 from db.database import get_session
@@ -220,15 +220,9 @@ def get_catalog_items_availability(
     if not session.get(Catalog, catalog_id):
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
-    all_items = (
-        session.exec(
-            select(Item)
-            .where(Item.catalog_id == catalog_id, Item.deleted_at.is_(None))  # ty: ignore[unresolved-attribute]
-            .options(*item_load_options())
-        )
-        .unique()
-        .all()
-    )
+    all_items = session.exec(
+        select(Item).where(Item.catalog_id == catalog_id, col(Item.deleted_at).is_(None)).options(*item_load_options())
+    ).all()
 
     item_ids = [item.id for item in all_items if item.id is not None]
     busy_ids = find_busy_item_ids(session, item_ids, start_date, end_date)
