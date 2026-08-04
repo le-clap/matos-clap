@@ -79,7 +79,7 @@ def get_requests(
 
     statement = (
         base_statement.options(*_request_load_options())
-        .order_by(asc(Request.start_date))
+        .order_by(asc(Request.start_date), asc(Request.id))
         .offset(pagination.offset())
         .limit(pagination.limit)
     )

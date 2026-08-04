@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import func
-from sqlmodel import Session, col, select
+from sqlmodel import Session, asc, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, require_role
@@ -39,7 +39,9 @@ def get_users(
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 
-    statement = base_statement.offset(pagination.offset()).limit(pagination.limit)
+    statement = (
+        base_statement.order_by(asc(User.name), asc(User.id)).offset(pagination.offset()).limit(pagination.limit)
+    )
     users = session.exec(statement).all()
 
     return PaginatedResponse(

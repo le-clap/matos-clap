@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import AwareDatetime
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
-from sqlmodel import Session, col, select
+from sqlmodel import Session, asc, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, has_role, require_role
@@ -79,7 +79,12 @@ def get_loans(
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 
-    statement = base_statement.options(*_loan_load_options()).offset(pagination.offset()).limit(pagination.limit)
+    statement = (
+        base_statement.options(*_loan_load_options())
+        .order_by(asc(Loan.start_date), asc(Loan.id))
+        .offset(pagination.offset())
+        .limit(pagination.limit)
+    )
     loans = session.exec(statement).all()
 
     return PaginatedResponse(
