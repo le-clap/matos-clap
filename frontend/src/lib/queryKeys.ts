@@ -26,6 +26,6 @@ export const qk = {
   request: (id: number) => ["requests", "detail", id] as const,
   recommendations: (id: number) => ["requests", id, "recommendations"] as const,
 
-  users: ["users"] as const,
+  users: (filters?: Record<string, unknown>) => ["users", filters ?? {}] as const,
   user: (id: number) => ["users", id] as const,
 };
