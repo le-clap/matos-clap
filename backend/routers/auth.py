@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Cookie, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
@@ -12,6 +13,8 @@ from db.database import get_session
 from models.enums import AccessLevel
 from models.models import User, UserSession
 from services.cla_auth import create_or_update_user, get_auth_url, validate_ticket
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -53,10 +56,12 @@ def cla_login() -> RedirectResponse:
 async def cla_callback(ticket: str, db: SessionDep) -> RedirectResponse:
     payload = await validate_ticket(ticket)
     if not payload:
+        logger.warning("auth.login_failed")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired ticket")
 
     user = create_or_update_user(db, payload)
     user_session = _create_session(db, user)
+    logger.info("auth.login", user_id=user.id, username=user.username)
 
     response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     _set_session_cookie(response, user_session)
@@ -71,6 +76,7 @@ def logout(
     if token:
         user_session = db.exec(select(UserSession).where(UserSession.token == token)).first()
         if user_session:
+            logger.info("auth.logout", user_id=user_session.user_id)
             db.delete(user_session)
             db.commit()
 
@@ -92,6 +98,7 @@ if settings.ENABLE_DEV_LOGIN:
         db.commit()
         db.refresh(user)
 
+        logger.warning("auth.dev_login_used", user_id=user.id, username=user.username)
         user_session = _create_session(db, user)
 
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)

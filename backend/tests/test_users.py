@@ -1,5 +1,7 @@
 """Tests for user management endpoints."""
 
+import logging
+
 from models.enums import AccessLevel
 from tests.conftest import auth, make_token, make_user
 
@@ -111,3 +113,17 @@ def test_update_user_not_found(client, session):
 
     r = client.patch("/api/users/99999", json={"access_level": "clap"}, headers=auth(token))
     assert r.status_code == 404
+
+
+def test_update_user_role_logs_change(client, session, caplog):
+    target = make_user(session, AccessLevel.USER, 12)
+    admin = make_user(session, AccessLevel.ADMIN, 13)
+    token = make_token(session, admin)
+
+    with caplog.at_level(logging.INFO):
+        r = client.patch(f"/api/users/{target.id}", json={"access_level": "clap"}, headers=auth(token))
+
+    assert r.status_code == 200
+    assert "user.role_changed" in caplog.text
+    assert "old_level=user" in caplog.text
+    assert "new_level=clap" in caplog.text

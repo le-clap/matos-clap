@@ -2,6 +2,7 @@
 
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlmodel import Session, col, select
 
@@ -11,6 +12,8 @@ from models.enums import AccessLevel
 from models.models import Catalog, Category, User
 from schemas.categories import CategoryPatch, CategoryPost, CategoryPublic
 from services.deletion import has_live_children, purge_or_archive
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -95,6 +98,7 @@ def delete_category(
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
 
     if has_live_children(session, Catalog, col(Catalog.category_id), category_id):
+        logger.warning("category.delete_blocked", category_id=category_id)
         raise HTTPException(
             status_code=409,
             detail="Cannot delete category: it still contains catalogs",
