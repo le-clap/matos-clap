@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     ENV: str = "development"
     ENABLE_DEV_LOGIN: bool = False
+    LOG_LEVEL: str = "INFO"
 
     MEDIA_DIR: str = "data/media"
 

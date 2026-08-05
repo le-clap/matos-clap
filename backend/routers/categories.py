@@ -2,6 +2,7 @@
 
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -11,6 +12,8 @@ from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel
 from models.models import Category, User
 from schemas.categories import CategoryPatch, CategoryPost, CategoryPublic
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -98,6 +101,7 @@ def delete_category(
         session.commit()
     except IntegrityError as e:
         session.rollback()
+        logger.warning("category.delete_blocked", category_id=category_id)
         raise HTTPException(
             status_code=409,
             detail="Cannot delete category: still used by catalogs",

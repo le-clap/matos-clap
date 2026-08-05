@@ -1,8 +1,11 @@
 import httpx
+import structlog
 from sqlmodel import select
 
 from core.config import settings
 from models.models import User
+
+logger = structlog.get_logger(__name__)
 
 
 def get_auth_url() -> str:
@@ -15,15 +18,18 @@ async def validate_ticket(ticket: str) -> dict | None:
         try:
             response = await client.get(url)
         except httpx.HTTPError:
+            logger.error("auth.cla_unreachable", exc_info=True)
             return None
 
     if response.status_code != 200:
+        logger.warning("auth.cla_ticket_rejected", status_code=response.status_code)
         return None
 
     data = response.json()
     payload = data.get("payload")
     if data.get("success") and isinstance(payload, dict):
         return payload
+    logger.warning("auth.cla_ticket_rejected")
     return None
 
 

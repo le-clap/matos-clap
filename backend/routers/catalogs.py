@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path as FilePath
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, status
 from pydantic import AwareDatetime
 from sqlalchemy.exc import IntegrityError
@@ -18,6 +19,8 @@ from models.models import Catalog, Category, Item, User
 from schemas.catalogs import CatalogPatch, CatalogPost, CatalogPublic
 from schemas.items import ItemAvailabilityResponse
 from services.inventory import find_busy_item_ids, item_load_options
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/catalogs", tags=["catalogs"])
 
@@ -186,6 +189,7 @@ def delete_catalog(
         session.commit()
     except IntegrityError as e:
         session.rollback()
+        logger.warning("catalog.delete_blocked", catalog_id=catalog_id)
         raise HTTPException(
             status_code=409,
             detail="Cannot delete catalog: still used by items or requests",

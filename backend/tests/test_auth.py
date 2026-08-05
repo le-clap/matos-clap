@@ -1,5 +1,6 @@
 """Tests for authentication endpoints."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from models.enums import AccessLevel
@@ -115,3 +116,14 @@ def test_logout_without_session_is_graceful(client):
     """Logout without a session cookie should still redirect cleanly."""
     r = client.post("/api/auth/logout", follow_redirects=False)
     assert r.status_code in (301, 302, 307, 308)
+
+
+def test_permission_denied_is_logged(client, session, caplog):
+    user = make_user(session, AccessLevel.USER, 5)
+    token = make_token(session, user)
+
+    with caplog.at_level(logging.WARNING):
+        r = client.get("/api/users", headers={"Authorization": f"Bearer {token}"})
+
+    assert r.status_code == 403
+    assert "auth.permission_denied" in caplog.text

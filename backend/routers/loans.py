@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import AwareDatetime
 from sqlalchemy import func
@@ -25,6 +26,8 @@ from schemas.loans import (
 from schemas.timeline import LoanTimelineEntry, LoanTimelineResponse
 from schemas.utils import PaginatedResponse, PaginationParams
 from services.inventory import find_busy_item_ids
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/loans", tags=["loans"])
 
@@ -264,6 +267,8 @@ def create_loan(
     created_loan = session.exec(select(Loan).where(Loan.id == db_loan.id).options(*_loan_load_options())).first()
     if not created_loan:
         raise HTTPException(status_code=500, detail="Loan was created but could not be reloaded")
+
+    logger.info("loan.created", loan_id=created_loan.id, borrower_id=payload.borrower_id, request_id=payload.request_id)
     return LoanPostResponse(loan=created_loan, warnings=warnings)  # ty: ignore[invalid-argument-type]
 
 
@@ -333,6 +338,8 @@ def partial_return_loan_items(
 
     session.commit()
     session.refresh(db_loan)
+
+    logger.info("loan.partial_returned", loan_id=db_loan.id, returned_item_ids=unique_item_ids)
     return db_loan
 
 
@@ -407,6 +414,8 @@ def return_loan(
     session.add(db_loan)
     session.commit()
     session.refresh(db_loan)
+
+    logger.info("loan.returned", loan_id=db_loan.id, retained_deposit_cents=db_loan.retained_deposit_cents)
     return db_loan
 
 
@@ -496,3 +505,5 @@ def delete_loan(
 
     session.delete(db_loan)
     session.commit()
+
+    logger.warning("loan.deleted", loan_id=loan_id)
