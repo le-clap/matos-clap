@@ -18,7 +18,7 @@ import {isOverdue} from "@/lib/loanStatus";
 import {useDebounce} from "@/hooks/useDebounce.ts";
 
 const LIMIT = 15;
-type Filter = "active" | "returned" | "all";
+type Filter = "scheduled" | "active" | "returned" | "all";
 
 export function AdminLoansPage() {
   const navigate = useNavigate();
@@ -27,8 +27,8 @@ export function AdminLoansPage() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search);
 
-  const active = filter === "active" ? true : filter === "returned" ? false : undefined;
-  const {data, isLoading} = useLoans({active, page, limit: LIMIT, search:debouncedSearch});
+  const status = filter === "all" ? undefined : filter;
+  const { data, isLoading } = useLoans({ status, page, limit: LIMIT, search:debouncedSearch });
 
   const rows = data?.items ?? [];
 
@@ -54,9 +54,10 @@ export function AdminLoansPage() {
             setPage(0);
           }}
           items={[
-            {value: "active", label: "En cours"},
-            {value: "returned", label: "Rendus"},
-            {value: "all", label: "Tous"},
+            { value: "active", label: "En cours" },
+            { value: "scheduled", label: "Planifiés" },
+            { value: "returned", label: "Rendus" },
+            { value: "all", label: "Tous" },
           ]}
         />
         <SearchInput

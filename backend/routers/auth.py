@@ -49,7 +49,7 @@ def cla_login() -> RedirectResponse:
     return RedirectResponse(url=get_auth_url())
 
 
-@router.get("/cla/callback")
+@router.get("/cla/callback", status_code=status.HTTP_302_FOUND)
 async def cla_callback(ticket: str, db: SessionDep) -> RedirectResponse:
     payload = await validate_ticket(ticket)
     if not payload:
@@ -63,7 +63,7 @@ async def cla_callback(ticket: str, db: SessionDep) -> RedirectResponse:
     return response
 
 
-@router.post("/logout")
+@router.post("/logout", status_code=status.HTTP_302_FOUND)
 def logout(
     db: SessionDep,
     token: Annotated[str | None, Cookie(alias=settings.SESSION_COOKIE_NAME)] = None,

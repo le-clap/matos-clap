@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class CategoryPost(BaseModel):
@@ -12,7 +12,7 @@ class CategoryPatch(BaseModel):
 
 
 class CategoryPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str

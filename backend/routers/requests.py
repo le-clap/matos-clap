@@ -54,7 +54,7 @@ def get_requests(
     pagination: Annotated[PaginationParams, Depends()],
     borrower_id: Annotated[int | None, Query()] = None,
     processed: Annotated[bool | None, Query()] = None,
-):
+) -> PaginatedResponse[Request]:
     effective_borrower_id = borrower_id
     if not has_role(current_user, AccessLevel.CLAP):
         effective_borrower_id = current_user.id

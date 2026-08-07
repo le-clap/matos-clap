@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from pydantic import AwareDatetime, BaseModel, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from models.enums import Availability, RequestStatus
 from schemas.catalogs import CatalogBrief
@@ -26,7 +26,7 @@ class RequestedCatalogPost(BaseModel):
 
 
 class RequestedCatalogPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     catalog_id: int
@@ -68,7 +68,7 @@ class RequestPatch(BaseModel):
 
 
 class RequestPublic(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     borrower: UserBrief

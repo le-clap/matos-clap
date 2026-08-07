@@ -10,28 +10,29 @@ import {
   type LoanPatch,
   type LoanPost,
   type LoanReturnPost,
+  type LoanStatus,
 } from "@/client";
 import { unwrap } from "@/lib/api";
 import { qk } from "@/lib/queryKeys";
 
 export interface LoanFilters {
   borrowerId?: number;
-  active?: boolean;
+  status?: LoanStatus;
   page?: number;
   limit?: number;
   search?: string;
 }
 
 export function useLoans(filters: LoanFilters = {}) {
-  const { borrowerId, active, page = 0, limit = 20, search} = filters;
+  const { borrowerId, status, page = 0, limit = 20, search } = filters;
   return useQuery({
-    queryKey: qk.loans({ borrowerId, active, page, limit, search }),
+    queryKey: qk.loans({ borrowerId, status, page, limit, search }),
     queryFn: () =>
       unwrap(
         LoansService.loansGetLoans({
           query: {
             borrower_id: borrowerId ?? null,
-            active: active ?? null,
+            status: status ?? null,
             page,
             limit,
             search,

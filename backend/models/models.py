@@ -2,9 +2,10 @@ import secrets
 from datetime import datetime
 from typing import Optional
 
-from pydantic import EmailStr
-from sqlalchemy import Column, DateTime, Enum, Text
-from sqlmodel import Field, Relationship, SQLModel
+from pydantic import ConfigDict, EmailStr
+from sqlalchemy import Column, DateTime, Enum, Text, case
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlmodel import Field, Relationship, SQLModel, col
 
 from models.enums import AccessLevel, Availability, Condition, LoanStatus, RequestStatus
 from models.timestamps import TimestampSQLModel
@@ -181,7 +182,10 @@ class Loan(TimestampSQLModel, table=True):
         back_populates="loan", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
-    @property
+    # status: hybrid property derived from the actual dates
+    model_config = ConfigDict(ignored_types=(hybrid_property,))  # ty: ignore[invalid-assignment]
+
+    @hybrid_property
     def status(self) -> LoanStatus:
         """Lifecycle status derived from the actual start/return timestamps."""
         if self.actual_return_date is not None:
@@ -189,6 +193,14 @@ class Loan(TimestampSQLModel, table=True):
         if self.actual_start_date is not None:
             return LoanStatus.ACTIVE
         return LoanStatus.SCHEDULED
+
+    @status.expression
+    def status(cls):
+        return case(
+            (col(cls.actual_return_date).is_not(None), LoanStatus.RETURNED.value),
+            (col(cls.actual_start_date).is_not(None), LoanStatus.ACTIVE.value),
+            else_=LoanStatus.SCHEDULED.value,
+        )
 
 
 class LoanedItem(SQLModel, table=True):
