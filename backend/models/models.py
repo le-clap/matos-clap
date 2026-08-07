@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import ConfigDict, EmailStr
 from sqlalchemy import Column, DateTime, Enum, Text, case
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, col
 
 from models.enums import AccessLevel, Availability, Condition, LoanStatus, RequestStatus
 from models.timestamps import TimestampSQLModel
@@ -197,8 +197,8 @@ class Loan(TimestampSQLModel, table=True):
     @status.expression
     def status(cls):
         return case(
-            (cls.actual_return_date.is_not(None), LoanStatus.RETURNED.value),  # ty: ignore[unresolved-attribute]
-            (cls.actual_start_date.is_not(None), LoanStatus.ACTIVE.value),  # ty: ignore[unresolved-attribute]
+            (col(cls.actual_return_date).is_not(None), LoanStatus.RETURNED.value),
+            (col(cls.actual_start_date).is_not(None), LoanStatus.ACTIVE.value),
             else_=LoanStatus.SCHEDULED.value,
         )
 
