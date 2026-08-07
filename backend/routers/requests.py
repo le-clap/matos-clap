@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
-from sqlmodel import Session, asc, select
+from sqlmodel import Session, asc, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, has_role, require_role
@@ -64,30 +64,33 @@ def get_requests(
     base_statement = select(Request)
     if effective_borrower_id is not None:
         base_statement = base_statement.where(Request.borrower_id == effective_borrower_id)
+    elif pagination.search is not None:
+        base_statement = base_statement.join(Request.borrower).where(  # ty: ignore[invalid-argument-type]
+            col(User.name).ilike(f"%{pagination.search}%")
+        )
     if processed is not None:
         processed_statuses = {
             True: [RequestStatus.APPROVED, RequestStatus.REFUSED],
             False: [RequestStatus.PENDING],
         }
-        base_statement = base_statement.where(
-            Request.status.in_(processed_statuses[processed])  # ty: ignore[unresolved-attribute]
-        )
+        base_statement = base_statement.where(col(Request.status).in_(processed_statuses[processed]))
 
     total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
 
     statement = (
         base_statement.options(*_request_load_options())
-        .order_by(asc(Request.start_date))
+        .order_by(asc(Request.start_date), asc(Request.id))
         .offset(pagination.offset())
         .limit(pagination.limit)
     )
-    requests = session.exec(statement).unique().all()
+    requests = session.exec(statement).all()
 
     return PaginatedResponse(
         items=list(requests),
         total=total,
         limit=pagination.limit,
         page=pagination.page,
+        search=pagination.search,
     )
 
 
@@ -102,7 +105,7 @@ def get_request_recommendations(
     request_id: Annotated[int, Path(ge=1)],
 ) -> RequestRecommendationsResponse:
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
-    db_request = session.exec(statement).unique().first()
+    db_request = session.exec(statement).first()
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
 
@@ -117,7 +120,7 @@ def get_request_recommendations(
             select(Item)
             .where(
                 Item.catalog_id == requested_catalog.catalog_id,
-                Item.deleted_at.is_(None),  # ty: ignore[unresolved-attribute]
+                col(Item.deleted_at).is_(None),
             )
             .order_by(asc(Item.id))
         ).all()
@@ -197,7 +200,7 @@ def get_request_by_id(
     request_id: Annotated[int, Path(ge=1)],
 ) -> Request:
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
-    db_request = session.exec(statement).unique().first()
+    db_request = session.exec(statement).first()
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
     return db_request
@@ -268,7 +271,7 @@ def update_request(
     request_patch: RequestPatch,
 ) -> Request:
     statement = select(Request).where(Request.id == request_id).options(*_request_load_options())
-    db_request = session.exec(statement).unique().first()
+    db_request = session.exec(statement).first()
     if not db_request:
         raise HTTPException(status_code=404, detail=f"Request with ID {request_id} not found")
 

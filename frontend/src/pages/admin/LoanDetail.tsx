@@ -14,7 +14,7 @@ import type {
   ItemPublic,
   LoanedItemPublic,
   LoanPublic,
-  UserPublic,
+  UserBrief,
 } from "@/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Avatar } from "@/components/ui/Avatar";
@@ -31,9 +31,9 @@ import { ConditionBadge, LoanStatusBadge } from "@/components/ui/StatusBadge";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { useToast } from "@/components/ui/Toast";
 import { ItemMultiSelect } from "@/features/loans/ItemMultiSelect";
+import { UserCombobox } from "@/features/loans/UserCombobox";
 import { useItems } from "@/hooks/useInventory";
 import { useLoan, useLoanMutations } from "@/hooks/useLoans";
-import { useUsers } from "@/hooks/useUsers";
 import { ApiError } from "@/lib/api";
 import {
   formatDateTime,
@@ -57,7 +57,6 @@ export function AdminLoanDetailPage() {
 
   const { data: loan, isLoading } = useLoan(loanId);
   const { data: allItems } = useItems();
-  const { data: users } = useUsers();
   const { update, returnLoan, partialReturn, remove } = useLoanMutations();
 
   const [modal, setModal] = useState<null | "edit" | "return" | "partial">(null);
@@ -238,7 +237,6 @@ export function AdminLoanDetailPage() {
           loan={loan}
           scheduled={status === "scheduled"}
           items={allItems ?? []}
-          users={users ?? []}
           onClose={() => setModal(null)}
           onSave={async (body) => {
             try {
@@ -340,7 +338,6 @@ function EditLoanModal({
   loan,
   scheduled,
   items,
-  users,
   onClose,
   onSave,
   saving,
@@ -348,12 +345,11 @@ function EditLoanModal({
   loan: LoanPublic;
   scheduled: boolean;
   items: ItemPublic[];
-  users: UserPublic[];
   onClose: () => void;
   onSave: (body: EditLoanBody) => void;
   saving: boolean;
 }) {
-  const [borrowerId, setBorrowerId] = useState(loan.borrower.id);
+  const [borrower, setBorrower] = useState<UserBrief | null>(loan.borrower);
   const [itemIds, setItemIds] = useState<number[]>(
     loan.loaned_items.map((li) => li.item.id),
   );
@@ -381,11 +377,14 @@ function EditLoanModal({
           </Button>
           <Button
             loading={saving}
-            disabled={!datesValid || (scheduled && itemIds.length === 0)}
+            disabled={
+              !datesValid ||
+              (scheduled && (itemIds.length === 0 || !borrower))
+            }
             onClick={() =>
               onSave({
                 ...(scheduled
-                  ? { borrower_id: borrowerId, item_ids: itemIds }
+                  ? { borrower_id: (borrower ?? loan.borrower).id, item_ids: itemIds }
                   : {}),
                 start_date: localInputToIso(start),
                 end_date: localInputToIso(end),
@@ -403,16 +402,7 @@ function EditLoanModal({
         {scheduled && (
           <>
             <Field label="Emprunteur">
-              <Select
-                value={borrowerId}
-                onChange={(e) => setBorrowerId(Number(e.target.value))}
-              >
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.username})
-                  </option>
-                ))}
-              </Select>
+              <UserCombobox value={borrower} onChange={setBorrower} />
             </Field>
             <Field label="Matériel">
               <ItemMultiSelect

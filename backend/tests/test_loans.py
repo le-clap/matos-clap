@@ -223,6 +223,29 @@ def test_get_loans_no_filter_returns_all(client, session, f_user, f_token, f_cat
     assert r.json()["total"] == 3
 
 
+def test_get_loans_search_filters_by_borrower_name(
+    client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
+):
+    catalog = f_catalog(f_category())
+    item_a = f_item(catalog)
+    item_b = f_item(catalog)
+    borrower_a = f_user(AccessLevel.USER)
+    borrower_b = f_user(AccessLevel.USER)
+    clap = f_user(AccessLevel.CLAP)
+    token = f_token(clap)
+
+    f_loan(borrower_a, clap, [item_a])
+    f_loan(borrower_b, clap, [item_b])
+
+    params = {"search": "user 0"}
+    r = client.get("/api/loans", params=params, headers=auth(token))
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 1
+    assert data["search"] == params["search"]
+    assert all(loan["borrower"]["id"] == borrower_a.id for loan in data["items"])
+
+
 # ── Return ────────────────────────────────────────────────────────────────────
 
 

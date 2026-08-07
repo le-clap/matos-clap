@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -18,12 +19,13 @@ export interface LoanFilters {
   active?: boolean;
   page?: number;
   limit?: number;
+  search?: string;
 }
 
 export function useLoans(filters: LoanFilters = {}) {
-  const { borrowerId, active, page = 0, limit = 20 } = filters;
+  const { borrowerId, active, page = 0, limit = 20, search} = filters;
   return useQuery({
-    queryKey: qk.loans({ borrowerId, active, page, limit }),
+    queryKey: qk.loans({ borrowerId, active, page, limit, search }),
     queryFn: () =>
       unwrap(
         LoansService.loansGetLoans({
@@ -32,9 +34,11 @@ export function useLoans(filters: LoanFilters = {}) {
             active: active ?? null,
             page,
             limit,
+            search,
           },
         }),
       ),
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from models.models import Catalog, Item, Loan, LoanedItem
 
@@ -36,7 +36,7 @@ def find_busy_item_ids(
         select(LoanedItem.item_id)
         .join(Loan, LoanedItem.loan_id == Loan.id)  # ty: ignore[invalid-argument-type]
         .where(
-            LoanedItem.item_id.in_(item_ids),  # ty: ignore[unresolved-attribute]
+            col(LoanedItem.item_id).in_(item_ids),
             func.coalesce(
                 Loan.actual_start_date,
                 Loan.start_date,

@@ -1,28 +1,27 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { UserBrief } from "@/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { DateRangeField } from "@/components/ui/DateRangeField";
 import { Field } from "@/components/ui/Field";
-import { Input, Select, Textarea } from "@/components/ui/Input";
-import { PageSpinner } from "@/components/ui/Spinner";
+import { Input, Textarea } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { ItemMultiSelect } from "@/features/loans/ItemMultiSelect";
+import { UserCombobox } from "@/features/loans/UserCombobox";
 import { useItems } from "@/hooks/useInventory";
 import { useLoanMutations } from "@/hooks/useLoans";
-import { useUsers } from "@/hooks/useUsers";
 import { ApiError } from "@/lib/api";
 import { localInputToIso } from "@/lib/format";
 
 export function AdminNewLoanPage() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { data: users, isLoading: usersLoading } = useUsers();
   const { data: items } = useItems();
   const { create } = useLoanMutations();
 
-  const [borrowerId, setBorrowerId] = useState<number | "">("");
+  const [borrower, setBorrower] = useState<UserBrief | null>(null);
   const [itemIds, setItemIds] = useState<number[]>([]);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -46,12 +45,12 @@ export function AdminNewLoanPage() {
 
   const submit = async () => {
     setError(null);
-    if (!borrowerId) return setError("Sélectionnez un emprunteur.");
+    if (!borrower) return setError("Sélectionnez un emprunteur.");
     if (itemIds.length === 0) return setError("Sélectionnez au moins un article.");
     if (!datesValid) return setError("Période invalide.");
     try {
       const res = await create.mutateAsync({
-        borrower_id: Number(borrowerId),
+        borrower_id: borrower.id,
         start_date: localInputToIso(start),
         end_date: localInputToIso(end),
         item_ids: itemIds,
@@ -72,8 +71,6 @@ export function AdminNewLoanPage() {
       setError(err instanceof ApiError ? err.detail ?? err.message : "Erreur");
     }
   };
-
-  if (usersLoading) return <PageSpinner />;
 
   return (
     <div>
@@ -99,19 +96,7 @@ export function AdminNewLoanPage() {
           <CardHeader title="Détails du prêt" />
           <CardBody className="flex flex-col gap-4">
             <Field label="Emprunteur" required>
-              <Select
-                value={borrowerId}
-                onChange={(e) =>
-                  setBorrowerId(e.target.value ? Number(e.target.value) : "")
-                }
-              >
-                <option value="">— Choisir —</option>
-                {users?.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.username})
-                  </option>
-                ))}
-              </Select>
+              <UserCombobox value={borrower} onChange={setBorrower} />
             </Field>
             <DateRangeField
               start={start}

@@ -1562,6 +1562,61 @@
         "operationId": "users_get_users",
         "parameters": [
           {
+            "name": "access_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AccessLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Level"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "exclusiveMinimum": 0,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -1600,11 +1655,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserPublic"
-                  },
-                  "title": "Response Users Get Users"
+                  "$ref": "#/components/schemas/PaginatedResponse_UserPublic_"
                 }
               }
             }
@@ -1912,6 +1963,22 @@
               "minimum": 0,
               "default": 0,
               "title": "Page"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
             }
           },
           {
@@ -2434,6 +2501,22 @@
               "minimum": 0,
               "default": 0,
               "title": "Page"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
             }
           },
           {
@@ -4656,6 +4739,17 @@
           "page": {
             "type": "integer",
             "title": "Page"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
           }
         },
         "type": "object",
@@ -4663,7 +4757,8 @@
           "items",
           "total",
           "limit",
-          "page"
+          "page",
+          "search"
         ],
         "title": "PaginatedResponse[LoanPublic]"
       },
@@ -4687,6 +4782,17 @@
           "page": {
             "type": "integer",
             "title": "Page"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
           }
         },
         "type": "object",
@@ -4694,9 +4800,53 @@
           "items",
           "total",
           "limit",
-          "page"
+          "page",
+          "search"
         ],
         "title": "PaginatedResponse[RequestPublic]"
+      },
+      "PaginatedResponse_UserPublic_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserPublic"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "page",
+          "search"
+        ],
+        "title": "PaginatedResponse[UserPublic]"
       },
       "RequestPatch": {
         "properties": {

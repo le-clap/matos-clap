@@ -3,13 +3,15 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path
-from sqlmodel import Session, select
+from sqlalchemy import func
+from sqlmodel import Session, asc, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel
 from models.models import User
 from schemas.users import UserPatch, UserPublic
+from schemas.utils import PaginatedResponse, PaginationParams
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -20,9 +22,35 @@ ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
 AdminDep = Annotated[User, Depends(require_role(AccessLevel.ADMIN))]
 
 
-@router.get("/", response_model=list[UserPublic])
-def get_users(session: SessionDep, _user: ClapDep) -> list[User]:
-    return list(session.exec(select(User)).all())
+@router.get("/", response_model=PaginatedResponse[UserPublic])
+def get_users(
+    session: SessionDep,
+    _user: ClapDep,
+    pagination: Annotated[PaginationParams, Depends()],
+    access_level: AccessLevel | None = None,
+) -> PaginatedResponse[User]:
+    base_statement = select(User)
+
+    if access_level is not None:
+        base_statement = base_statement.where(User.access_level == access_level)
+
+    if pagination.search is not None:
+        base_statement = base_statement.where(col(User.name).ilike(f"%{pagination.search}%"))
+
+    total = session.exec(select(func.count()).select_from(base_statement.subquery())).one()
+
+    statement = (
+        base_statement.order_by(asc(User.name), asc(User.id)).offset(pagination.offset()).limit(pagination.limit)
+    )
+    users = session.exec(statement).all()
+
+    return PaginatedResponse(
+        items=list(users),
+        total=total,
+        limit=pagination.limit,
+        page=pagination.page,
+        search=pagination.search,
+    )
 
 
 @router.get("/me", response_model=UserPublic)
