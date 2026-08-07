@@ -1,36 +1,20 @@
-import {
-  History,
-  Image as ImageIcon,
-  ImagePlus,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
-import { useState } from "react";
-import type {
-  Availability,
-  CatalogPublic,
-  CategoryPublic,
-  Condition,
-  ItemPublic,
-} from "@/client";
-import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/Button";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Field } from "@/components/ui/Field";
-import { Input, Select, Textarea } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
-import { Skeleton } from "@/components/ui/Skeleton";
-import {
-  AvailabilityBadge,
-  ConditionBadge,
-} from "@/components/ui/StatusBadge";
-import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { Tabs } from "@/components/ui/Tabs";
-import { useToast } from "@/components/ui/Toast";
-import { ImportExportButtons } from "@/features/inventory/ImportExportButtons";
-import { ItemHistoryModal } from "@/features/inventory/ItemHistoryModal";
+import { History, Image as ImageIcon, ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import type { Availability, CatalogPublic, CategoryPublic, Condition, ItemPublic } from '@/client';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Field } from '@/components/ui/Field';
+import { Input, Select, Textarea } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { AvailabilityBadge, ConditionBadge } from '@/components/ui/StatusBadge';
+import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
+import { Tabs } from '@/components/ui/Tabs';
+import { useToast } from '@/components/ui/Toast';
+import { ImportExportButtons } from '@/features/inventory/ImportExportButtons';
+import { ItemHistoryModal } from '@/features/inventory/ItemHistoryModal';
 import {
   useCatalogMutations,
   useCatalogs,
@@ -38,14 +22,14 @@ import {
   useCategoryMutations,
   useItemMutations,
   useItems,
-} from "@/hooks/useInventory";
-import { ApiError } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
+} from '@/hooks/useInventory';
+import { ApiError } from '@/lib/api';
+import { formatMoney } from '@/lib/format';
 
-type Tab = "catalogs" | "categories" | "items";
+type Tab = 'catalogs' | 'categories' | 'items';
 
 export function AdminInventoryPage() {
-  const [tab, setTab] = useState<Tab>("catalogs");
+  const [tab, setTab] = useState<Tab>('catalogs');
   const catalogs = useCatalogs();
   const categories = useCategories();
   const items = useItems();
@@ -61,16 +45,16 @@ export function AdminInventoryPage() {
           value={tab}
           onChange={setTab}
           items={[
-            { value: "catalogs", label: "Catalogue", count: catalogs.data?.length },
-            { value: "categories", label: "Catégories", count: categories.data?.length },
-            { value: "items", label: "Articles", count: items.data?.length },
+            { value: 'catalogs', label: 'Catalogue', count: catalogs.data?.length },
+            { value: 'categories', label: 'Catégories', count: categories.data?.length },
+            { value: 'items', label: 'Articles', count: items.data?.length },
           ]}
         />
       </div>
 
-      {tab === "catalogs" && <CatalogsTab />}
-      {tab === "categories" && <CategoriesTab />}
-      {tab === "items" && <ItemsTab />}
+      {tab === 'catalogs' && <CatalogsTab />}
+      {tab === 'categories' && <CategoriesTab />}
+      {tab === 'items' && <ItemsTab />}
     </div>
   );
 }
@@ -82,12 +66,12 @@ function CatalogsTab() {
   const { data: categories } = useCategories();
   const { create, update, remove, uploadImage } = useCatalogMutations();
   const toast = useToast();
-  const [editing, setEditing] = useState<CatalogPublic | "new" | null>(null);
+  const [editing, setEditing] = useState<CatalogPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<CatalogPublic | null>(null);
 
   return (
     <Section
-      onAdd={() => setEditing("new")}
+      onAdd={() => setEditing('new')}
       addLabel="Nouvelle référence"
       leading={<ImportExportButtons entity="catalogs" />}
       empty={!isLoading && (!data || data.length === 0)}
@@ -107,14 +91,9 @@ function CatalogsTab() {
             <Tr key={c.id}>
               <Td className="font-medium">{c.name}</Td>
               <Td className="text-content-muted">{c.category.name}</Td>
-              <Td className="max-w-xs truncate text-content-muted">
-                {c.description ?? "—"}
-              </Td>
+              <Td className="max-w-xs truncate text-content-muted">{c.description ?? '—'}</Td>
               <Td>
-                <RowActions
-                  onEdit={() => setEditing(c)}
-                  onDelete={() => setToDelete(c)}
-                />
+                <RowActions onEdit={() => setEditing(c)} onDelete={() => setToDelete(c)} />
               </Td>
             </Tr>
           ))}
@@ -123,25 +102,22 @@ function CatalogsTab() {
 
       {editing && (
         <CatalogModal
-          catalog={editing === "new" ? null : editing}
+          catalog={editing === 'new' ? null : editing}
           categories={categories ?? []}
           saving={create.isPending || update.isPending || uploadImage.isPending}
           onClose={() => setEditing(null)}
           onSave={async (body, file, removeImage) => {
             let catalogId: number;
-            if (editing === "new") {
+            if (editing === 'new') {
               catalogId = (await create.mutateAsync(body)).id;
             } else {
               // Clearing the image is a patch of image_path → null.
-              const patch =
-                removeImage && !file ? { ...body, image_path: null } : body;
+              const patch = removeImage && !file ? { ...body, image_path: null } : body;
               await update.mutateAsync({ id: editing.id, body: patch });
               catalogId = editing.id;
             }
             if (file) await uploadImage.mutateAsync({ id: catalogId, file });
-            toast.success(
-              editing === "new" ? "Référence créée" : "Référence mise à jour",
-            );
+            toast.success(editing === 'new' ? 'Référence créée' : 'Référence mise à jour');
             setEditing(null);
           }}
         />
@@ -157,13 +133,10 @@ function CatalogsTab() {
         onConfirm={async () => {
           try {
             await remove.mutateAsync(toDelete!.id);
-            toast.success("Référence supprimée");
+            toast.success('Référence supprimée');
             setToDelete(null);
           } catch (err) {
-            toast.error(
-              "Suppression impossible",
-              err instanceof ApiError ? err.detail : undefined,
-            );
+            toast.error('Suppression impossible', err instanceof ApiError ? err.detail : undefined);
             setToDelete(null);
           }
         }}
@@ -193,15 +166,11 @@ function CatalogModal({
   ) => void;
   saving: boolean;
 }) {
-  const [name, setName] = useState(catalog?.name ?? "");
-  const [description, setDescription] = useState(catalog?.description ?? "");
-  const [categoryId, setCategoryId] = useState(
-    catalog?.category.id ?? categories[0]?.id ?? 0,
-  );
+  const [name, setName] = useState(catalog?.name ?? '');
+  const [description, setDescription] = useState(catalog?.description ?? '');
+  const [categoryId, setCategoryId] = useState(catalog?.category.id ?? categories[0]?.id ?? 0);
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(
-    catalog?.image_path ?? null,
-  );
+  const [preview, setPreview] = useState<string | null>(catalog?.image_path ?? null);
   const [removeImage, setRemoveImage] = useState(false);
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,7 +190,7 @@ function CatalogModal({
     <Modal
       open
       onClose={onClose}
-      title={catalog ? "Modifier la référence" : "Nouvelle référence"}
+      title={catalog ? 'Modifier la référence' : 'Nouvelle référence'}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -261,7 +230,7 @@ function CatalogModal({
             </div>
             <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface-raised px-3 text-sm font-medium text-content transition-colors hover:bg-surface-hover">
               <ImagePlus className="size-4" />
-              {preview ? "Changer l'image" : "Choisir une image"}
+              {preview ? "Changer l'image" : 'Choisir une image'}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif"
@@ -285,10 +254,7 @@ function CatalogModal({
           <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </Field>
         <Field label="Catégorie" required>
-          <Select
-            value={categoryId}
-            onChange={(e) => setCategoryId(Number(e.target.value))}
-          >
+          <Select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))}>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -297,10 +263,7 @@ function CatalogModal({
           </Select>
         </Field>
         <Field label="Description">
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
       </div>
     </Modal>
@@ -313,12 +276,12 @@ function CategoriesTab() {
   const { data, isLoading } = useCategories();
   const { create, update, remove } = useCategoryMutations();
   const toast = useToast();
-  const [editing, setEditing] = useState<CategoryPublic | "new" | null>(null);
+  const [editing, setEditing] = useState<CategoryPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<CategoryPublic | null>(null);
 
   return (
     <Section
-      onAdd={() => setEditing("new")}
+      onAdd={() => setEditing('new')}
       addLabel="Nouvelle catégorie"
       leading={<ImportExportButtons entity="categories" />}
       empty={!isLoading && (!data || data.length === 0)}
@@ -336,14 +299,9 @@ function CategoriesTab() {
           {data?.map((c) => (
             <Tr key={c.id}>
               <Td className="font-medium">{c.name}</Td>
-              <Td className="max-w-md truncate text-content-muted">
-                {c.description ?? "—"}
-              </Td>
+              <Td className="max-w-md truncate text-content-muted">{c.description ?? '—'}</Td>
               <Td>
-                <RowActions
-                  onEdit={() => setEditing(c)}
-                  onDelete={() => setToDelete(c)}
-                />
+                <RowActions onEdit={() => setEditing(c)} onDelete={() => setToDelete(c)} />
               </Td>
             </Tr>
           ))}
@@ -352,16 +310,16 @@ function CategoriesTab() {
 
       {editing && (
         <CategoryModal
-          category={editing === "new" ? null : editing}
+          category={editing === 'new' ? null : editing}
           saving={create.isPending || update.isPending}
           onClose={() => setEditing(null)}
           onSave={async (body) => {
-            if (editing === "new") {
+            if (editing === 'new') {
               await create.mutateAsync(body);
-              toast.success("Catégorie créée");
+              toast.success('Catégorie créée');
             } else {
               await update.mutateAsync({ id: editing.id, body });
-              toast.success("Catégorie mise à jour");
+              toast.success('Catégorie mise à jour');
             }
             setEditing(null);
           }}
@@ -378,13 +336,10 @@ function CategoriesTab() {
         onConfirm={async () => {
           try {
             await remove.mutateAsync(toDelete!.id);
-            toast.success("Catégorie supprimée");
+            toast.success('Catégorie supprimée');
             setToDelete(null);
           } catch (err) {
-            toast.error(
-              "Suppression impossible",
-              err instanceof ApiError ? err.detail : undefined,
-            );
+            toast.error('Suppression impossible', err instanceof ApiError ? err.detail : undefined);
             setToDelete(null);
           }
         }}
@@ -404,14 +359,14 @@ function CategoryModal({
   onSave: (body: { name: string; description: string | null }) => void;
   saving: boolean;
 }) {
-  const [name, setName] = useState(category?.name ?? "");
-  const [description, setDescription] = useState(category?.description ?? "");
+  const [name, setName] = useState(category?.name ?? '');
+  const [description, setDescription] = useState(category?.description ?? '');
 
   return (
     <Modal
       open
       onClose={onClose}
-      title={category ? "Modifier la catégorie" : "Nouvelle catégorie"}
+      title={category ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -420,9 +375,7 @@ function CategoryModal({
           <Button
             loading={saving}
             disabled={!name.trim()}
-            onClick={() =>
-              onSave({ name: name.trim(), description: description.trim() || null })
-            }
+            onClick={() => onSave({ name: name.trim(), description: description.trim() || null })}
           >
             Enregistrer
           </Button>
@@ -434,10 +387,7 @@ function CategoryModal({
           <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </Field>
         <Field label="Description">
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
       </div>
     </Modal>
@@ -447,14 +397,14 @@ function CategoryModal({
 /* ---------------------------------- Items --------------------------------- */
 
 const CONDITIONS: { value: Condition; label: string }[] = [
-  { value: "new", label: "Neuf" },
-  { value: "good", label: "Bon état" },
-  { value: "degraded", label: "Dégradé" },
+  { value: 'new', label: 'Neuf' },
+  { value: 'good', label: 'Bon état' },
+  { value: 'degraded', label: 'Dégradé' },
 ];
 const AVAILABILITIES: { value: Availability; label: string }[] = [
-  { value: "available", label: "Disponible" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "retired", label: "Retiré" },
+  { value: 'available', label: 'Disponible' },
+  { value: 'maintenance', label: 'Maintenance' },
+  { value: 'retired', label: 'Retiré' },
 ];
 
 function ItemsTab() {
@@ -462,13 +412,13 @@ function ItemsTab() {
   const { data: catalogs } = useCatalogs();
   const { create, update, remove } = useItemMutations();
   const toast = useToast();
-  const [editing, setEditing] = useState<ItemPublic | "new" | null>(null);
+  const [editing, setEditing] = useState<ItemPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<ItemPublic | null>(null);
   const [history, setHistory] = useState<ItemPublic | null>(null);
 
   return (
     <Section
-      onAdd={() => setEditing("new")}
+      onAdd={() => setEditing('new')}
       addLabel="Nouvel article"
       leading={<ImportExportButtons entity="items" />}
       empty={!isLoading && (!data || data.length === 0)}
@@ -497,7 +447,7 @@ function ItemsTab() {
                 <AvailabilityBadge availability={item.availability} />
               </Td>
               <Td className="tabular-nums">
-                {item.deposit_cents > 0 ? formatMoney(item.deposit_cents) : "—"}
+                {item.deposit_cents > 0 ? formatMoney(item.deposit_cents) : '—'}
               </Td>
               <Td>
                 <RowActions
@@ -513,17 +463,17 @@ function ItemsTab() {
 
       {editing && (
         <ItemModal
-          item={editing === "new" ? null : editing}
+          item={editing === 'new' ? null : editing}
           catalogs={catalogs ?? []}
           saving={create.isPending || update.isPending}
           onClose={() => setEditing(null)}
           onSave={async (body, isNew) => {
             if (isNew) {
               await create.mutateAsync(body);
-              toast.success("Article créé");
+              toast.success('Article créé');
             } else {
               await update.mutateAsync({ id: (editing as ItemPublic).id, body });
-              toast.success("Article mis à jour");
+              toast.success('Article mis à jour');
             }
             setEditing(null);
           }}
@@ -540,13 +490,10 @@ function ItemsTab() {
         onConfirm={async () => {
           try {
             await remove.mutateAsync(toDelete!.id);
-            toast.success("Article supprimé");
+            toast.success('Article supprimé');
             setToDelete(null);
           } catch (err) {
-            toast.error(
-              "Suppression impossible",
-              err instanceof ApiError ? err.detail : undefined,
-            );
+            toast.error('Suppression impossible', err instanceof ApiError ? err.detail : undefined);
             setToDelete(null);
           }
         }}
@@ -579,19 +526,17 @@ function ItemModal({
   ) => void;
   saving: boolean;
 }) {
-  const [name, setName] = useState(item?.name ?? "");
+  const [name, setName] = useState(item?.name ?? '');
   const [catalogId, setCatalogId] = useState(item?.catalog.id ?? catalogs[0]?.id ?? 0);
-  const [condition, setCondition] = useState<Condition>(item?.condition ?? "good");
-  const [availability, setAvailability] = useState<Availability>(
-    item?.availability ?? "available",
-  );
+  const [condition, setCondition] = useState<Condition>(item?.condition ?? 'good');
+  const [availability, setAvailability] = useState<Availability>(item?.availability ?? 'available');
   const [deposit, setDeposit] = useState(((item?.deposit_cents ?? 0) / 100).toFixed(2));
 
   return (
     <Modal
       open
       onClose={onClose}
-      title={item ? "Modifier l'article" : "Nouvel article"}
+      title={item ? "Modifier l'article" : 'Nouvel article'}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -607,7 +552,7 @@ function ItemModal({
                   catalog_id: catalogId,
                   condition,
                   availability,
-                  deposit_cents: Math.round(parseFloat(deposit || "0") * 100),
+                  deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
                 },
                 !item,
               )
@@ -623,10 +568,7 @@ function ItemModal({
           <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </Field>
         <Field label="Référence" required>
-          <Select
-            value={catalogId}
-            onChange={(e) => setCatalogId(Number(e.target.value))}
-          >
+          <Select value={catalogId} onChange={(e) => setCatalogId(Number(e.target.value))}>
             {catalogs.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -636,10 +578,7 @@ function ItemModal({
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="État">
-            <Select
-              value={condition}
-              onChange={(e) => setCondition(e.target.value as Condition)}
-            >
+            <Select value={condition} onChange={(e) => setCondition(e.target.value as Condition)}>
               {CONDITIONS.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
@@ -732,12 +671,7 @@ function RowActions({
   return (
     <div className="flex items-center justify-end gap-1">
       {onHistory && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onHistory}
-          aria-label="Historique"
-        >
+        <Button variant="ghost" size="icon-sm" onClick={onHistory} aria-label="Historique">
           <History className="size-4" />
         </Button>
       )}

@@ -1,4 +1,4 @@
-import { client } from "@/client/client.gen";
+import { client } from '@/client/client.gen';
 
 /**
  * Configure the shared hey-api client:
@@ -7,7 +7,7 @@ import { client } from "@/client/client.gen";
  *   CLA SSO callback.
  */
 client.setConfig({
-  credentials: "include",
+  credentials: 'include',
 });
 
 export { client };
@@ -17,7 +17,7 @@ export class ApiError extends Error {
   detail?: string;
   constructor(status: number, detail?: string) {
     super(detail || `Erreur ${status}`);
-    this.name = "ApiError";
+    this.name = 'ApiError';
     this.status = status;
     this.detail = detail;
   }
@@ -30,9 +30,9 @@ interface RequestResult<T> {
 }
 
 function extractDetail(error: unknown): string | undefined {
-  if (!error || typeof error !== "object") return undefined;
+  if (!error || typeof error !== 'object') return undefined;
   const detail = (error as { detail?: unknown }).detail;
-  if (typeof detail === "string") return detail;
+  if (typeof detail === 'string') return detail;
   if (Array.isArray(detail)) {
     // FastAPI validation errors: [{ msg, loc, ... }]
     const first = detail[0] as { msg?: string } | undefined;

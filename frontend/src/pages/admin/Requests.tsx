@@ -1,33 +1,37 @@
-import {ClipboardList} from "lucide-react";
-import {useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {PageHeader} from "@/components/PageHeader";
-import {Avatar} from "@/components/ui/Avatar";
-import {Badge} from "@/components/ui/Badge";
-import {EmptyState} from "@/components/ui/EmptyState";
-import {Pagination} from "@/components/ui/Pagination";
-import {SearchInput} from "@/components/ui/SearchInput";
-import {Skeleton} from "@/components/ui/Skeleton";
-import {RequestStatusBadge} from "@/components/ui/StatusBadge";
-import {Table, TBody, Td, Th, THead, Tr} from "@/components/ui/Table";
-import {Tabs} from "@/components/ui/Tabs";
-import {useRequests} from "@/hooks/useRequests";
-import {formatDateShort} from "@/lib/format";
-import {useDebounce} from "@/hooks/useDebounce.ts";
+import { ClipboardList } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/PageHeader';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Pagination } from '@/components/ui/Pagination';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { RequestStatusBadge } from '@/components/ui/StatusBadge';
+import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
+import { Tabs } from '@/components/ui/Tabs';
+import { useRequests } from '@/hooks/useRequests';
+import { formatDateShort } from '@/lib/format';
+import { useDebounce } from '@/hooks/useDebounce.ts';
 
 const LIMIT = 15;
-type Filter = "all" | "pending" | "processed";
+type Filter = 'all' | 'pending' | 'processed';
 
 export function AdminRequestsPage() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<Filter>("pending");
+  const [filter, setFilter] = useState<Filter>('pending');
   const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search);
 
-  const processed =
-    filter === "pending" ? false : filter === "processed" ? true : undefined;
-  const {data, isLoading} = useRequests({processed, page, limit: LIMIT, search: debouncedSearch});
+  const processed = filter === 'pending' ? false : filter === 'processed' ? true : undefined;
+  const { data, isLoading } = useRequests({
+    processed,
+    page,
+    limit: LIMIT,
+    search: debouncedSearch,
+  });
 
   const rows = data?.items ?? [];
 
@@ -46,9 +50,9 @@ export function AdminRequestsPage() {
             setPage(0);
           }}
           items={[
-            {value: "pending", label: "En attente"},
-            {value: "processed", label: "Traitées"},
-            {value: "all", label: "Toutes"},
+            { value: 'pending', label: 'En attente' },
+            { value: 'processed', label: 'Traitées' },
+            { value: 'all', label: 'Toutes' },
           ]}
         />
         <SearchInput
@@ -63,7 +67,7 @@ export function AdminRequestsPage() {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-64 rounded-[var(--radius-card)]"/>
+        <Skeleton className="h-64 rounded-[var(--radius-card)]" />
       ) : rows.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
@@ -90,7 +94,7 @@ export function AdminRequestsPage() {
                 >
                   <Td>
                     <div className="flex items-center gap-2.5">
-                      <Avatar name={req.borrower.name} size="sm"/>
+                      <Avatar name={req.borrower.name} size="sm" />
                       <div>
                         <p className="font-medium">{req.borrower.name}</p>
                         <p className="text-xs text-content-faint">
@@ -100,8 +104,7 @@ export function AdminRequestsPage() {
                     </div>
                   </Td>
                   <Td className="whitespace-nowrap text-content-muted">
-                    {formatDateShort(req.start_date)} →{" "}
-                    {formatDateShort(req.end_date)}
+                    {formatDateShort(req.start_date)} → {formatDateShort(req.end_date)}
                   </Td>
                   <Td>
                     <div className="flex flex-wrap gap-1">
@@ -111,28 +114,18 @@ export function AdminRequestsPage() {
                         </Badge>
                       ))}
                       {req.requested_catalogs.length > 3 && (
-                        <Badge tone="neutral">
-                          +{req.requested_catalogs.length - 3}
-                        </Badge>
+                        <Badge tone="neutral">+{req.requested_catalogs.length - 3}</Badge>
                       )}
                     </div>
                   </Td>
                   <Td>
-                    <RequestStatusBadge
-                      refused={req.refused}
-                      loanId={req.loan_id}
-                    />
+                    <RequestStatusBadge refused={req.refused} loanId={req.loan_id} />
                   </Td>
                 </Tr>
               ))}
             </TBody>
           </Table>
-          <Pagination
-            page={page}
-            limit={LIMIT}
-            total={data?.total ?? 0}
-            onPageChange={setPage}
-          />
+          <Pagination page={page} limit={LIMIT} total={data?.total ?? 0} onPageChange={setPage} />
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
-import { ArrowRight } from "lucide-react";
-import { Field } from "./Field";
-import { Input } from "./Input";
-import { cn } from "@/lib/utils";
+import { ArrowRight } from 'lucide-react';
+import { Field } from './Field';
+import { Input } from './Input';
+import { cn } from '@/lib/utils';
 
 /**
  * Two `datetime-local` inputs for a [start, end] window. Values are raw
@@ -15,8 +15,8 @@ export function DateRangeField({
   end,
   onStartChange,
   onEndChange,
-  startLabel = "Début",
-  endLabel = "Fin",
+  startLabel = 'Début',
+  endLabel = 'Fin',
   required,
   error,
   stack = false,
@@ -33,12 +33,7 @@ export function DateRangeField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <div
-        className={cn(
-          "flex flex-col gap-3",
-          !stack && "sm:flex-row sm:items-end",
-        )}
-      >
+      <div className={cn('flex flex-col gap-3', !stack && 'sm:flex-row sm:items-end')}>
         <Field label={startLabel} required={required} className="min-w-0 flex-1">
           <Input
             type="datetime-local"

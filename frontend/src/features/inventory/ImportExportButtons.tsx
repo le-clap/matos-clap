@@ -1,36 +1,32 @@
-import { Download, TriangleAlert, Upload } from "lucide-react";
-import { useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
-import { useToast } from "@/components/ui/Toast";
-import { downloadCsv, importCsv } from "@/lib/csv";
+import { Download, TriangleAlert, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
+import { downloadCsv, importCsv } from '@/lib/csv';
 
 const LABELS = {
-  categories: { file: "categories.csv", noun: "catégories" },
-  catalogs: { file: "catalogues.csv", noun: "catalogues" },
-  items: { file: "articles.csv", noun: "articles" },
+  categories: { file: 'categories.csv', noun: 'catégories' },
+  catalogs: { file: 'catalogues.csv', noun: 'catalogues' },
+  items: { file: 'articles.csv', noun: 'articles' },
 };
 
-export function ImportExportButtons({
-  entity,
-}: {
-  entity: "categories" | "catalogs" | "items";
-}) {
+export function ImportExportButtons({ entity }: { entity: 'categories' | 'catalogs' | 'items' }) {
   const qc = useQueryClient();
   const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState<"export" | "import" | null>(null);
+  const [busy, setBusy] = useState<'export' | 'import' | null>(null);
   const [errors, setErrors] = useState<string[] | null>(null);
 
   const cfg = LABELS[entity];
 
   const onExport = async () => {
-    setBusy("export");
+    setBusy('export');
     try {
       await downloadCsv(`/api/io/${entity}/export`, cfg.file);
     } catch {
-      toast.error("Export impossible");
+      toast.error('Export impossible');
     } finally {
       setBusy(null);
     }
@@ -38,19 +34,16 @@ export function ImportExportButtons({
 
   const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    e.target.value = ""; // allow re-importing the same filename
+    e.target.value = ''; // allow re-importing the same filename
     if (!file) return;
-    setBusy("import");
+    setBusy('import');
     try {
       const result = await importCsv(`/api/io/${entity}/import`, file);
       if (result.ok) {
-        toast.success(
-          "Import réussi",
-          `${result.created} créé(s), ${result.updated} mis à jour`,
-        );
-        qc.invalidateQueries({ queryKey: ["categories"] });
-        qc.invalidateQueries({ queryKey: ["catalogs"] });
-        qc.invalidateQueries({ queryKey: ["items"] });
+        toast.success('Import réussi', `${result.created} créé(s), ${result.updated} mis à jour`);
+        qc.invalidateQueries({ queryKey: ['categories'] });
+        qc.invalidateQueries({ queryKey: ['catalogs'] });
+        qc.invalidateQueries({ queryKey: ['items'] });
       } else {
         setErrors(result.errors);
       }
@@ -61,19 +54,14 @@ export function ImportExportButtons({
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onExport}
-        loading={busy === "export"}
-      >
+      <Button variant="outline" size="sm" onClick={onExport} loading={busy === 'export'}>
         <Download className="size-4" /> Exporter
       </Button>
       <Button
         variant="outline"
         size="sm"
         onClick={() => inputRef.current?.click()}
-        loading={busy === "import"}
+        loading={busy === 'import'}
       >
         <Upload className="size-4" /> Importer
       </Button>

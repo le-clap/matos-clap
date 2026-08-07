@@ -1,9 +1,9 @@
-import { Check, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import type { ItemPublic } from "@/client";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { formatMoney } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { Check, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import type { ItemPublic } from '@/client';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { formatMoney } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 /**
  * Search-and-pick multiple inventory units. Soft-deleted items are excluded.
@@ -17,7 +17,7 @@ export function ItemMultiSelect({
   selected: number[];
   onChange: (ids: number[]) => void;
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const selectedSet = new Set(selected);
 
   const itemById = useMemo(() => {
@@ -33,16 +33,13 @@ export function ItemMultiSelect({
       .filter(
         (i) =>
           !i.deleted_at &&
-          (i.name.toLowerCase().includes(q) ||
-            i.catalog.name.toLowerCase().includes(q)),
+          (i.name.toLowerCase().includes(q) || i.catalog.name.toLowerCase().includes(q)),
       )
       .slice(0, 8);
   }, [items, search]);
 
   const toggle = (id: number) =>
-    onChange(
-      selectedSet.has(id) ? selected.filter((x) => x !== id) : [...selected, id],
-    );
+    onChange(selectedSet.has(id) ? selected.filter((x) => x !== id) : [...selected, id]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -63,18 +60,18 @@ export function ItemMultiSelect({
                 type="button"
                 onClick={() => toggle(item.id)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors",
+                  'flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors',
                   selectedSet.has(item.id)
-                    ? "border-primary/50 bg-danger-bg"
-                    : "border-border hover:border-border-strong hover:bg-surface-raised",
+                    ? 'border-primary/50 bg-danger-bg'
+                    : 'border-border hover:border-border-strong hover:bg-surface-raised',
                 )}
               >
                 <div
                   className={cn(
-                    "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors",
+                    'flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors',
                     selectedSet.has(item.id)
-                      ? "border-primary bg-primary text-white"
-                      : "border-border-strong",
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border-strong',
                   )}
                 >
                   {selectedSet.has(item.id) && <Check className="size-3.5" />}
@@ -83,8 +80,7 @@ export function ItemMultiSelect({
                   <p className="truncate text-sm font-medium">{item.name}</p>
                   <p className="truncate text-[11px] text-content-faint">
                     {item.catalog.name}
-                    {item.deposit_cents > 0 &&
-                      ` · ${formatMoney(item.deposit_cents)}`}
+                    {item.deposit_cents > 0 && ` · ${formatMoney(item.deposit_cents)}`}
                   </p>
                 </div>
               </button>

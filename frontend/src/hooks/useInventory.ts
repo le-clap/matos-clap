@@ -1,8 +1,4 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CatalogsService,
   CategoriesService,
@@ -15,9 +11,9 @@ import {
   type Condition,
   type ItemPatch,
   type ItemPost,
-} from "@/client";
-import { unwrap } from "@/lib/api";
-import { qk } from "@/lib/queryKeys";
+} from '@/client';
+import { unwrap } from '@/lib/api';
+import { qk } from '@/lib/queryKeys';
 
 /* ------------------------------- Categories ------------------------------- */
 
@@ -75,10 +71,7 @@ export function useCatalogs() {
 export function useCatalog(id: number) {
   return useQuery({
     queryKey: qk.catalog(id),
-    queryFn: () =>
-      unwrap(
-        CatalogsService.catalogsGetCatalogById({ path: { catalog_id: id } }),
-      ),
+    queryFn: () => unwrap(CatalogsService.catalogsGetCatalogById({ path: { catalog_id: id } })),
     enabled: Number.isFinite(id),
   });
 }
@@ -107,8 +100,7 @@ export function useCatalogMutations() {
   const invalidate = () => qc.invalidateQueries({ queryKey: qk.catalogs });
 
   const create = useMutation({
-    mutationFn: (body: CatalogPost) =>
-      unwrap(CatalogsService.catalogsCreateCatalog({ body })),
+    mutationFn: (body: CatalogPost) => unwrap(CatalogsService.catalogsCreateCatalog({ body })),
     onSuccess: invalidate,
   });
   const update = useMutation({
@@ -123,9 +115,7 @@ export function useCatalogMutations() {
   });
   const remove = useMutation({
     mutationFn: (id: number) =>
-      unwrap(
-        CatalogsService.catalogsDeleteCatalog({ path: { catalog_id: id } }),
-      ),
+      unwrap(CatalogsService.catalogsDeleteCatalog({ path: { catalog_id: id } })),
     onSuccess: invalidate,
   });
   const uploadImage = useMutation({
@@ -144,10 +134,7 @@ export function useCatalogMutations() {
 
 /* ---------------------------------- Items --------------------------------- */
 
-export function useItems(filters?: {
-  availability?: Availability;
-  condition?: Condition;
-}) {
+export function useItems(filters?: { availability?: Availability; condition?: Condition }) {
   return useQuery({
     queryKey: qk.items(filters),
     queryFn: () =>
@@ -165,8 +152,7 @@ export function useItems(filters?: {
 export function useItemHistory(id: number, enabled = true) {
   return useQuery({
     queryKey: qk.itemHistory(id),
-    queryFn: () =>
-      unwrap(ItemsService.itemsGetItemHistory({ path: { item_id: id } })),
+    queryFn: () => unwrap(ItemsService.itemsGetItemHistory({ path: { item_id: id } })),
     enabled: enabled && Number.isFinite(id),
   });
 }
@@ -174,13 +160,12 @@ export function useItemHistory(id: number, enabled = true) {
 export function useItemMutations() {
   const qc = useQueryClient();
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["items"] });
+    qc.invalidateQueries({ queryKey: ['items'] });
     qc.invalidateQueries({ queryKey: qk.catalogs });
   };
 
   const create = useMutation({
-    mutationFn: (body: ItemPost) =>
-      unwrap(ItemsService.itemsCreateItem({ body })),
+    mutationFn: (body: ItemPost) => unwrap(ItemsService.itemsCreateItem({ body })),
     onSuccess: invalidate,
   });
   const update = useMutation({
@@ -189,8 +174,7 @@ export function useItemMutations() {
     onSuccess: invalidate,
   });
   const remove = useMutation({
-    mutationFn: (id: number) =>
-      unwrap(ItemsService.itemsSoftDeleteItem({ path: { item_id: id } })),
+    mutationFn: (id: number) => unwrap(ItemsService.itemsSoftDeleteItem({ path: { item_id: id } })),
     onSuccess: invalidate,
   });
 

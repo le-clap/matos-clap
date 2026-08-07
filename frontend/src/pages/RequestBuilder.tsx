@@ -1,22 +1,22 @@
-import { PackageOpen, SendHorizonal, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/auth/AuthContext";
-import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/Button";
-import { Card, CardBody } from "@/components/ui/Card";
-import { DateRangeField } from "@/components/ui/DateRangeField";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Field } from "@/components/ui/Field";
-import { Input, Textarea } from "@/components/ui/Input";
-import { QuantityStepper } from "@/components/ui/QuantityStepper";
-import { useToast } from "@/components/ui/Toast";
-import { CatalogThumb } from "@/features/catalog/CatalogCard";
-import { useCart } from "@/features/cart/CartContext";
-import { useRequestMutations } from "@/hooks/useRequests";
-import { ApiError } from "@/lib/api";
-import { daysBetween, localInputToIso } from "@/lib/format";
-import { PHONE_HINT, isValidPhone } from "@/lib/validation";
+import { PackageOpen, SendHorizonal, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/Button';
+import { Card, CardBody } from '@/components/ui/Card';
+import { DateRangeField } from '@/components/ui/DateRangeField';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Field } from '@/components/ui/Field';
+import { Input, Textarea } from '@/components/ui/Input';
+import { QuantityStepper } from '@/components/ui/QuantityStepper';
+import { useToast } from '@/components/ui/Toast';
+import { CatalogThumb } from '@/features/catalog/CatalogCard';
+import { useCart } from '@/features/cart/CartContext';
+import { useRequestMutations } from '@/hooks/useRequests';
+import { ApiError } from '@/lib/api';
+import { daysBetween, localInputToIso } from '@/lib/format';
+import { PHONE_HINT, isValidPhone } from '@/lib/validation';
 
 export function RequestBuilderPage() {
   const { user } = useAuth();
@@ -25,10 +25,10 @@ export function RequestBuilderPage() {
   const toast = useToast();
   const navigate = useNavigate();
 
-  const [phone, setPhone] = useState("");
-  const [reason, setReason] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
+  const [phone, setPhone] = useState('');
+  const [reason, setReason] = useState('');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const datesValid = !!start && !!end && new Date(start) < new Date(end);
@@ -36,12 +36,10 @@ export function RequestBuilderPage() {
   const submit = async () => {
     setError(null);
     if (!user) return;
-    if (lines.length === 0) return setError("Votre demande est vide.");
-    if (!phone.trim()) return setError("Veuillez indiquer un numéro de téléphone.");
-    if (!isValidPhone(phone))
-      return setError("Numéro de téléphone invalide (ex. 06 12 34 56 78).");
-    if (!datesValid)
-      return setError("La date de fin doit être postérieure à la date de début.");
+    if (lines.length === 0) return setError('Votre demande est vide.');
+    if (!phone.trim()) return setError('Veuillez indiquer un numéro de téléphone.');
+    if (!isValidPhone(phone)) return setError('Numéro de téléphone invalide (ex. 06 12 34 56 78).');
+    if (!datesValid) return setError('La date de fin doit être postérieure à la date de début.');
 
     try {
       await create.mutateAsync({
@@ -56,15 +54,10 @@ export function RequestBuilderPage() {
         })),
       });
       clear();
-      toast.success(
-        "Demande envoyée",
-        "Le CLAP va l'étudier et revenir vers vous.",
-      );
-      navigate("/my/requests");
+      toast.success('Demande envoyée', "Le CLAP va l'étudier et revenir vers vous.");
+      navigate('/my/requests');
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.detail ?? err.message : "Erreur inconnue",
-      );
+      setError(err instanceof ApiError ? (err.detail ?? err.message) : 'Erreur inconnue');
     }
   };
 
@@ -147,7 +140,7 @@ export function RequestBuilderPage() {
               required
               htmlFor="phone"
               hint={PHONE_HINT}
-              error={phone && !isValidPhone(phone) ? "Numéro invalide" : null}
+              error={phone && !isValidPhone(phone) ? 'Numéro invalide' : null}
             >
               <Input
                 id="phone"
@@ -157,11 +150,7 @@ export function RequestBuilderPage() {
                 onChange={(e) => setPhone(e.target.value)}
               />
             </Field>
-            <Field
-              label="Motif"
-              hint="Tournage, projet, événement… (optionnel)"
-              htmlFor="reason"
-            >
+            <Field label="Motif" hint="Tournage, projet, événement… (optionnel)" htmlFor="reason">
               <Textarea
                 id="reason"
                 placeholder="Décrivez brièvement votre projet"

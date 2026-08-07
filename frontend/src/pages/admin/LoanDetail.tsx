@@ -6,47 +6,36 @@ import {
   Undo2,
   UserCheck,
   User as UserIcon,
-} from "lucide-react";
-import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import type {
-  Condition,
-  ItemPublic,
-  LoanedItemPublic,
-  LoanPublic,
-  UserBrief,
-} from "@/client";
-import { PageHeader } from "@/components/PageHeader";
-import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DateRangeField } from "@/components/ui/DateRangeField";
-import { Field } from "@/components/ui/Field";
-import { Input, Select, Textarea } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
-import { PageSpinner } from "@/components/ui/Spinner";
-import { ConditionBadge, LoanStatusBadge } from "@/components/ui/StatusBadge";
-import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/Table";
-import { useToast } from "@/components/ui/Toast";
-import { ItemMultiSelect } from "@/features/loans/ItemMultiSelect";
-import { UserCombobox } from "@/features/loans/UserCombobox";
-import { useItems } from "@/hooks/useInventory";
-import { useLoan, useLoanMutations } from "@/hooks/useLoans";
-import { ApiError } from "@/lib/api";
-import {
-  formatDateTime,
-  formatMoney,
-  isoToLocalInput,
-  localInputToIso,
-} from "@/lib/format";
-import { isOverdue } from "@/lib/loanStatus";
+} from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import type { Condition, ItemPublic, LoanedItemPublic, LoanPublic, UserBrief } from '@/client';
+import { PageHeader } from '@/components/PageHeader';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardBody, CardHeader } from '@/components/ui/Card';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DateRangeField } from '@/components/ui/DateRangeField';
+import { Field } from '@/components/ui/Field';
+import { Input, Select, Textarea } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { ConditionBadge, LoanStatusBadge } from '@/components/ui/StatusBadge';
+import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
+import { useToast } from '@/components/ui/Toast';
+import { ItemMultiSelect } from '@/features/loans/ItemMultiSelect';
+import { UserCombobox } from '@/features/loans/UserCombobox';
+import { useItems } from '@/hooks/useInventory';
+import { useLoan, useLoanMutations } from '@/hooks/useLoans';
+import { ApiError } from '@/lib/api';
+import { formatDateTime, formatMoney, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { isOverdue } from '@/lib/loanStatus';
 
 const CONDITIONS: { value: Condition; label: string }[] = [
-  { value: "new", label: "Neuf" },
-  { value: "good", label: "Bon état" },
-  { value: "degraded", label: "Dégradé" },
+  { value: 'new', label: 'Neuf' },
+  { value: 'good', label: 'Bon état' },
+  { value: 'degraded', label: 'Dégradé' },
 ];
 
 export function AdminLoanDetailPage() {
@@ -59,13 +48,13 @@ export function AdminLoanDetailPage() {
   const { data: allItems } = useItems();
   const { update, returnLoan, partialReturn, remove } = useLoanMutations();
 
-  const [modal, setModal] = useState<null | "edit" | "return" | "partial">(null);
+  const [modal, setModal] = useState<null | 'edit' | 'return' | 'partial'>(null);
   const [confirmStart, setConfirmStart] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (isLoading) return <PageSpinner />;
   if (!loan) {
-    return <PageHeader title="Prêt introuvable" back={{ to: "/admin/loans", label: "Prêts" }} />;
+    return <PageHeader title="Prêt introuvable" back={{ to: '/admin/loans', label: 'Prêts' }} />;
   }
 
   const status = loan.status;
@@ -77,7 +66,7 @@ export function AdminLoanDetailPage() {
       id: loan.id,
       body: { actual_start_date: new Date().toISOString() },
     });
-    toast.success("Prêt démarré", "Le matériel est marqué comme remis.");
+    toast.success('Prêt démarré', 'Le matériel est marqué comme remis.');
     setConfirmStart(false);
   };
 
@@ -85,25 +74,30 @@ export function AdminLoanDetailPage() {
     <div>
       <PageHeader
         title={`Prêt #${loan.id}`}
-        back={{ to: "/admin/loans", label: "Prêts" }}
+        back={{ to: '/admin/loans', label: 'Prêts' }}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            {status === "scheduled" && (
+            {status === 'scheduled' && (
               <Button onClick={() => setConfirmStart(true)}>
                 <PlayCircle className="size-4" /> Démarrer
               </Button>
             )}
-            {status === "active" && (
+            {status === 'active' && (
               <>
-                <Button variant="secondary" onClick={() => setModal("partial")}>
+                <Button variant="secondary" onClick={() => setModal('partial')}>
                   Retour partiel
                 </Button>
-                <Button onClick={() => setModal("return")}>
+                <Button onClick={() => setModal('return')}>
                   <Undo2 className="size-4" /> Enregistrer le retour
                 </Button>
               </>
             )}
-            <Button variant="ghost" size="icon" onClick={() => setModal("edit")} aria-label="Modifier">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setModal('edit')}
+              aria-label="Modifier"
+            >
               <Pencil className="size-4" />
             </Button>
             <Button
@@ -232,20 +226,20 @@ export function AdminLoanDetailPage() {
         </div>
       </div>
 
-      {modal === "edit" && (
+      {modal === 'edit' && (
         <EditLoanModal
           loan={loan}
-          scheduled={status === "scheduled"}
+          scheduled={status === 'scheduled'}
           items={allItems ?? []}
           onClose={() => setModal(null)}
           onSave={async (body) => {
             try {
               await update.mutateAsync({ id: loan.id, body });
-              toast.success("Prêt mis à jour");
+              toast.success('Prêt mis à jour');
               setModal(null);
             } catch (err) {
               toast.error(
-                "Échec de la mise à jour",
+                'Échec de la mise à jour',
                 err instanceof ApiError ? err.detail : undefined,
               );
             }
@@ -254,7 +248,7 @@ export function AdminLoanDetailPage() {
         />
       )}
 
-      {modal === "return" && (
+      {modal === 'return' && (
         <ReturnModal
           loan={loan}
           items={outItems}
@@ -262,33 +256,27 @@ export function AdminLoanDetailPage() {
           onSubmit={async (body) => {
             try {
               await returnLoan.mutateAsync({ id: loan.id, body });
-              toast.success("Retour enregistré");
+              toast.success('Retour enregistré');
               setModal(null);
             } catch (err) {
-              toast.error(
-                "Échec du retour",
-                err instanceof ApiError ? err.detail : undefined,
-              );
+              toast.error('Échec du retour', err instanceof ApiError ? err.detail : undefined);
             }
           }}
           saving={returnLoan.isPending}
         />
       )}
 
-      {modal === "partial" && (
+      {modal === 'partial' && (
         <PartialReturnModal
           items={outItems}
           onClose={() => setModal(null)}
           onSubmit={async (body) => {
             try {
               await partialReturn.mutateAsync({ id: loan.id, body });
-              toast.success("Retour partiel enregistré");
+              toast.success('Retour partiel enregistré');
               setModal(null);
             } catch (err) {
-              toast.error(
-                "Échec",
-                err instanceof ApiError ? err.detail : undefined,
-              );
+              toast.error('Échec', err instanceof ApiError ? err.detail : undefined);
             }
           }}
           saving={partialReturn.isPending}
@@ -311,8 +299,8 @@ export function AdminLoanDetailPage() {
         onClose={() => setConfirmDelete(false)}
         onConfirm={async () => {
           await remove.mutateAsync(loan.id);
-          toast.success("Prêt supprimé");
-          navigate("/admin/loans");
+          toast.success('Prêt supprimé');
+          navigate('/admin/loans');
         }}
         loading={remove.isPending}
         title="Supprimer le prêt ?"
@@ -350,13 +338,11 @@ function EditLoanModal({
   saving: boolean;
 }) {
   const [borrower, setBorrower] = useState<UserBrief | null>(loan.borrower);
-  const [itemIds, setItemIds] = useState<number[]>(
-    loan.loaned_items.map((li) => li.item.id),
-  );
+  const [itemIds, setItemIds] = useState<number[]>(loan.loaned_items.map((li) => li.item.id));
   const [start, setStart] = useState(isoToLocalInput(loan.start_date));
   const [end, setEnd] = useState(isoToLocalInput(loan.end_date));
   const [deposit, setDeposit] = useState((loan.total_deposit_cents / 100).toFixed(2));
-  const [comments, setComments] = useState(loan.comments ?? "");
+  const [comments, setComments] = useState(loan.comments ?? '');
 
   const datesValid = !!start && !!end && new Date(start) < new Date(end);
 
@@ -365,11 +351,7 @@ function EditLoanModal({
       open
       onClose={onClose}
       title="Modifier le prêt"
-      description={
-        scheduled
-          ? "Le prêt n'a pas démarré."
-          : "Le prêt a démarré."
-      }
+      description={scheduled ? "Le prêt n'a pas démarré." : 'Le prêt a démarré.'}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -377,10 +359,7 @@ function EditLoanModal({
           </Button>
           <Button
             loading={saving}
-            disabled={
-              !datesValid ||
-              (scheduled && (itemIds.length === 0 || !borrower))
-            }
+            disabled={!datesValid || (scheduled && (itemIds.length === 0 || !borrower))}
             onClick={() =>
               onSave({
                 ...(scheduled
@@ -388,7 +367,7 @@ function EditLoanModal({
                   : {}),
                 start_date: localInputToIso(start),
                 end_date: localInputToIso(end),
-                total_deposit_cents: Math.round(parseFloat(deposit || "0") * 100),
+                total_deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
                 comments: comments.trim() || null,
               })
             }
@@ -405,20 +384,11 @@ function EditLoanModal({
               <UserCombobox value={borrower} onChange={setBorrower} />
             </Field>
             <Field label="Matériel">
-              <ItemMultiSelect
-                items={items}
-                selected={itemIds}
-                onChange={setItemIds}
-              />
+              <ItemMultiSelect items={items} selected={itemIds} onChange={setItemIds} />
             </Field>
           </>
         )}
-        <DateRangeField
-          start={start}
-          end={end}
-          onStartChange={setStart}
-          onEndChange={setEnd}
-        />
+        <DateRangeField start={start} end={end} onStartChange={setStart} onEndChange={setEnd} />
         <Field label="Caution (€)">
           <Input
             type="number"
@@ -455,11 +425,11 @@ function ReturnModal({
   }) => void;
   saving: boolean;
 }) {
-  const [retained, setRetained] = useState("0.00");
-  const [conditions, setConditions] = useState<Record<number, Condition>>(
-    () => Object.fromEntries(items.map((li) => [li.item.id, "good" as Condition])),
+  const [retained, setRetained] = useState('0.00');
+  const [conditions, setConditions] = useState<Record<number, Condition>>(() =>
+    Object.fromEntries(items.map((li) => [li.item.id, 'good' as Condition])),
   );
-  const [comments, setComments] = useState("");
+  const [comments, setComments] = useState('');
 
   return (
     <Modal
@@ -476,10 +446,10 @@ function ReturnModal({
             loading={saving}
             onClick={() =>
               onSubmit({
-                retained_deposit_cents: Math.round(parseFloat(retained || "0") * 100),
+                retained_deposit_cents: Math.round(parseFloat(retained || '0') * 100),
                 item_return_conditions: items.map((li) => ({
                   item_id: li.item.id,
-                  return_condition: conditions[li.item.id] ?? "good",
+                  return_condition: conditions[li.item.id] ?? 'good',
                 })),
                 comments: comments.trim() || null,
               })
@@ -500,7 +470,7 @@ function ReturnModal({
               <span className="text-sm font-medium">{li.item.name}</span>
               <Select
                 className="w-40"
-                value={conditions[li.item.id] ?? "good"}
+                value={conditions[li.item.id] ?? 'good'}
                 onChange={(e) =>
                   setConditions((prev) => ({
                     ...prev,
@@ -547,9 +517,7 @@ function PartialReturnModal({
 }: {
   items: LoanedItemPublic[];
   onClose: () => void;
-  onSubmit: (body: {
-    items: { item_id: number; return_condition: Condition }[];
-  }) => void;
+  onSubmit: (body: { items: { item_id: number; return_condition: Condition }[] }) => void;
   saving: boolean;
 }) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -574,7 +542,7 @@ function PartialReturnModal({
               onSubmit({
                 items: [...selected].map((itemId) => ({
                   item_id: itemId,
-                  return_condition: conditions[itemId] ?? "good",
+                  return_condition: conditions[itemId] ?? 'good',
                 })),
               })
             }
@@ -611,7 +579,7 @@ function PartialReturnModal({
               {checked && (
                 <Select
                   className="w-40"
-                  value={conditions[li.item.id] ?? "good"}
+                  value={conditions[li.item.id] ?? 'good'}
                   onChange={(e) =>
                     setConditions((prev) => ({
                       ...prev,

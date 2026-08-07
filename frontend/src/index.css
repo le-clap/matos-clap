@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ------------------------------------------------------------------ *
  *  Matos CLAP — design tokens
@@ -7,8 +7,7 @@
  * ------------------------------------------------------------------ */
 
 @theme {
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Charcoal greys — the structural palette */
   --color-ink-950: #0d0d0f;
@@ -69,8 +68,7 @@
   --radius-card: 14px;
 
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-  --shadow-pop:
-    0 4px 12px rgba(0, 0, 0, 0.5), 0 16px 40px -8px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 4px 12px rgba(0, 0, 0, 0.5), 0 16px 40px -8px rgba(0, 0, 0, 0.7);
 }
 
 @layer base {
@@ -89,8 +87,8 @@
     background-color: var(--color-bg);
     color: var(--color-content);
     font-family: var(--font-sans);
-    font-feature-settings: "cv11", "ss01";
-    font-variation-settings: "opsz" 32;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
   }
 
   /* Charcoal scrollbars */
@@ -124,9 +122,9 @@
   }
 
   /* Tame native date/number controls in the dark theme */
-  input[type="datetime-local"],
-  input[type="date"],
-  input[type="number"] {
+  input[type='datetime-local'],
+  input[type='date'],
+  input[type='number'] {
     color-scheme: dark;
   }
 }
@@ -138,10 +136,7 @@
 
   /* Subtle dotted texture used behind hero / auth surfaces */
   .bg-grid {
-    background-image: radial-gradient(
-      rgba(255, 255, 255, 0.04) 1px,
-      transparent 1px
-    );
+    background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     background-size: 22px 22px;
   }
 
@@ -210,16 +205,11 @@
     background-color: var(--color-ink-800);
   }
   .skeleton::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background-image: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.05),
-      transparent
-    );
+    background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
     animation: shimmer 1.4s infinite;
   }
 }

@@ -7,14 +7,14 @@ import {
   Users,
   Menu,
   X,
-} from "lucide-react";
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { useAuth } from "@/auth/AuthContext";
-import { Logo } from "@/components/Logo";
-import { UserMenu } from "@/components/UserMenu";
-import type { AccessLevel } from "@/client";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { useState } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
+import { Logo } from '@/components/Logo';
+import { UserMenu } from '@/components/UserMenu';
+import type { AccessLevel } from '@/client';
+import { cn } from '@/lib/utils';
 
 interface NavItem {
   to: string;
@@ -25,12 +25,12 @@ interface NavItem {
 }
 
 const nav: NavItem[] = [
-  { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard, end: true },
-  { to: "/admin/requests", label: "Demandes", icon: ClipboardList },
-  { to: "/admin/loans", label: "Prêts", icon: ScrollText },
-  { to: "/admin/planning", label: "Planning", icon: CalendarRange },
-  { to: "/admin/inventory", label: "Inventaire", icon: Package, min: "manager" },
-  { to: "/admin/users", label: "Utilisateurs", icon: Users },
+  { to: '/admin', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
+  { to: '/admin/requests', label: 'Demandes', icon: ClipboardList },
+  { to: '/admin/loans', label: 'Prêts', icon: ScrollText },
+  { to: '/admin/planning', label: 'Planning', icon: CalendarRange },
+  { to: '/admin/inventory', label: 'Inventaire', icon: Package, min: 'manager' },
+  { to: '/admin/users', label: 'Utilisateurs', icon: Users },
 ];
 
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
@@ -47,10 +47,10 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? "bg-danger-bg text-brand-200 shadow-[inset_2px_0_0_var(--color-primary)]"
-                  : "text-content-muted hover:bg-surface-raised hover:text-content",
+                  ? 'bg-danger-bg text-brand-200 shadow-[inset_2px_0_0_var(--color-primary)]'
+                  : 'text-content-muted hover:bg-surface-raised hover:text-content',
               )
             }
           >

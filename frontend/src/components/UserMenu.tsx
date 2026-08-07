@@ -1,36 +1,36 @@
-import { ChevronDown, LayoutDashboard, LogOut, Store } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/auth/AuthContext";
-import { Avatar } from "@/components/ui/Avatar";
-import { DropdownMenu } from "@/components/ui/DropdownMenu";
-import { ROLE_LABELS } from "@/lib/roles";
+import { ChevronDown, LayoutDashboard, LogOut, Store } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
+import { Avatar } from '@/components/ui/Avatar';
+import { DropdownMenu } from '@/components/ui/DropdownMenu';
+import { ROLE_LABELS } from '@/lib/roles';
 
-export function UserMenu({ context = "app" }: { context?: "app" | "admin" }) {
+export function UserMenu({ context = 'app' }: { context?: 'app' | 'admin' }) {
   const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
   if (!user) return null;
 
-  const items: Parameters<typeof DropdownMenu>[0]["items"] = [];
-  if (hasRole("clap")) {
+  const items: Parameters<typeof DropdownMenu>[0]['items'] = [];
+  if (hasRole('clap')) {
     items.push(
-      context === "app"
+      context === 'app'
         ? {
-            label: "Backoffice",
+            label: 'Backoffice',
             icon: LayoutDashboard,
-            onClick: () => navigate("/admin"),
+            onClick: () => navigate('/admin'),
           }
         : {
-            label: "Retour au site",
+            label: 'Retour au site',
             icon: Store,
-            onClick: () => navigate("/catalog"),
+            onClick: () => navigate('/catalog'),
           },
-      "separator",
+      'separator',
     );
   }
   items.push({
-    label: "Se déconnecter",
+    label: 'Se déconnecter',
     icon: LogOut,
-    tone: "danger",
+    tone: 'danger',
     onClick: () => void logout(),
   });
 
@@ -44,9 +44,7 @@ export function UserMenu({ context = "app" }: { context?: "app" | "admin" }) {
             <div className="max-w-[140px] truncate text-[13px] font-medium text-content">
               {user.name}
             </div>
-            <div className="text-[11px] text-content-faint">
-              {ROLE_LABELS[user.access_level]}
-            </div>
+            <div className="text-[11px] text-content-faint">{ROLE_LABELS[user.access_level]}</div>
           </div>
           <ChevronDown className="size-4 text-content-faint" />
         </button>

@@ -1,6 +1,6 @@
-import { type ReactNode } from "react";
-import { Modal } from "./Modal";
-import { Button } from "./Button";
+import { type ReactNode } from 'react';
+import { Modal } from './Modal';
+import { Button } from './Button';
 
 export function ConfirmDialog({
   open,
@@ -8,9 +8,9 @@ export function ConfirmDialog({
   onConfirm,
   title,
   description,
-  confirmLabel = "Confirmer",
-  cancelLabel = "Annuler",
-  tone = "danger",
+  confirmLabel = 'Confirmer',
+  cancelLabel = 'Annuler',
+  tone = 'danger',
   loading = false,
 }: {
   open: boolean;
@@ -20,7 +20,7 @@ export function ConfirmDialog({
   description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
-  tone?: "danger" | "primary";
+  tone?: 'danger' | 'primary';
   loading?: boolean;
 }) {
   return (
@@ -35,7 +35,7 @@ export function ConfirmDialog({
             {cancelLabel}
           </Button>
           <Button
-            variant={tone === "danger" ? "danger" : "primary"}
+            variant={tone === 'danger' ? 'danger' : 'primary'}
             onClick={onConfirm}
             loading={loading}
           >

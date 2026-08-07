@@ -1,5 +1,5 @@
-import { Minus, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Minus, Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function QuantityStepper({
   value,
@@ -17,7 +17,7 @@ export function QuantityStepper({
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-lg border border-border bg-surface",
+        'inline-flex items-center rounded-lg border border-border bg-surface',
         className,
       )}
     >
@@ -30,9 +30,7 @@ export function QuantityStepper({
       >
         <Minus className="size-4" />
       </button>
-      <span className="w-9 text-center text-sm font-medium tabular-nums">
-        {value}
-      </span>
+      <span className="w-9 text-center text-sm font-medium tabular-nums">{value}</span>
       <button
         type="button"
         onClick={() => onChange(Math.min(max, value + 1))}

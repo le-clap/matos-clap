@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "./Button";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from './Button';
 
 export function Pagination({
   page,

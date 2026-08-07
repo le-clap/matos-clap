@@ -1,6 +1,6 @@
-import { type LucideIcon } from "lucide-react";
-import { type ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { type LucideIcon } from 'lucide-react';
+import { type ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 export function EmptyState({
   icon: Icon,
@@ -18,7 +18,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-border-strong bg-surface/40 px-6 py-14 text-center",
+        'flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-border-strong bg-surface/40 px-6 py-14 text-center',
         className,
       )}
     >
@@ -28,9 +28,7 @@ export function EmptyState({
         </div>
       )}
       <h3 className="font-semibold text-content">{title}</h3>
-      {description && (
-        <p className="mt-1 max-w-sm text-sm text-content-muted">{description}</p>
-      )}
+      {description && <p className="mt-1 max-w-sm text-sm text-content-muted">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );

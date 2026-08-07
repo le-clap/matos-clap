@@ -31,13 +31,13 @@ définissant `VITE_ENABLE_DEV_LOGIN=true` côté frontend.
 
 ## Scripts
 
-| Script | Rôle |
-| --- | --- |
-| `npm run dev` | Serveur de développement Vite |
-| `npm run build` | Vérification TypeScript + build de production (`dist/`) |
-| `npm run lint` | ESLint |
-| `npm run generate:client` | Régénère le SDK depuis `../backend/openapi.json` |
-| `npm run generate` | Régénère `openapi.json` puis le SDK |
+| Script                    | Rôle                                                    |
+| ------------------------- | ------------------------------------------------------- |
+| `npm run dev`             | Serveur de développement Vite                           |
+| `npm run build`           | Vérification TypeScript + build de production (`dist/`) |
+| `npm run lint`            | ESLint                                                  |
+| `npm run generate:client` | Régénère le SDK depuis `../backend/openapi.json`        |
+| `npm run generate`        | Régénère `openapi.json` puis le SDK                     |
 
 ## Architecture
 

@@ -1,9 +1,4 @@
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LoansService,
   type LoanPartialReturnPost,
@@ -11,9 +6,9 @@ import {
   type LoanPost,
   type LoanReturnPost,
   type LoanStatus,
-} from "@/client";
-import { unwrap } from "@/lib/api";
-import { qk } from "@/lib/queryKeys";
+} from '@/client';
+import { unwrap } from '@/lib/api';
+import { qk } from '@/lib/queryKeys';
 
 export interface LoanFilters {
   borrowerId?: number;
@@ -46,8 +41,7 @@ export function useLoans(filters: LoanFilters = {}) {
 export function useLoan(id: number) {
   return useQuery({
     queryKey: qk.loan(id),
-    queryFn: () =>
-      unwrap(LoansService.loansGetLoanById({ path: { loan_id: id } })),
+    queryFn: () => unwrap(LoansService.loansGetLoanById({ path: { loan_id: id } })),
     enabled: Number.isFinite(id),
   });
 }
@@ -68,14 +62,13 @@ export function useLoanTimeline(startIso: string, endIso: string, enabled = true
 export function useLoanMutations() {
   const qc = useQueryClient();
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["loans"] });
-    qc.invalidateQueries({ queryKey: ["items"] });
-    qc.invalidateQueries({ queryKey: ["requests"] });
+    qc.invalidateQueries({ queryKey: ['loans'] });
+    qc.invalidateQueries({ queryKey: ['items'] });
+    qc.invalidateQueries({ queryKey: ['requests'] });
   };
 
   const create = useMutation({
-    mutationFn: (body: LoanPost) =>
-      unwrap(LoansService.loansCreateLoan({ body })),
+    mutationFn: (body: LoanPost) => unwrap(LoansService.loansCreateLoan({ body })),
     onSuccess: invalidate,
   });
   const update = useMutation({
@@ -99,8 +92,7 @@ export function useLoanMutations() {
     onSuccess: invalidate,
   });
   const remove = useMutation({
-    mutationFn: (id: number) =>
-      unwrap(LoansService.loansDeleteLoan({ path: { loan_id: id } })),
+    mutationFn: (id: number) => unwrap(LoansService.loansDeleteLoan({ path: { loan_id: id } })),
     onSuccess: invalidate,
   });
 

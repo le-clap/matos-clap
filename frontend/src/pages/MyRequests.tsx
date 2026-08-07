@@ -1,31 +1,26 @@
-import { ClipboardList, Pencil, Phone, ScrollText, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import type { RequestPublic } from "@/client";
-import { useAuth } from "@/auth/AuthContext";
-import { PageHeader } from "@/components/PageHeader";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Card, CardBody } from "@/components/ui/Card";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DateRangeField } from "@/components/ui/DateRangeField";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Field } from "@/components/ui/Field";
-import { Input, Textarea } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
-import { Pagination } from "@/components/ui/Pagination";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { RequestStatusBadge } from "@/components/ui/StatusBadge";
-import { useToast } from "@/components/ui/Toast";
-import { useRequestMutations, useRequests } from "@/hooks/useRequests";
-import { ApiError } from "@/lib/api";
-import {
-  formatDate,
-  formatDateShort,
-  isoToLocalInput,
-  localInputToIso,
-} from "@/lib/format";
-import { PHONE_HINT, isValidPhone } from "@/lib/validation";
+import { ClipboardList, Pencil, Phone, ScrollText, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import type { RequestPublic } from '@/client';
+import { useAuth } from '@/auth/AuthContext';
+import { PageHeader } from '@/components/PageHeader';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardBody } from '@/components/ui/Card';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DateRangeField } from '@/components/ui/DateRangeField';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Field } from '@/components/ui/Field';
+import { Input, Textarea } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { Pagination } from '@/components/ui/Pagination';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { RequestStatusBadge } from '@/components/ui/StatusBadge';
+import { useToast } from '@/components/ui/Toast';
+import { useRequestMutations, useRequests } from '@/hooks/useRequests';
+import { ApiError } from '@/lib/api';
+import { formatDate, formatDateShort, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { PHONE_HINT, isValidPhone } from '@/lib/validation';
 
 const LIMIT = 10;
 
@@ -80,16 +75,13 @@ export function MyRequestsPage() {
                 <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <RequestStatusBadge
-                        refused={req.refused}
-                        loanId={req.loan_id}
-                      />
+                      <RequestStatusBadge refused={req.refused} loanId={req.loan_id} />
                       <span className="text-xs text-content-faint">
                         Demande #{req.id} · {formatDate(req.created_at)}
                       </span>
                     </div>
                     <p className="mt-2 text-sm text-content">
-                      Du <strong>{formatDateShort(req.start_date)}</strong> au{" "}
+                      Du <strong>{formatDateShort(req.start_date)}</strong> au{' '}
                       <strong>{formatDateShort(req.end_date)}</strong>
                     </p>
                     <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -99,11 +91,7 @@ export function MyRequestsPage() {
                         </Badge>
                       ))}
                     </div>
-                    {req.reason && (
-                      <p className="mt-2 text-sm text-content-muted">
-                        {req.reason}
-                      </p>
-                    )}
+                    {req.reason && <p className="mt-2 text-sm text-content-muted">{req.reason}</p>}
                     {req.loan_id != null && (
                       <Link
                         to="/my/loans"
@@ -121,11 +109,7 @@ export function MyRequestsPage() {
                     </div>
                     {pending && (
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditing(req)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(req)}>
                           <Pencil className="size-4" /> Modifier
                         </Button>
                         <Button
@@ -144,12 +128,7 @@ export function MyRequestsPage() {
               </Card>
             );
           })}
-          <Pagination
-            page={page}
-            limit={LIMIT}
-            total={data.total}
-            onPageChange={setPage}
-          />
+          <Pagination page={page} limit={LIMIT} total={data.total} onPageChange={setPage} />
         </div>
       )}
 
@@ -160,7 +139,7 @@ export function MyRequestsPage() {
           onClose={() => setEditing(null)}
           onSave={async (body) => {
             await update.mutateAsync({ id: editing.id, body });
-            toast.success("Demande mise à jour");
+            toast.success('Demande mise à jour');
             setEditing(null);
           }}
         />
@@ -176,13 +155,10 @@ export function MyRequestsPage() {
         onConfirm={async () => {
           try {
             await remove.mutateAsync(toDelete!.id);
-            toast.success("Demande supprimée");
+            toast.success('Demande supprimée');
             setToDelete(null);
           } catch (err) {
-            toast.error(
-              "Suppression impossible",
-              err instanceof ApiError ? err.detail : undefined,
-            );
+            toast.error('Suppression impossible', err instanceof ApiError ? err.detail : undefined);
             setToDelete(null);
           }
         }}
@@ -210,7 +186,7 @@ function EditRequestModal({
   const [phone, setPhone] = useState(request.phone_number);
   const [start, setStart] = useState(isoToLocalInput(request.start_date));
   const [end, setEnd] = useState(isoToLocalInput(request.end_date));
-  const [reason, setReason] = useState(request.reason ?? "");
+  const [reason, setReason] = useState(request.reason ?? '');
 
   const datesValid = !!start && !!end && new Date(start) < new Date(end);
   const phoneValid = isValidPhone(phone);
@@ -255,13 +231,9 @@ function EditRequestModal({
           label="Téléphone"
           required
           hint={PHONE_HINT}
-          error={phone && !phoneValid ? "Numéro invalide" : null}
+          error={phone && !phoneValid ? 'Numéro invalide' : null}
         >
-          <Input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Field>
         <Field label="Motif">
           <Textarea value={reason} onChange={(e) => setReason(e.target.value)} />
