@@ -1,7 +1,7 @@
-import { ArrowLeft } from "lucide-react";
-import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { ArrowLeft } from 'lucide-react';
+import { type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 export function PageHeader({
   title,
@@ -17,7 +17,7 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-6", className)}>
+    <div className={cn('mb-6', className)}>
       {back && (
         <Link
           to={back.to}
@@ -29,12 +29,8 @@ export function PageHeader({
       )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-content">
-            {title}
-          </h1>
-          {description && (
-            <p className="mt-1 text-sm text-content-muted">{description}</p>
-          )}
+          <h1 className="text-2xl font-bold tracking-tight text-content">{title}</h1>
+          {description && <p className="mt-1 text-sm text-content-muted">{description}</p>}
         </div>
         {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
       </div>

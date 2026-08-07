@@ -1,18 +1,18 @@
-import { defineConfig } from "@hey-api/openapi-ts";
+import { defineConfig } from '@hey-api/openapi-ts';
 
 export default defineConfig({
-  input: "../backend/openapi.json",
+  input: '../backend/openapi.json',
   output: {
-    path: "src/client",
-    postProcess: ["prettier"],
+    path: 'src/client',
+    postProcess: ['prettier'],
   },
   plugins: [
-    "@hey-api/client-fetch",
+    '@hey-api/client-fetch',
     {
-      name: "@hey-api/sdk",
+      name: '@hey-api/sdk',
       operations: {
-        strategy: "byTags",
-        containerName: "{{name}}Service",
+        strategy: 'byTags',
+        containerName: '{{name}}Service',
       },
     },
   ],

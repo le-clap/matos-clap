@@ -1,32 +1,32 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from 'react-router-dom';
 
-import { useAuth } from "@/auth/AuthContext";
-import { RequireAuth, RequireRole } from "@/components/RouteGuards";
-import { CartProvider } from "@/features/cart/CartContext";
-import { AppLayout } from "@/layouts/AppLayout";
-import { AdminLayout } from "@/layouts/AdminLayout";
+import { useAuth } from '@/auth/AuthContext';
+import { RequireAuth, RequireRole } from '@/components/RouteGuards';
+import { CartProvider } from '@/features/cart/CartContext';
+import { AppLayout } from '@/layouts/AppLayout';
+import { AdminLayout } from '@/layouts/AdminLayout';
 
-import { LoginPage } from "@/pages/Login";
-import { NotFound } from "@/pages/NotFound";
-import { CatalogPage } from "@/pages/Catalog";
-import { CatalogDetailPage } from "@/pages/CatalogDetail";
-import { RequestBuilderPage } from "@/pages/RequestBuilder";
-import { MyRequestsPage } from "@/pages/MyRequests";
-import { MyLoansPage } from "@/pages/MyLoans";
+import { LoginPage } from '@/pages/Login';
+import { NotFound } from '@/pages/NotFound';
+import { CatalogPage } from '@/pages/Catalog';
+import { CatalogDetailPage } from '@/pages/CatalogDetail';
+import { RequestBuilderPage } from '@/pages/RequestBuilder';
+import { MyRequestsPage } from '@/pages/MyRequests';
+import { MyLoansPage } from '@/pages/MyLoans';
 
-import { DashboardPage } from "@/pages/admin/Dashboard";
-import { AdminRequestsPage } from "@/pages/admin/Requests";
-import { AdminRequestDetailPage } from "@/pages/admin/RequestDetail";
-import { AdminLoansPage } from "@/pages/admin/Loans";
-import { AdminLoanDetailPage } from "@/pages/admin/LoanDetail";
-import { AdminNewLoanPage } from "@/pages/admin/NewLoan";
-import { AdminTimelinePage } from "@/pages/admin/Timeline";
-import { AdminInventoryPage } from "@/pages/admin/Inventory";
-import { AdminUsersPage } from "@/pages/admin/Users";
+import { DashboardPage } from '@/pages/admin/Dashboard';
+import { AdminRequestsPage } from '@/pages/admin/Requests';
+import { AdminRequestDetailPage } from '@/pages/admin/RequestDetail';
+import { AdminLoansPage } from '@/pages/admin/Loans';
+import { AdminLoanDetailPage } from '@/pages/admin/LoanDetail';
+import { AdminNewLoanPage } from '@/pages/admin/NewLoan';
+import { AdminTimelinePage } from '@/pages/admin/Timeline';
+import { AdminInventoryPage } from '@/pages/admin/Inventory';
+import { AdminUsersPage } from '@/pages/admin/Users';
 
 function HomeRedirect() {
   const { hasRole } = useAuth();
-  return <Navigate to={hasRole("clap") ? "/admin" : "/catalog"} replace />;
+  return <Navigate to={hasRole('clap') ? '/admin' : '/catalog'} replace />;
 }
 
 export function App() {

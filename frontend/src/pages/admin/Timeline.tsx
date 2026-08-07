@@ -1,20 +1,15 @@
-import { CalendarRange } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import type { LoanTimelineEntry } from "@/client";
-import { PageHeader } from "@/components/PageHeader";
-import { Card, CardBody } from "@/components/ui/Card";
-import { DateRangeField } from "@/components/ui/DateRangeField";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { useLoanTimeline } from "@/hooks/useLoans";
-import {
-  formatDateShort,
-  formatDayMonth,
-  isoToLocalInput,
-  localInputToIso,
-} from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { CalendarRange } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { LoanTimelineEntry } from '@/client';
+import { PageHeader } from '@/components/PageHeader';
+import { Card, CardBody } from '@/components/ui/Card';
+import { DateRangeField } from '@/components/ui/DateRangeField';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useLoanTimeline } from '@/hooks/useLoans';
+import { formatDateShort, formatDayMonth, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 const DAY = 86_400_000;
 
@@ -26,17 +21,17 @@ function defaultRange() {
 }
 
 const statusBar: Record<string, string> = {
-  scheduled: "bg-info/70 border-info",
-  active: "bg-success/70 border-success",
-  returned: "bg-ink-500 border-ink-400",
+  scheduled: 'bg-info/70 border-info',
+  active: 'bg-success/70 border-success',
+  returned: 'bg-ink-500 border-ink-400',
 };
 
 export function AdminTimelinePage() {
   const navigate = useNavigate();
   const [{ start, end }, setRange] = useState(defaultRange);
   const valid = !!start && !!end && new Date(start) < new Date(end);
-  const startIso = valid ? localInputToIso(start) : "";
-  const endIso = valid ? localInputToIso(end) : "";
+  const startIso = valid ? localInputToIso(start) : '';
+  const endIso = valid ? localInputToIso(end) : '';
   const { data, isLoading } = useLoanTimeline(startIso, endIso, valid);
 
   const windowStart = new Date(start).getTime();
@@ -133,14 +128,14 @@ export function AdminTimelinePage() {
                         <button
                           onClick={() => navigate(`/admin/loans/${entry.loan_id}`)}
                           className={cn(
-                            "absolute top-1 flex h-7 items-center overflow-hidden rounded-md border px-2 text-[11px] font-medium text-ink-950 transition-transform hover:scale-[1.01]",
+                            'absolute top-1 flex h-7 items-center overflow-hidden rounded-md border px-2 text-[11px] font-medium text-ink-950 transition-transform hover:scale-[1.01]',
                             statusBar[entry.status] ?? statusBar.returned,
                           )}
                           style={{ left: `${left}%`, width: `${width}%` }}
                           title={`${entry.borrower.name} · ${formatDateShort(entry.start_date)} → ${formatDateShort(entry.end_date)}`}
                         >
                           <span className="truncate">
-                            {entry.items.map((it) => it.name).join(", ")}
+                            {entry.items.map((it) => it.name).join(', ')}
                           </span>
                         </button>
                       </div>

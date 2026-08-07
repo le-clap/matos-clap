@@ -1,6 +1,6 @@
-import { ShieldAlert } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/Button";
+import { ShieldAlert } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/Button';
 
 export function Forbidden() {
   return (

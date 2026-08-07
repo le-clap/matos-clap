@@ -9,42 +9,33 @@ import {
   Search,
   TriangleAlert,
   User as UserIcon,
-} from "lucide-react";
-import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import type {
   ItemPublic,
   RequestPublic,
   RequestRecommendationItem,
   RequestRecommendationsResponse,
-} from "@/client";
-import { PageHeader } from "@/components/PageHeader";
-import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DateRangeField } from "@/components/ui/DateRangeField";
-import { Field } from "@/components/ui/Field";
-import { Input, Textarea } from "@/components/ui/Input";
-import { PageSpinner } from "@/components/ui/Spinner";
-import { RequestStatusBadge } from "@/components/ui/StatusBadge";
-import { useToast } from "@/components/ui/Toast";
-import { useItems } from "@/hooks/useInventory";
-import { useLoanMutations } from "@/hooks/useLoans";
-import {
-  useRequest,
-  useRequestMutations,
-  useRequestRecommendations,
-} from "@/hooks/useRequests";
-import { ApiError } from "@/lib/api";
-import {
-  formatDateShort,
-  formatMoney,
-  isoToLocalInput,
-  localInputToIso,
-} from "@/lib/format";
-import { cn } from "@/lib/utils";
+} from '@/client';
+import { PageHeader } from '@/components/PageHeader';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardBody, CardHeader } from '@/components/ui/Card';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DateRangeField } from '@/components/ui/DateRangeField';
+import { Field } from '@/components/ui/Field';
+import { Input, Textarea } from '@/components/ui/Input';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { RequestStatusBadge } from '@/components/ui/StatusBadge';
+import { useToast } from '@/components/ui/Toast';
+import { useItems } from '@/hooks/useInventory';
+import { useLoanMutations } from '@/hooks/useLoans';
+import { useRequest, useRequestMutations, useRequestRecommendations } from '@/hooks/useRequests';
+import { ApiError } from '@/lib/api';
+import { formatDateShort, formatMoney, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 export function AdminRequestDetailPage() {
   const { id } = useParams();
@@ -53,8 +44,7 @@ export function AdminRequestDetailPage() {
   const toast = useToast();
 
   const { data: request, isLoading } = useRequest(requestId);
-  const { data: recs, isLoading: recsLoading } =
-    useRequestRecommendations(requestId);
+  const { data: recs, isLoading: recsLoading } = useRequestRecommendations(requestId);
   const { data: items } = useItems();
   const { remove, setStatus } = useRequestMutations();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -63,10 +53,7 @@ export function AdminRequestDetailPage() {
   if (isLoading) return <PageSpinner />;
   if (!request) {
     return (
-      <PageHeader
-        title="Demande introuvable"
-        back={{ to: "/admin/requests", label: "Demandes" }}
-      />
+      <PageHeader title="Demande introuvable" back={{ to: '/admin/requests', label: 'Demandes' }} />
     );
   }
 
@@ -74,7 +61,7 @@ export function AdminRequestDetailPage() {
     <div>
       <PageHeader
         title={`Demande #${request.id}`}
-        back={{ to: "/admin/requests", label: "Demandes" }}
+        back={{ to: '/admin/requests', label: 'Demandes' }}
         action={
           <>
             <RequestStatusBadge refused={request.refused} loanId={request.loan_id} />
@@ -84,18 +71,14 @@ export function AdminRequestDetailPage() {
                 size="sm"
                 loading={setStatus.isPending}
                 onClick={async () => {
-                  await setStatus.mutateAsync({id: request.id, status: "refused"});
-                  toast.toast({ tone: "info", title: "Demande refusée" });
+                  await setStatus.mutateAsync({ id: request.id, status: 'refused' });
+                  toast.toast({ tone: 'info', title: 'Demande refusée' });
                 }}
               >
                 <Ban className="size-4" /> Refuser
               </Button>
             )}
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setConfirmDelete(true)}
-            >
+            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
               Supprimer
             </Button>
           </>
@@ -107,8 +90,8 @@ export function AdminRequestDetailPage() {
           request={request}
           reopening={setStatus.isPending}
           onReopen={async () => {
-            await setStatus.mutateAsync({id: request.id, status: "pending"});
-            toast.success("Demande rouverte", "Elle est de nouveau en attente.");
+            await setStatus.mutateAsync({ id: request.id, status: 'pending' });
+            toast.success('Demande rouverte', 'Elle est de nouveau en attente.');
           }}
         />
       ) : request.loan_id != null ? (
@@ -129,8 +112,8 @@ export function AdminRequestDetailPage() {
         onClose={() => setConfirmDelete(false)}
         onConfirm={async () => {
           await remove.mutateAsync(request.id);
-          toast.success("Demande supprimée");
-          navigate("/admin/requests");
+          toast.success('Demande supprimée');
+          navigate('/admin/requests');
         }}
         loading={remove.isPending}
         title="Supprimer la demande ?"
@@ -153,8 +136,8 @@ function ProcessedNotice({ request }: { request: RequestPublic }) {
           <div>
             <h3 className="font-semibold">Demande traitée</h3>
             <p className="mt-1 max-w-sm text-sm text-content-muted">
-              Cette demande a déjà été transformée en prêt. Il n'est plus
-              possible d'en créer un second.
+              Cette demande a déjà été transformée en prêt. Il n'est plus possible d'en créer un
+              second.
             </p>
           </div>
           <Link
@@ -180,8 +163,7 @@ function ProcessedNotice({ request }: { request: RequestPublic }) {
             {request.phone_number}
           </InfoRow>
           <InfoRow icon={CalendarRange} label="Période souhaitée">
-            {formatDateShort(request.start_date)} →{" "}
-            {formatDateShort(request.end_date)}
+            {formatDateShort(request.start_date)} → {formatDateShort(request.end_date)}
           </InfoRow>
         </CardBody>
       </Card>
@@ -209,8 +191,8 @@ function RefusedNotice({
           <div>
             <h3 className="font-semibold">Demande refusée</h3>
             <p className="mt-1 max-w-sm text-sm text-content-muted">
-              Cette demande a été refusée. Vous pouvez la rouvrir pour la
-              remettre en attente et éventuellement créer un prêt.
+              Cette demande a été refusée. Vous pouvez la rouvrir pour la remettre en attente et
+              éventuellement créer un prêt.
             </p>
           </div>
           <Button variant="secondary" loading={reopening} onClick={onReopen}>
@@ -233,8 +215,7 @@ function RefusedNotice({
             {request.phone_number}
           </InfoRow>
           <InfoRow icon={CalendarRange} label="Période souhaitée">
-            {formatDateShort(request.start_date)} →{" "}
-            {formatDateShort(request.end_date)}
+            {formatDateShort(request.start_date)} → {formatDateShort(request.end_date)}
           </InfoRow>
         </CardBody>
       </Card>
@@ -266,10 +247,10 @@ function Workspace({
   const [start, setStart] = useState(() => isoToLocalInput(request.start_date));
   const [end, setEnd] = useState(() => isoToLocalInput(request.end_date));
   const [depositOverride, setDepositOverride] = useState<string | null>(null);
-  const [comments, setComments] = useState("");
+  const [comments, setComments] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const [itemSearch, setItemSearch] = useState("");
+  const [itemSearch, setItemSearch] = useState('');
 
   const depositByItem = useMemo(() => {
     const map = new Map<number, number>();
@@ -286,12 +267,7 @@ function Workspace({
   // Items that are NOT among the recommendation candidates — the CLAP can still
   // add any of them to the loan (e.g. a substitute or an extra accessory).
   const candidateIds = useMemo(
-    () =>
-      new Set(
-        recs.recommendations.flatMap((r) =>
-          r.candidate_items.map((c) => c.item_id),
-        ),
-      ),
+    () => new Set(recs.recommendations.flatMap((r) => r.candidate_items.map((c) => c.item_id))),
     [recs],
   );
 
@@ -308,8 +284,7 @@ function Workspace({
         (i) =>
           !i.deleted_at &&
           !candidateIds.has(i.id) &&
-          (i.name.toLowerCase().includes(q) ||
-            i.catalog.name.toLowerCase().includes(q)),
+          (i.name.toLowerCase().includes(q) || i.catalog.name.toLowerCase().includes(q)),
       )
       .slice(0, 8);
   }, [items, candidateIds, itemSearch]);
@@ -319,8 +294,7 @@ function Workspace({
     [selected, depositByItem],
   );
 
-  const depositValue =
-    depositOverride ?? (suggestedDeposit / 100).toFixed(2);
+  const depositValue = depositOverride ?? (suggestedDeposit / 100).toFixed(2);
 
   const toggle = (itemId: number) =>
     setSelected((prev) => {
@@ -334,160 +308,160 @@ function Workspace({
 
   const submit = async () => {
     setError(null);
-    if (selected.size === 0) return setError("Sélectionnez au moins un article.");
-    if (!datesValid) return setError("Période invalide.");
+    if (selected.size === 0) return setError('Sélectionnez au moins un article.');
+    if (!datesValid) return setError('Période invalide.');
     try {
       const res = await create.mutateAsync({
         borrower_id: request.borrower.id,
         start_date: localInputToIso(start),
         end_date: localInputToIso(end),
         item_ids: [...selected],
-        total_deposit_cents: Math.round(parseFloat(depositValue || "0") * 100),
+        total_deposit_cents: Math.round(parseFloat(depositValue || '0') * 100),
         request_id: request.id,
         comments: comments.trim() || null,
       });
       if (res.warnings.length > 0) {
         toast.toast({
-          tone: "warning",
-          title: "Prêt créé avec avertissements",
-          description: res.warnings.map((w) => w.message).join(" · "),
+          tone: 'warning',
+          title: 'Prêt créé avec avertissements',
+          description: res.warnings.map((w) => w.message).join(' · '),
         });
       } else {
-        toast.success("Prêt créé", "La demande a été marquée comme traitée.");
+        toast.success('Prêt créé', 'La demande a été marquée comme traitée.');
       }
       onCreated(res.loan.id);
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail ?? err.message : "Erreur");
+      setError(err instanceof ApiError ? (err.detail ?? err.message) : 'Erreur');
     }
   };
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader
-          title="Sélection du matériel"
-          description="Cochez les articles à inclure. Les recommandations du système sont pré-sélectionnées."
-        />
-        <CardBody className="flex flex-col gap-5">
-          {recs.recommendations.map((rec) => (
-            <div key={rec.requested_catalog_id}>
-              <div className="mb-2 flex items-center justify-between">
-                <h4 className="font-medium">
-                  {rec.catalog.name}
-                  <span className="ml-2 text-sm font-normal text-content-faint">
-                    {rec.requested_quantity} demandé(s)
+        <Card>
+          <CardHeader
+            title="Sélection du matériel"
+            description="Cochez les articles à inclure. Les recommandations du système sont pré-sélectionnées."
+          />
+          <CardBody className="flex flex-col gap-5">
+            {recs.recommendations.map((rec) => (
+              <div key={rec.requested_catalog_id}>
+                <div className="mb-2 flex items-center justify-between">
+                  <h4 className="font-medium">
+                    {rec.catalog.name}
+                    <span className="ml-2 text-sm font-normal text-content-faint">
+                      {rec.requested_quantity} demandé(s)
+                    </span>
+                  </h4>
+                  <span className="text-xs text-content-faint">
+                    {rec.candidate_items.length} candidat(s)
                   </span>
-                </h4>
-                <span className="text-xs text-content-faint">
-                  {rec.candidate_items.length} candidat(s)
-                </span>
-              </div>
-              {(rec.warnings ?? []).map((w, i) => (
-                <p
-                  key={i}
-                  className="mb-2 flex items-center gap-1.5 rounded-lg border border-warning/30 bg-warning-bg px-2.5 py-1.5 text-xs text-warning"
-                >
-                  <TriangleAlert className="size-3.5" /> {w}
-                </p>
-              ))}
-              <div className="grid gap-2 sm:grid-cols-2">
-                {rec.candidate_items.map((item) => (
-                  <CandidateItem
-                    key={item.item_id}
-                    item={item}
-                    deposit={depositByItem.get(item.item_id)}
-                    selected={selected.has(item.item_id)}
-                    onToggle={() => toggle(item.item_id)}
-                  />
-                ))}
-                {rec.candidate_items.length === 0 && (
-                  <p className="text-sm text-content-faint">
-                    Aucun article disponible pour ce matériel.
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardHeader
-          title="Ajouter d'autres articles"
-          description="Recherchez n'importe quel article de l'inventaire, même hors des catalogues demandés."
-        />
-        <CardBody className="flex flex-col gap-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-content-faint" />
-            <input
-              value={itemSearch}
-              onChange={(e) => setItemSearch(e.target.value)}
-              placeholder="Rechercher un article ou une référence…"
-              className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm text-content placeholder:text-content-faint outline-none transition-colors focus:border-primary/70 focus:ring-2 focus:ring-primary/25"
-            />
-          </div>
-
-          {itemSearch.trim() && (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {extraMatches.length === 0 ? (
-                <p className="text-sm text-content-faint">Aucun article trouvé.</p>
-              ) : (
-                extraMatches.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => toggle(item.id)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors",
-                      selected.has(item.id)
-                        ? "border-primary/50 bg-danger-bg"
-                        : "border-border hover:border-border-strong hover:bg-surface-raised",
-                    )}
+                </div>
+                {(rec.warnings ?? []).map((w, i) => (
+                  <p
+                    key={i}
+                    className="mb-2 flex items-center gap-1.5 rounded-lg border border-warning/30 bg-warning-bg px-2.5 py-1.5 text-xs text-warning"
                   >
-                    <div
+                    <TriangleAlert className="size-3.5" /> {w}
+                  </p>
+                ))}
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {rec.candidate_items.map((item) => (
+                    <CandidateItem
+                      key={item.item_id}
+                      item={item}
+                      deposit={depositByItem.get(item.item_id)}
+                      selected={selected.has(item.item_id)}
+                      onToggle={() => toggle(item.item_id)}
+                    />
+                  ))}
+                  {rec.candidate_items.length === 0 && (
+                    <p className="text-sm text-content-faint">
+                      Aucun article disponible pour ce matériel.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Ajouter d'autres articles"
+            description="Recherchez n'importe quel article de l'inventaire, même hors des catalogues demandés."
+          />
+          <CardBody className="flex flex-col gap-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-content-faint" />
+              <input
+                value={itemSearch}
+                onChange={(e) => setItemSearch(e.target.value)}
+                placeholder="Rechercher un article ou une référence…"
+                className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm text-content placeholder:text-content-faint outline-none transition-colors focus:border-primary/70 focus:ring-2 focus:ring-primary/25"
+              />
+            </div>
+
+            {itemSearch.trim() && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {extraMatches.length === 0 ? (
+                  <p className="text-sm text-content-faint">Aucun article trouvé.</p>
+                ) : (
+                  extraMatches.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => toggle(item.id)}
                       className={cn(
-                        "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors",
+                        'flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors',
                         selected.has(item.id)
-                          ? "border-primary bg-primary text-white"
-                          : "border-border-strong",
+                          ? 'border-primary/50 bg-danger-bg'
+                          : 'border-border hover:border-border-strong hover:bg-surface-raised',
                       )}
                     >
-                      {selected.has(item.id) && <Check className="size-3.5" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{item.name}</p>
-                      <p className="truncate text-[11px] text-content-faint">
-                        {item.catalog.name}
-                      </p>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          )}
+                      <div
+                        className={cn(
+                          'flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+                          selected.has(item.id)
+                            ? 'border-primary bg-primary text-white'
+                            : 'border-border-strong',
+                        )}
+                      >
+                        {selected.has(item.id) && <Check className="size-3.5" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{item.name}</p>
+                        <p className="truncate text-[11px] text-content-faint">
+                          {item.catalog.name}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
 
-          {extraSelected.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 border-t border-border pt-3">
-              {extraSelected.map((id) => (
-                <span
-                  key={id}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-danger-bg px-2.5 py-1 text-xs text-brand-200"
-                >
-                  {itemById.get(id)?.name ?? `#${id}`}
-                  <button
-                    onClick={() => toggle(id)}
-                    className="text-brand-300/70 hover:text-brand-200"
-                    aria-label="Retirer"
+            {extraSelected.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 border-t border-border pt-3">
+                {extraSelected.map((id) => (
+                  <span
+                    key={id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-danger-bg px-2.5 py-1 text-xs text-brand-200"
                   >
-                    ✕
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </CardBody>
-      </Card>
+                    {itemById.get(id)?.name ?? `#${id}`}
+                    <button
+                      onClick={() => toggle(id)}
+                      className="text-brand-300/70 hover:text-brand-200"
+                      aria-label="Retirer"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </CardBody>
+        </Card>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -504,8 +478,7 @@ function Workspace({
               {request.phone_number}
             </InfoRow>
             <InfoRow icon={CalendarRange} label="Période souhaitée">
-              {formatDateShort(request.start_date)} →{" "}
-              {formatDateShort(request.end_date)}
+              {formatDateShort(request.start_date)} → {formatDateShort(request.end_date)}
             </InfoRow>
             {request.reason && (
               <div className="rounded-lg bg-surface-raised p-3 text-content-muted">
@@ -529,10 +502,7 @@ function Workspace({
               required
               stack
             />
-            <Field
-              label="Caution (€)"
-              hint="Suggérée d'après les articles sélectionnés"
-            >
+            <Field label="Caution (€)" hint="Suggérée d'après les articles sélectionnés">
               <Input
                 type="number"
                 min="0"
@@ -554,11 +524,7 @@ function Workspace({
                 {error}
               </p>
             )}
-            <Button
-              onClick={submit}
-              loading={create.isPending}
-              disabled={selected.size === 0}
-            >
+            <Button onClick={submit} loading={create.isPending} disabled={selected.size === 0}>
               Créer le prêt
             </Button>
           </CardBody>
@@ -584,18 +550,16 @@ function CandidateItem({
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors",
+        'flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors',
         selected
-          ? "border-primary/50 bg-danger-bg"
-          : "border-border hover:border-border-strong hover:bg-surface-raised",
+          ? 'border-primary/50 bg-danger-bg'
+          : 'border-border hover:border-border-strong hover:bg-surface-raised',
       )}
     >
       <div
         className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors",
-          selected
-            ? "border-primary bg-primary text-white"
-            : "border-border-strong",
+          'flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+          selected ? 'border-primary bg-primary text-white' : 'border-border-strong',
         )}
       >
         {selected && <Check className="size-3.5" />}
@@ -609,15 +573,11 @@ function CandidateItem({
             </span>
           )}
           {deposit !== undefined && deposit > 0 && (
-            <span className="text-[11px] text-content-faint">
-              {formatMoney(deposit)}
-            </span>
+            <span className="text-[11px] text-content-faint">{formatMoney(deposit)}</span>
           )}
         </div>
       </div>
-      {item.availability !== "available" && (
-        <Badge tone="warning">{item.availability}</Badge>
-      )}
+      {item.availability !== 'available' && <Badge tone="warning">{item.availability}</Badge>}
     </button>
   );
 }

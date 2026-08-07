@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { createContext, useContext, type ReactNode } from "react";
-import { UsersService, type UserPublic, type AccessLevel } from "@/client";
-import { ApiError, unwrap } from "@/lib/api";
-import { hasRole as hasRoleFn } from "@/lib/roles";
+import { useQuery } from '@tanstack/react-query';
+import { createContext, useContext, type ReactNode } from 'react';
+import { UsersService, type UserPublic, type AccessLevel } from '@/client';
+import { ApiError, unwrap } from '@/lib/api';
+import { hasRole as hasRoleFn } from '@/lib/roles';
 
 interface AuthContextValue {
   user: UserPublic | null;
@@ -15,7 +15,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const devLoginEnabled = import.meta.env.VITE_ENABLE_DEV_LOGIN === "true";
+const devLoginEnabled = import.meta.env.VITE_ENABLE_DEV_LOGIN === 'true';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const {
@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["me"],
+    queryKey: ['me'],
     queryFn: async () => {
       try {
         return await unwrap(UsersService.usersGetMe());
@@ -37,21 +37,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const login = () => {
-    window.location.href = devLoginEnabled
-      ? "/api/auth/dev-login"
-      : "/api/auth/login";
+    window.location.href = devLoginEnabled ? '/api/auth/dev-login' : '/api/auth/login';
   };
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-        redirect: "manual",
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        redirect: 'manual',
       });
     } finally {
       await refetch();
-      window.location.href = "/login";
+      window.location.href = '/login';
     }
   };
 
@@ -70,6 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }

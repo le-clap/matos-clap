@@ -1,17 +1,17 @@
-import { PackageSearch } from "lucide-react";
-import { useMemo, useState } from "react";
-import { PageHeader } from "@/components/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { CatalogCard } from "@/features/catalog/CatalogCard";
-import { useCatalogs, useCategories } from "@/hooks/useInventory";
-import { cn } from "@/lib/utils";
+import { PackageSearch } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { PageHeader } from '@/components/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { CatalogCard } from '@/features/catalog/CatalogCard';
+import { useCatalogs, useCategories } from '@/hooks/useInventory';
+import { cn } from '@/lib/utils';
 
 export function CatalogPage() {
   const { data: catalogs, isLoading } = useCatalogs();
   const { data: categories } = useCategories();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
@@ -72,8 +72,8 @@ export function CatalogPage() {
           title="Aucun résultat"
           description={
             search || categoryId !== null
-              ? "Aucun matériel ne correspond à votre recherche."
-              : "Le catalogue est vide pour le moment."
+              ? 'Aucun matériel ne correspond à votre recherche.'
+              : 'Le catalogue est vide pour le moment.'
           }
         />
       ) : (
@@ -100,10 +100,10 @@ function Chip({
     <button
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+        'rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
         active
-          ? "border-primary/40 bg-danger-bg text-brand-200"
-          : "border-border text-content-muted hover:border-border-strong hover:text-content",
+          ? 'border-primary/40 bg-danger-bg text-brand-200'
+          : 'border-border text-content-muted hover:border-border-strong hover:text-content',
       )}
     >
       {children}

@@ -1,14 +1,14 @@
-import { ClipboardList, Package, ShoppingBag } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
-import { Logo } from "@/components/Logo";
-import { UserMenu } from "@/components/UserMenu";
-import { useCart } from "@/features/cart/CartContext";
-import { cn } from "@/lib/utils";
+import { ClipboardList, Package, ShoppingBag } from 'lucide-react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { Logo } from '@/components/Logo';
+import { UserMenu } from '@/components/UserMenu';
+import { useCart } from '@/features/cart/CartContext';
+import { cn } from '@/lib/utils';
 
 const links = [
-  { to: "/catalog", label: "Catalogue", icon: Package },
-  { to: "/my/requests", label: "Mes demandes", icon: ClipboardList },
-  { to: "/my/loans", label: "Mes prêts", icon: ShoppingBag },
+  { to: '/catalog', label: 'Catalogue', icon: Package },
+  { to: '/my/requests', label: 'Mes demandes', icon: ClipboardList },
+  { to: '/my/loans', label: 'Mes prêts', icon: ShoppingBag },
 ];
 
 export function AppLayout() {
@@ -26,10 +26,10 @@ export function AppLayout() {
                 to={link.to}
                 className={({ isActive }) =>
                   cn(
-                    "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     isActive
-                      ? "bg-surface-raised text-content"
-                      : "text-content-muted hover:text-content",
+                      ? 'bg-surface-raised text-content'
+                      : 'text-content-muted hover:text-content',
                   )
                 }
               >
@@ -43,10 +43,10 @@ export function AppLayout() {
               to="/request"
               className={({ isActive }) =>
                 cn(
-                  "relative inline-flex h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-medium transition-colors",
+                  'relative inline-flex h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-medium transition-colors',
                   isActive
-                    ? "border-primary/40 bg-danger-bg text-brand-300"
-                    : "border-border text-content hover:bg-surface-raised",
+                    ? 'border-primary/40 bg-danger-bg text-brand-300'
+                    : 'border-border text-content hover:bg-surface-raised',
                 )
               }
             >
@@ -70,10 +70,8 @@ export function AppLayout() {
               to={link.to}
               className={({ isActive }) =>
                 cn(
-                  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors",
-                  isActive
-                    ? "bg-surface-raised text-content"
-                    : "text-content-muted",
+                  'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors',
+                  isActive ? 'bg-surface-raised text-content' : 'text-content-muted',
                 )
               }
             >

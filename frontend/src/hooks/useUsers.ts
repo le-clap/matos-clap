@@ -1,12 +1,7 @@
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { UsersService, type AccessLevel, type UserPatch } from "@/client";
-import { unwrap } from "@/lib/api";
-import { qk } from "@/lib/queryKeys";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { UsersService, type AccessLevel, type UserPatch } from '@/client';
+import { unwrap } from '@/lib/api';
+import { qk } from '@/lib/queryKeys';
 
 export interface UserFilters {
   accessLevel?: AccessLevel;
@@ -42,7 +37,7 @@ export function useUserMutations() {
     mutationFn: ({ id, body }: { id: number; body: UserPatch }) =>
       unwrap(UsersService.usersUpdateUser({ path: { user_id: id }, body })),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["users"] });
+      qc.invalidateQueries({ queryKey: ['users'] });
       qc.invalidateQueries({ queryKey: qk.me });
     },
   });

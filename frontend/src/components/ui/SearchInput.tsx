@@ -1,10 +1,10 @@
-import { Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Search, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function SearchInput({
   value,
   onChange,
-  placeholder = "Rechercher…",
+  placeholder = 'Rechercher…',
   className,
 }: {
   value: string;
@@ -13,7 +13,7 @@ export function SearchInput({
   className?: string;
 }) {
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn('relative', className)}>
       <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-content-faint" />
       <input
         value={value}
@@ -23,7 +23,7 @@ export function SearchInput({
       />
       {value && (
         <button
-          onClick={() => onChange("")}
+          onClick={() => onChange('')}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-content-faint transition-colors hover:text-content"
           aria-label="Effacer"
         >

@@ -1,34 +1,34 @@
-import {Plus, ScrollText, TriangleAlert} from "lucide-react";
-import {useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
-import {PageHeader} from "@/components/PageHeader";
-import {Avatar} from "@/components/ui/Avatar";
-import {Badge} from "@/components/ui/Badge";
-import {Button} from "@/components/ui/Button";
-import {EmptyState} from "@/components/ui/EmptyState";
-import {Pagination} from "@/components/ui/Pagination";
-import {SearchInput} from "@/components/ui/SearchInput";
-import {Skeleton} from "@/components/ui/Skeleton";
-import {LoanStatusBadge} from "@/components/ui/StatusBadge";
-import {Table, TBody, Td, Th, THead, Tr} from "@/components/ui/Table";
-import {Tabs} from "@/components/ui/Tabs";
-import {useLoans} from "@/hooks/useLoans";
-import {formatDateShort, formatMoney} from "@/lib/format";
-import {isOverdue} from "@/lib/loanStatus";
-import {useDebounce} from "@/hooks/useDebounce.ts";
+import { Plus, ScrollText, TriangleAlert } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/PageHeader';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Pagination } from '@/components/ui/Pagination';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { LoanStatusBadge } from '@/components/ui/StatusBadge';
+import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
+import { Tabs } from '@/components/ui/Tabs';
+import { useLoans } from '@/hooks/useLoans';
+import { formatDateShort, formatMoney } from '@/lib/format';
+import { isOverdue } from '@/lib/loanStatus';
+import { useDebounce } from '@/hooks/useDebounce.ts';
 
 const LIMIT = 15;
-type Filter = "scheduled" | "active" | "returned" | "all";
+type Filter = 'scheduled' | 'active' | 'returned' | 'all';
 
 export function AdminLoansPage() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<Filter>("active");
+  const [filter, setFilter] = useState<Filter>('active');
   const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search);
 
-  const status = filter === "all" ? undefined : filter;
-  const { data, isLoading } = useLoans({ status, page, limit: LIMIT, search:debouncedSearch });
+  const status = filter === 'all' ? undefined : filter;
+  const { data, isLoading } = useLoans({ status, page, limit: LIMIT, search: debouncedSearch });
 
   const rows = data?.items ?? [];
 
@@ -40,7 +40,7 @@ export function AdminLoansPage() {
         action={
           <Button asChild>
             <Link to="/admin/loans/new">
-              <Plus className="size-4"/> Nouveau prêt
+              <Plus className="size-4" /> Nouveau prêt
             </Link>
           </Button>
         }
@@ -54,10 +54,10 @@ export function AdminLoansPage() {
             setPage(0);
           }}
           items={[
-            { value: "active", label: "En cours" },
-            { value: "scheduled", label: "Planifiés" },
-            { value: "returned", label: "Rendus" },
-            { value: "all", label: "Tous" },
+            { value: 'active', label: 'En cours' },
+            { value: 'scheduled', label: 'Planifiés' },
+            { value: 'returned', label: 'Rendus' },
+            { value: 'all', label: 'Tous' },
           ]}
         />
         <SearchInput
@@ -72,7 +72,7 @@ export function AdminLoansPage() {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-64 rounded-[var(--radius-card)]"/>
+        <Skeleton className="h-64 rounded-[var(--radius-card)]" />
       ) : rows.length === 0 ? (
         <EmptyState
           icon={ScrollText}
@@ -100,7 +100,7 @@ export function AdminLoansPage() {
                 >
                   <Td>
                     <div className="flex items-center gap-2.5">
-                      <Avatar name={loan.borrower.name} size="sm"/>
+                      <Avatar name={loan.borrower.name} size="sm" />
                       <div>
                         <p className="font-medium">{loan.borrower.name}</p>
                         <p className="text-xs text-content-faint">#{loan.id}</p>
@@ -108,23 +108,18 @@ export function AdminLoansPage() {
                     </div>
                   </Td>
                   <Td className="whitespace-nowrap text-content-muted">
-                    {formatDateShort(loan.start_date)} →{" "}
-                    {formatDateShort(loan.end_date)}
+                    {formatDateShort(loan.start_date)} → {formatDateShort(loan.end_date)}
                   </Td>
-                  <Td className="text-content-muted tabular-nums">
-                    {loan.loaned_items.length}
-                  </Td>
+                  <Td className="text-content-muted tabular-nums">{loan.loaned_items.length}</Td>
                   <Td className="tabular-nums">
-                    {loan.total_deposit_cents > 0
-                      ? formatMoney(loan.total_deposit_cents)
-                      : "—"}
+                    {loan.total_deposit_cents > 0 ? formatMoney(loan.total_deposit_cents) : '—'}
                   </Td>
                   <Td>
                     <div className="flex items-center gap-1.5">
-                      <LoanStatusBadge status={loan.status}/>
+                      <LoanStatusBadge status={loan.status} />
                       {isOverdue(loan) && (
                         <Badge tone="danger" dot>
-                          <TriangleAlert className="size-3"/> Retard
+                          <TriangleAlert className="size-3" /> Retard
                         </Badge>
                       )}
                     </div>
@@ -133,12 +128,7 @@ export function AdminLoansPage() {
               ))}
             </TBody>
           </Table>
-          <Pagination
-            page={page}
-            limit={LIMIT}
-            total={data?.total ?? 0}
-            onPageChange={setPage}
-          />
+          <Pagination page={page} limit={LIMIT} total={data?.total ?? 0} onPageChange={setPage} />
         </div>
       )}
     </div>

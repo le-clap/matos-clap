@@ -1,18 +1,18 @@
-import { CalendarCheck, Plus, ShoppingBag } from "lucide-react";
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/Button";
-import { Card, CardBody } from "@/components/ui/Card";
-import { DateRangeField } from "@/components/ui/DateRangeField";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { QuantityStepper } from "@/components/ui/QuantityStepper";
-import { PageSpinner } from "@/components/ui/Spinner";
-import { CatalogThumb } from "@/features/catalog/CatalogCard";
-import { useCart } from "@/features/cart/CartContext";
-import { useCatalog, useCatalogAvailability } from "@/hooks/useInventory";
-import { localInputToIso } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { CalendarCheck, Plus, ShoppingBag } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/Button';
+import { Card, CardBody } from '@/components/ui/Card';
+import { DateRangeField } from '@/components/ui/DateRangeField';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { QuantityStepper } from '@/components/ui/QuantityStepper';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { CatalogThumb } from '@/features/catalog/CatalogCard';
+import { useCart } from '@/features/cart/CartContext';
+import { useCatalog, useCatalogAvailability } from '@/hooks/useInventory';
+import { localInputToIso } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 export function CatalogDetailPage() {
   const { id } = useParams();
@@ -22,11 +22,11 @@ export function CatalogDetailPage() {
 
   const { data: catalog, isLoading } = useCatalog(catalogId);
 
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
   const rangeReady = !!start && !!end && new Date(start) < new Date(end);
-  const startIso = rangeReady ? localInputToIso(start) : "";
-  const endIso = rangeReady ? localInputToIso(end) : "";
+  const startIso = rangeReady ? localInputToIso(start) : '';
+  const endIso = rangeReady ? localInputToIso(end) : '';
   const { data: availability, isFetching } = useCatalogAvailability(
     catalogId,
     startIso,
@@ -40,9 +40,7 @@ export function CatalogDetailPage() {
 
   if (isLoading) return <PageSpinner />;
   if (!catalog) {
-    return (
-      <EmptyState title="Matériel introuvable" description="Ce matériel n'existe pas." />
-    );
+    return <EmptyState title="Matériel introuvable" description="Ce matériel n'existe pas." />;
   }
 
   return (
@@ -50,7 +48,7 @@ export function CatalogDetailPage() {
       <PageHeader
         title={catalog.name}
         description={catalog.category.name}
-        back={{ to: "/catalog", label: "Catalogue" }}
+        back={{ to: '/catalog', label: 'Catalogue' }}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
@@ -60,9 +58,7 @@ export function CatalogDetailPage() {
           </div>
           {catalog.description && (
             <CardBody>
-              <p className="text-sm leading-relaxed text-content-muted">
-                {catalog.description}
-              </p>
+              <p className="text-sm leading-relaxed text-content-muted">{catalog.description}</p>
             </CardBody>
           )}
         </Card>
@@ -71,9 +67,7 @@ export function CatalogDetailPage() {
           <Card>
             <CardBody>
               <h3 className="font-semibold">Ajouter à ma demande</h3>
-              <p className="mt-1 text-sm text-content-muted">
-                Choisissez la quantité souhaitée.
-              </p>
+              <p className="mt-1 text-sm text-content-muted">Choisissez la quantité souhaitée.</p>
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-sm text-content-muted">Quantité</span>
                 <QuantityStepper value={quantity} onChange={setQuantity} />
@@ -119,12 +113,12 @@ export function CatalogDetailPage() {
               {rangeReady && (
                 <div
                   className={cn(
-                    "mt-4 rounded-lg border p-4 text-center",
+                    'mt-4 rounded-lg border p-4 text-center',
                     isFetching
-                      ? "border-border bg-surface-raised"
+                      ? 'border-border bg-surface-raised'
                       : availableCount > 0
-                        ? "border-success/30 bg-success-bg"
-                        : "border-warning/30 bg-warning-bg",
+                        ? 'border-success/30 bg-success-bg'
+                        : 'border-warning/30 bg-warning-bg',
                   )}
                 >
                   {isFetching ? (
@@ -134,7 +128,7 @@ export function CatalogDetailPage() {
                       <p className="text-2xl font-bold tabular-nums">
                         {availableCount}
                         <span className="text-base font-normal text-content-muted">
-                          {" "}
+                          {' '}
                           / {totalCount}
                         </span>
                       </p>

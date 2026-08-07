@@ -1,16 +1,16 @@
-import { PackageCheck, TriangleAlert } from "lucide-react";
-import { useState } from "react";
-import { useAuth } from "@/auth/AuthContext";
-import { PageHeader } from "@/components/PageHeader";
-import { Badge } from "@/components/ui/Badge";
-import { Card, CardBody } from "@/components/ui/Card";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Pagination } from "@/components/ui/Pagination";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { LoanStatusBadge } from "@/components/ui/StatusBadge";
-import { useLoans } from "@/hooks/useLoans";
-import { formatDateShort, formatMoney } from "@/lib/format";
-import { isOverdue } from "@/lib/loanStatus";
+import { PackageCheck, TriangleAlert } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '@/auth/AuthContext';
+import { PageHeader } from '@/components/PageHeader';
+import { Badge } from '@/components/ui/Badge';
+import { Card, CardBody } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Pagination } from '@/components/ui/Pagination';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { LoanStatusBadge } from '@/components/ui/StatusBadge';
+import { useLoans } from '@/hooks/useLoans';
+import { formatDateShort, formatMoney } from '@/lib/format';
+import { isOverdue } from '@/lib/loanStatus';
 
 const LIMIT = 10;
 
@@ -58,20 +58,15 @@ export function MyLoansPage() {
                           <TriangleAlert className="size-3" /> En retard
                         </Badge>
                       )}
-                      <span className="text-xs text-content-faint">
-                        Prêt #{loan.id}
-                      </span>
+                      <span className="text-xs text-content-faint">Prêt #{loan.id}</span>
                     </div>
                     <p className="mt-2 text-sm text-content">
-                      Du <strong>{formatDateShort(loan.start_date)}</strong> au{" "}
+                      Du <strong>{formatDateShort(loan.start_date)}</strong> au{' '}
                       <strong>{formatDateShort(loan.end_date)}</strong>
                     </p>
                     <div className="mt-2.5 flex flex-wrap gap-1.5">
                       {loan.loaned_items.map((li) => (
-                        <Badge
-                          key={li.id}
-                          tone={li.actual_return_date ? "neutral" : "info"}
-                        >
+                        <Badge key={li.id} tone={li.actual_return_date ? 'neutral' : 'info'}>
                           {li.item.name}
                         </Badge>
                       ))}
@@ -89,12 +84,7 @@ export function MyLoansPage() {
               </Card>
             );
           })}
-          <Pagination
-            page={page}
-            limit={LIMIT}
-            total={data.total}
-            onPageChange={setPage}
-          />
+          <Pagination page={page} limit={LIMIT} total={data.total} onPageChange={setPage} />
         </div>
       )}
     </div>

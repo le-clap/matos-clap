@@ -1,9 +1,9 @@
-import { type ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import type { AccessLevel } from "@/client";
-import { useAuth } from "@/auth/AuthContext";
-import { PageSpinner } from "@/components/ui/Spinner";
-import { Forbidden } from "@/pages/Forbidden";
+import { type ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import type { AccessLevel } from '@/client';
+import { useAuth } from '@/auth/AuthContext';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { Forbidden } from '@/pages/Forbidden';
 
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -16,13 +16,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-export function RequireRole({
-  min,
-  children,
-}: {
-  min: AccessLevel;
-  children: ReactNode;
-}) {
+export function RequireRole({ min, children }: { min: AccessLevel; children: ReactNode }) {
   const { isLoading, hasRole } = useAuth();
   if (isLoading) return <PageSpinner label="Chargement…" />;
   if (!hasRole(min)) return <Forbidden />;

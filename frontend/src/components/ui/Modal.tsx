@@ -1,7 +1,7 @@
-import { X } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { cn } from "@/lib/utils";
+import { X } from 'lucide-react';
+import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { cn } from '@/lib/utils';
 
 interface ModalProps {
   open: boolean;
@@ -10,16 +10,16 @@ interface ModalProps {
   description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   /** Hide the close (X) button. */
   hideClose?: boolean;
 }
 
 const sizes = {
-  sm: "max-w-sm",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  sm: 'max-w-sm',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
 };
 
 export function Modal({
@@ -29,19 +29,19 @@ export function Modal({
   description,
   children,
   footer,
-  size = "md",
+  size = 'md',
   hideClose = false,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
-    document.addEventListener("keydown", onKey);
+    document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
     };
   }, [open, onClose]);
@@ -59,21 +59,15 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 mt-[6vh] w-full animate-pop-in rounded-[var(--radius-card)] border border-border-strong bg-surface shadow-pop",
+          'relative z-10 mt-[6vh] w-full animate-pop-in rounded-[var(--radius-card)] border border-border-strong bg-surface shadow-pop',
           sizes[size],
         )}
       >
         {(title || !hideClose) && (
           <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
             <div className="min-w-0">
-              {title && (
-                <h2 className="text-lg font-semibold text-content">{title}</h2>
-              )}
-              {description && (
-                <p className="mt-0.5 text-sm text-content-muted">
-                  {description}
-                </p>
-              )}
+              {title && <h2 className="text-lg font-semibold text-content">{title}</h2>}
+              {description && <p className="mt-0.5 text-sm text-content-muted">{description}</p>}
             </div>
             {!hideClose && (
               <button

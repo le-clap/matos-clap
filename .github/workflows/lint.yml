@@ -2,9 +2,9 @@ name: Lint & Type Check
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   backend-lint:
@@ -43,4 +43,5 @@ jobs:
       - run: npm ci
       - run: npm run generate:client
       - run: npm run lint
+      - run: npm run format:check
       - run: npm run build

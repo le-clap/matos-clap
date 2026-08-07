@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 export function Logo({
-  to = "/",
+  to = '/',
   className,
   compact = false,
 }: {
@@ -13,13 +13,9 @@ export function Logo({
   return (
     <Link
       to={to}
-      className={cn("flex items-center gap-2.5 transition-opacity hover:opacity-90", className)}
+      className={cn('flex items-center gap-2.5 transition-opacity hover:opacity-90', className)}
     >
-      <img
-        src="/logo-clap.png"
-        alt="CLAP"
-        className="size-9 rounded-lg object-contain"
-      />
+      <img src="/logo-clap.png" alt="CLAP" className="size-9 rounded-lg object-contain" />
       {!compact && (
         <div className="flex flex-col leading-none">
           <span className="text-[15px] font-bold tracking-tight text-content">
