@@ -1,4 +1,4 @@
-import { Check, Package, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CatalogPublic } from "@/client";
 import { Button } from "@/components/ui/Button";
@@ -11,22 +11,13 @@ export function CatalogThumb({
   imagePath?: string | null;
   className?: string;
 }) {
-  if (imagePath) {
-    return (
-      <img
-        src={imagePath}
-        alt=""
-        className={`${className} object-cover`}
-        loading="lazy"
-      />
-    );
-  }
   return (
-    <div
-      className={`${className} flex items-center justify-center bg-gradient-to-br from-ink-800 to-ink-900 text-content-faint`}
-    >
-      <Package className="size-8 opacity-50" />
-    </div>
+    <img
+      src={imagePath || "/placeholder.jpg"}
+      alt=""
+      className={`${className} object-cover`}
+      loading="lazy"
+    />
   );
 }
 
