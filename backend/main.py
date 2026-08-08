@@ -43,7 +43,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def bind_request_context(request: Request, call_next):
-    """Tag every log line emitted during this request with a shared request_id."""
+    """Tag every log line emitted during this request with a shared request_uuid."""
     structlog.contextvars.clear_contextvars()
     structlog.contextvars.bind_contextvars(request_uuid=str(uuid4())[:8])
     return await call_next(request)
