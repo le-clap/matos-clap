@@ -97,6 +97,14 @@ def test_update_user_role_as_admin(client, session):
     assert r.json()["access_level"] == "clap"
 
 
+def test_update_user_self_forbidden(client, session):
+    admin = make_user(session, AccessLevel.ADMIN, 12)
+    token = make_token(session, admin)
+
+    r = client.patch(f"/api/users/{admin.id}", json={"access_level": "clap"}, headers=auth(token))
+    assert r.status_code == 403
+
+
 def test_update_user_not_found(client, session):
     admin = make_user(session, AccessLevel.ADMIN, 11)
     token = make_token(session, admin)
