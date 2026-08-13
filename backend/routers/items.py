@@ -172,7 +172,7 @@ def delete_item(
     _user: ManagerDep,
     item_id: Annotated[int, Path(ge=1)],
 ) -> None:
-    item = session.get(Item, item_id)
+    item = session.get(Item, item_id, with_for_update=True)
     if not item:
         raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
 

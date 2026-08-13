@@ -21,17 +21,14 @@ def purge_or_archive[T: SoftDeleteTimestampSQLModel](session: Session, model: ty
         return False
 
     try:
-        session.delete(obj)
+        with session.begin_nested():
+            session.delete(obj)
         session.commit()
         return True
     except IntegrityError:
-        session.rollback()
-
-    # The instance is expired after the rollback; re-fetch before mutating it.
-    obj = session.get(model, obj_id)
-    if obj is not None and obj.deleted_at is None:
-        obj.deleted_at = datetime.now(UTC)
-        session.add(obj)
+        if obj.deleted_at is None:
+            obj.deleted_at = datetime.now(UTC)
+            session.add(obj)
         session.commit()
     return False
 

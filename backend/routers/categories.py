@@ -90,7 +90,7 @@ def delete_category(
     _user: ManagerDep,
     category_id: Annotated[int, Path(ge=1)],
 ) -> None:
-    db_category = session.get(Category, category_id)
+    db_category = session.get(Category, category_id, with_for_update=True)
     if not db_category:
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
 

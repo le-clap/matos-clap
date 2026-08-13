@@ -140,7 +140,7 @@ async def upload_catalog_image(
 ) -> Catalog:
     """Upload (or replace) the illustrative image of a catalog reference."""
     db_catalog = session.get(Catalog, catalog_id)
-    if not db_catalog:
+    if not db_catalog or db_catalog.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
     extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
@@ -182,7 +182,7 @@ def delete_catalog(
     _user: ManagerDep,
     catalog_id: Annotated[int, Path(ge=1)],
 ) -> None:
-    db_catalog = session.get(Catalog, catalog_id)
+    db_catalog = session.get(Catalog, catalog_id, with_for_update=True)
     if not db_catalog:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
