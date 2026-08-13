@@ -76,7 +76,7 @@ _AVAILABILITY_VALUES = ", ".join(a.value for a in Availability)
 @router.get("/catalogs/export")
 def export_catalogs(session: SessionDep, _user: ManagerDep) -> Response:
     catalogs = session.exec(
-        select(Catalog).options(joinedload(Catalog.category))  # ty: ignore[invalid-argument-type]
+        select(Catalog).where(col(Catalog.deleted_at).is_(None)).options(joinedload(Catalog.category))  # ty: ignore[invalid-argument-type]
     ).all()
 
     output = io.StringIO()
@@ -102,7 +102,7 @@ def export_catalogs(session: SessionDep, _user: ManagerDep) -> Response:
 
 @router.get("/categories/export")
 def export_categories(session: SessionDep, _user: ManagerDep) -> Response:
-    categories = session.exec(select(Category)).all()
+    categories = session.exec(select(Category).where(col(Category.deleted_at).is_(None))).all()
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -199,7 +199,11 @@ async def import_categories(
             detail=[f"Colonne(s) obligatoire(s) manquante(s) : {', '.join(missing)}"],
         )
 
-    existing = {c.id: c for c in session.exec(select(Category)).all() if c.id is not None}
+    existing = {
+        c.id: c
+        for c in session.exec(select(Category).where(col(Category.deleted_at).is_(None))).all()
+        if c.id is not None
+    }
     has_description = "description" in header
 
     errors: list[str] = []
@@ -254,8 +258,14 @@ async def import_catalogs(
             detail=[f"Colonne(s) obligatoire(s) manquante(s) : {', '.join(missing)}"],
         )
 
-    categories_by_name = _index_by_name(list(session.exec(select(Category)).all()))
-    existing = {c.id: c for c in session.exec(select(Catalog)).all() if c.id is not None}
+    categories_by_name = _index_by_name(
+        list(session.exec(select(Category).where(col(Category.deleted_at).is_(None))).all())
+    )
+    existing = {
+        c.id: c
+        for c in session.exec(select(Catalog).where(col(Catalog.deleted_at).is_(None))).all()
+        if c.id is not None
+    }
 
     has_description = "description" in header
     has_image = "image_path" in header
@@ -328,7 +338,9 @@ async def import_items(
             detail=[f"Colonne(s) obligatoire(s) manquante(s) : {', '.join(missing)}"],
         )
 
-    catalogs_by_name = _index_by_name(list(session.exec(select(Catalog)).all()))
+    catalogs_by_name = _index_by_name(
+        list(session.exec(select(Catalog).where(col(Catalog.deleted_at).is_(None))).all())
+    )
     existing = {
         i.id: i for i in session.exec(select(Item).where(col(Item.deleted_at).is_(None))).all() if i.id is not None
     }

@@ -30,8 +30,11 @@ def upgrade() -> None:
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
+    with op.batch_alter_table("category", schema=None) as batch_op:
+        batch_op.create_index(batch_op.f("ix_category_deleted_at"), ["deleted_at"], unique=False)
     op.create_table(
         "matos_user",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -60,11 +63,13 @@ def upgrade() -> None:
         sa.Column("image_path", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["category_id"], ["category.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),
     )
     with op.batch_alter_table("catalog", schema=None) as batch_op:
         batch_op.create_index(batch_op.f("ix_catalog_category_id"), ["category_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_catalog_deleted_at"), ["deleted_at"], unique=False)
 
     op.create_table(
         "request",
@@ -127,6 +132,7 @@ def upgrade() -> None:
     )
     with op.batch_alter_table("item", schema=None) as batch_op:
         batch_op.create_index(batch_op.f("ix_item_catalog_id"), ["catalog_id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_item_deleted_at"), ["deleted_at"], unique=False)
 
     op.create_table(
         "loan",
@@ -206,6 +212,7 @@ def downgrade() -> None:
 
     op.drop_table("loan")
     with op.batch_alter_table("item", schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f("ix_item_deleted_at"))
         batch_op.drop_index(batch_op.f("ix_item_catalog_id"))
 
     op.drop_table("item")
@@ -220,6 +227,7 @@ def downgrade() -> None:
 
     op.drop_table("request")
     with op.batch_alter_table("catalog", schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f("ix_catalog_deleted_at"))
         batch_op.drop_index(batch_op.f("ix_catalog_category_id"))
 
     op.drop_table("catalog")
@@ -228,4 +236,7 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f("ix_matos_user_email"))
 
     op.drop_table("matos_user")
+    with op.batch_alter_table("category", schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f("ix_category_deleted_at"))
+
     op.drop_table("category")

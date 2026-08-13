@@ -226,7 +226,8 @@ def create_request(
         raise HTTPException(status_code=404, detail=f"User with ID {request_data.borrower_id} not found")
 
     for rc in request_data.requested_catalogs:
-        if not session.get(Catalog, rc.catalog_id):
+        catalog = session.get(Catalog, rc.catalog_id)
+        if not catalog or catalog.deleted_at is not None:
             raise HTTPException(status_code=404, detail=f"Catalog with ID {rc.catalog_id} not found")
 
     db_request = Request(

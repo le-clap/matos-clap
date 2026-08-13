@@ -3,14 +3,14 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
-from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from db.database import get_session
 from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel
-from models.models import Category, User
+from models.models import Catalog, Category, User
 from schemas.categories import CategoryPatch, CategoryPost, CategoryPublic
+from services.deletion import has_live_children, purge_or_archive
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -22,7 +22,8 @@ ManagerDep = Annotated[User, Depends(require_role(AccessLevel.MANAGER))]
 
 @router.get("/", response_model=list[CategoryPublic])
 def get_categories(session: SessionDep, _user: CurrentUserDep) -> list[Category]:
-    return list(session.exec(select(Category)).all())
+    statement = select(Category).where(col(Category.deleted_at).is_(None))
+    return list(session.exec(statement).all())
 
 
 @router.get(
@@ -66,7 +67,7 @@ def update_category(
     category_patch: CategoryPatch,
 ) -> Category:
     db_category = session.get(Category, category_id)
-    if not db_category:
+    if not db_category or db_category.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
 
     db_category.sqlmodel_update(category_patch.model_dump(exclude_unset=True))
@@ -93,12 +94,10 @@ def delete_category(
     if not db_category:
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
 
-    try:
-        session.delete(db_category)
-        session.commit()
-    except IntegrityError as e:
-        session.rollback()
+    if has_live_children(session, Catalog, col(Catalog.category_id), category_id):
         raise HTTPException(
             status_code=409,
-            detail="Cannot delete category: still used by catalogs",
-        ) from e
+            detail="Cannot delete category: it still contains catalogs",
+        )
+
+    purge_or_archive(session, Category, category_id)

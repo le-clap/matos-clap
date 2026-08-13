@@ -42,6 +42,7 @@ erDiagram
         string email
         string access_level
         datetime created_at
+        datetime updated_at
     }
 
     UserSession {
@@ -49,12 +50,17 @@ erDiagram
         string token
         int user_id FK
         datetime expires_at
+        datetime created_at
+        datetime updated_at
     }
 
     Category {
         int id PK
         string name
         string description
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
     }
 
     Catalog {
@@ -63,6 +69,9 @@ erDiagram
         string description
         int category_id FK
         string image_path
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
     }
 
     Item {
@@ -72,6 +81,8 @@ erDiagram
         string condition
         string availability
         int deposit_cents
+        datetime created_at
+        datetime updated_at
         datetime deleted_at
     }
 
@@ -83,6 +94,8 @@ erDiagram
         datetime end_date
         string reason
         string status
+        datetime created_at
+        datetime updated_at
     }
 
     RequestedCatalog {
@@ -104,6 +117,8 @@ erDiagram
         int total_deposit_cents
         int retained_deposit_cents
         string comments
+        datetime created_at
+        datetime updated_at
     }
 
     LoanedItem {
