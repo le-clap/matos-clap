@@ -1,0 +1,52 @@
+# VCS
+.git
+.gitignore
+.github
+
+# Python
+backend/__pycache__
+backend/**/__pycache__
+backend/*.pyc
+backend/.Python
+backend/.env
+backend/.venv
+backend/venv/
+backend/.pytest_cache
+backend/.ruff_cache
+backend/*.egg-info
+backend/*.db
+backend/database.db
+backend/.coverage
+backend/htmlcov/
+backend/data
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+frontend/coverage
+frontend/.nyc_output
+
+# IDEs
+.idea
+.vscode
+*.swp
+*.swo
+*.swn
+*.sln
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Docs
+README.md

@@ -3,8 +3,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    API_PREFIX: str = "/api"
-
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_NAME: str = ""
@@ -15,7 +13,7 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: str = ""
 
-    ENV: str = "development"
+    ENV: str = "production"
     ENABLE_DEV_LOGIN: bool = False
 
     MEDIA_DIR: str = "data/media"
@@ -32,7 +30,7 @@ class Settings(BaseSettings):
     CLA_IDENTIFIER: str = "matos-clap"
 
     SESSION_COOKIE_NAME: str = "session_id"
-    SESSION_COOKIE_SECURE: bool = False
+    SESSION_COOKIE_SECURE: bool = True
     SESSION_TTL_DAYS: int = 30
 
     @field_validator("ALLOWED_ORIGINS")

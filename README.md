@@ -151,10 +151,9 @@ DB_NAME=matos_clap
 DB_USER=postgres
 DB_PASSWORD=postgres
 
-# development ou production
 ENV=development
 ENABLE_DEV_LOGIN=true
-
+SESSION_COOKIE_SECURE=false
 ```
 
 Lancez ensuite les commandes suivantes :
@@ -163,7 +162,7 @@ Lancez ensuite les commandes suivantes :
 cd backend
 uv sync                     # Installe les dépendances
 uv run alembic upgrade head # Applique les dernières migrations
-uv run main.py              # Lance l'API sur http://localhost:8000
+uv run fastapi dev          # Lance l'API sur http://localhost:8000
 ```
 
 > [!TIP]
@@ -192,16 +191,14 @@ npm run dev # Disponible sur http://localhost:5173
 
 ## Déploiement avec Docker
 
-Pour lancer l'ensemble de la stack (Frontend, Backend, Nginx et PostgreSQL) en une seule commande :
+L'image Docker est un monolithe : un build multi-stage compile le frontend puis copie le résultat statique dans l'image
+du backend, qui le sert lui-même via `app.frontend()` en plus de l'API.
 
 ```bash
 docker compose up --build
 ```
 
-* Application (Frontend) : `http://localhost:3000`
-* API (Backend) : `http://localhost:8000`
-* Un reverse-proxy Nginx distribue le frontend et relaie de manière transparente les appels `/api/` et `/media/` vers le
-  conteneur du backend.
+Application (Frontend + API + médias) : `http://localhost:8000`
 
 ## Commandes utiles
 
