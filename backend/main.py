@@ -43,7 +43,8 @@ media_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=media_dir), name="media")
 
 
-app.frontend("/", directory="static", check_dir=False)
+if _production():
+    app.frontend("/", directory="static")
 
 
 @app.get("/health")

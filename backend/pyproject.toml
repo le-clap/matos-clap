@@ -5,14 +5,14 @@ description = "Backend for the Matos CLAP project."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "alembic>=1.18.5",
-    "fastapi[standard]>=0.139.0",
+    "alembic>=1.19.1",
+    "fastapi[standard]>=0.141.1",
     "httpx>=0.28.1",
-    "pydantic-settings>=2.14.2",
+    "pydantic-settings>=2.15.0",
     "pydantic[email]>=2.13.4",
     "psycopg2-binary>=2.9.12",
     "sqlmodel>=0.0.39",
-    "uvicorn[standard]>=0.49.0",
+    "uvicorn[standard]>=0.52.3",
 ]
 
 [dependency-groups]
@@ -22,11 +22,13 @@ dev = [
     "pre-commit>=4.6.0",
     "pytest>=8.3",
     "pytest-sugar>=1.0",
+    "pytest-env>=1.7.0",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+env = ["ENV=development"]
 
 [[tool.ty.overrides]]
 include = ["tests/**"]

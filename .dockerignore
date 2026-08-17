@@ -7,6 +7,8 @@
 backend/__pycache__
 backend/**/__pycache__
 backend/*.pyc
+backend/*.pyo
+backend/*.pyd
 backend/.Python
 backend/.env
 backend/.venv
@@ -14,6 +16,8 @@ backend/venv/
 backend/.pytest_cache
 backend/.ruff_cache
 backend/*.egg-info
+backend/dist
+backend/build
 backend/*.db
 backend/database.db
 backend/.coverage
