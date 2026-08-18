@@ -32,7 +32,7 @@ const roleTone: Record<AccessLevel, Parameters<typeof Badge>[0]['tone']> = {
 };
 
 export function AdminUsersPage() {
-  const { hasRole } = useAuth();
+  const { user: currentUser, hasRole } = useAuth();
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
@@ -120,15 +120,17 @@ export function AdminUsersPage() {
                   </Td>
                   {canEdit && (
                     <Td>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditing(u)}
-                        className="gap-1.5"
-                      >
-                        <ShieldCheck className="size-4" />
-                        Rôle
-                      </Button>
+                      {u.id !== currentUser?.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditing(u)}
+                          className="gap-1.5"
+                        >
+                          <ShieldCheck className="size-4" />
+                          Rôle
+                        </Button>
+                      )}
                     </Td>
                   )}
                 </Tr>

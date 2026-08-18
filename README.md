@@ -198,6 +198,15 @@ Toutes les commandes s'exécutent depuis le dossier `backend/` :
 * Générer une nouvelle migration : `uv run alembic revision --autogenerate -m "description_du_changement"`
 * Annuler la dernière migration (downgrade) : `uv run alembic downgrade -1`
 
+### Initialisation du premier administrateur
+
+Pour promouvoir un utilisateur au rôle `admin`, une fois qu'il s'est connecté au moins une fois :
+
+```bash
+cd backend
+uv run python -m db.bootstrap_admin <username>
+```
+
 ### Qualité du code & Tests (CI/CD)
 
 Pour s'assurer que le code est propre avant de push :

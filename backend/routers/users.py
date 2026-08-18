@@ -81,10 +81,13 @@ def get_user_by_id(
 )
 def update_user(
     session: SessionDep,
-    _user: AdminDep,
+    current_user: AdminDep,
     user_id: Annotated[int, Path(ge=1)],
     user_patch: UserPatch,
 ) -> User:
+    if user_id == current_user.id:
+        raise HTTPException(status_code=403, detail="You cannot edit your own user account")
+
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
