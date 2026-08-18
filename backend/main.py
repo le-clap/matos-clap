@@ -1,13 +1,21 @@
 from pathlib import Path
+from uuid import uuid4
 
-from fastapi import FastAPI
+import structlog
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
 from core.config import settings
+from core.logging import configure_logging
 from routers import catalogs, categories, data_io, items, loans, requests, users
 from routers.auth import router as auth_router
+
+configure_logging()
+
+logger = structlog.get_logger(__name__)
 
 
 def _unique_id(route: APIRoute) -> str:
@@ -31,6 +39,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def bind_request_context(request: Request, call_next):
+    """Tag every log line emitted during this request with a shared request_uuid."""
+    structlog.contextvars.clear_contextvars()
+    structlog.contextvars.bind_contextvars(request_uuid=str(uuid4())[:8])
+    return await call_next(request)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Log unhandled exceptions with a stack trace and return a generic 500."""
+    logger.error("unhandled_exception", path=request.url.path, exc_info=exc)
+    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
 
 media_dir = Path(settings.MEDIA_DIR)

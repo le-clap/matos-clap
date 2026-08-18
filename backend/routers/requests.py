@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
@@ -23,6 +24,8 @@ from schemas.requests import (
 )
 from schemas.utils import PaginatedResponse, PaginationParams
 from services.inventory import find_busy_item_ids
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/requests", tags=["requests"])
 
@@ -252,6 +255,8 @@ def create_request(
 
     session.commit()
     session.refresh(db_request)
+
+    logger.info("request.created", request_id=db_request.id)
     return db_request
 
 
@@ -324,3 +329,5 @@ def delete_request(
 
     session.delete(db_request)
     session.commit()
+
+    logger.info("request.deleted", request_id=request_id)

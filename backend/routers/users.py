@@ -2,6 +2,7 @@
 
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import func
 from sqlmodel import Session, asc, col, select
@@ -12,6 +13,8 @@ from models.enums import AccessLevel
 from models.models import User
 from schemas.users import UserPatch, UserPublic
 from schemas.utils import PaginatedResponse, PaginationParams
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -92,9 +95,12 @@ def update_user(
     if not db_user:
         raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
 
+    old_level = db_user.access_level
     db_user.sqlmodel_update(user_patch.model_dump(exclude_unset=True))
 
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
+
+    logger.info("user.role_changed", target_id=db_user.id, old_level=old_level, new_level=db_user.access_level)
     return db_user
