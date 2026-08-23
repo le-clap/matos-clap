@@ -1,6 +1,5 @@
 """Item management endpoints."""
 
-from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
@@ -13,6 +12,7 @@ from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel, Availability, Condition, LoanStatus
 from models.models import Catalog, Item, Loan, LoanedItem, User
 from schemas.items import ItemHistoryEntry, ItemPatch, ItemPost, ItemPublic
+from services.deletion import item_has_open_loan, purge_or_archive
 from services.inventory import item_load_options
 
 router = APIRouter(prefix="/items", tags=["items"])
@@ -120,7 +120,8 @@ def create_item(
     _user: ManagerDep,
     item: ItemPost,
 ) -> Item:
-    if not session.get(Catalog, item.catalog_id):
+    catalog = session.get(Catalog, item.catalog_id)
+    if not catalog or catalog.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {item.catalog_id} not found")
 
     db_item = Item(**item.model_dump())
@@ -142,12 +143,14 @@ def update_item(
     item_patch: ItemPatch,
 ) -> Item:
     db_item = session.get(Item, item_id)
-    if not db_item:
+    if not db_item or db_item.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
 
     update_data = item_patch.model_dump(exclude_unset=True)
-    if "catalog_id" in update_data and not session.get(Catalog, update_data["catalog_id"]):
-        raise HTTPException(status_code=404, detail=f"Catalog with ID {update_data['catalog_id']} not found")
+    if "catalog_id" in update_data:
+        catalog = session.get(Catalog, update_data["catalog_id"])
+        if not catalog or catalog.deleted_at is not None:
+            raise HTTPException(status_code=404, detail=f"Catalog with ID {update_data['catalog_id']} not found")
 
     db_item.sqlmodel_update(update_data)
     session.add(db_item)
@@ -159,17 +162,24 @@ def update_item(
 @router.delete(
     "/{item_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={404: {"description": "Item not found"}},
+    responses={
+        404: {"description": "Item not found"},
+        409: {"description": "Item is part of an active or scheduled loan"},
+    },
 )
-def soft_delete_item(
+def delete_item(
     session: SessionDep,
     _user: ManagerDep,
     item_id: Annotated[int, Path(ge=1)],
 ) -> None:
-    item = session.get(Item, item_id)
+    item = session.get(Item, item_id, with_for_update=True)
     if not item:
         raise HTTPException(status_code=404, detail=f"Item with ID {item_id} not found")
 
-    item.deleted_at = datetime.now(UTC)
-    session.add(item)
-    session.commit()
+    if item_has_open_loan(session, item_id):
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete item: it is part of an active or scheduled loan",
+        )
+
+    purge_or_archive(session, Item, item_id)

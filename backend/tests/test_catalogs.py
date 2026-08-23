@@ -1,6 +1,7 @@
 """Tests for catalog CRUD and availability endpoints."""
 
-from models.enums import AccessLevel, Availability
+from models.enums import AccessLevel, Availability, RequestStatus
+from models.models import Catalog, Request, RequestedCatalog
 from tests.conftest import auth, dt, iso
 
 
@@ -73,6 +74,107 @@ def test_delete_catalog_with_items_returns_409(client, session, f_user, f_token,
 
     r = client.delete(f"/api/catalogs/{catalog.id}", headers=auth(token))
     assert r.status_code == 409
+
+
+def test_delete_empty_catalog_purges(client, session, f_user, f_token, f_category, f_catalog):
+    catalog = f_catalog(f_category())
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    r = client.delete(f"/api/catalogs/{catalog.id}", headers=auth(token))
+    assert r.status_code == 204
+    assert session.get(Catalog, catalog.id) is None
+
+
+def test_delete_catalog_with_only_archived_items_archives(
+    client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
+):
+    """Regression test: a reference whose items were all archived must not be stuck forever."""
+    catalog = f_catalog(f_category())
+    item = f_item(catalog)
+    clap = f_user(AccessLevel.CLAP)
+    borrower = f_user(AccessLevel.USER)
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    f_loan(borrower, clap, [item], actual_start=dt(-5), actual_return=dt(-1))
+    r = client.delete(f"/api/items/{item.id}", headers=auth(token))
+    assert r.status_code == 204  # item archived, not purged, since it has history
+
+    r = client.delete(f"/api/catalogs/{catalog.id}", headers=auth(token))
+    assert r.status_code == 204
+
+    archived = session.get(Catalog, catalog.id)
+    assert archived is not None
+    assert archived.deleted_at is not None
+
+
+def test_delete_catalog_referenced_by_request_archives(client, session, f_user, f_token, f_category, f_catalog):
+    catalog = f_catalog(f_category())
+    manager = f_user(AccessLevel.MANAGER)
+    borrower = f_user(AccessLevel.USER)
+    token = f_token(manager)
+
+    request = Request(
+        borrower_id=borrower.id,
+        phone_number="0600000000",
+        start_date=dt(1),
+        end_date=dt(5),
+        status=RequestStatus.PENDING,
+    )
+    session.add(request)
+    session.flush()
+    session.add(RequestedCatalog(request_id=request.id, catalog_id=catalog.id, quantity=1))
+    session.commit()
+
+    r = client.delete(f"/api/catalogs/{catalog.id}", headers=auth(token))
+    assert r.status_code == 204
+
+    archived = session.get(Catalog, catalog.id)
+    assert archived is not None
+    assert archived.deleted_at is not None
+
+
+def test_update_archived_catalog_returns_404(client, session, f_user, f_token, f_category, f_catalog):
+    catalog = f_catalog(f_category())
+    catalog.deleted_at = dt(-1)
+    session.add(catalog)
+    session.commit()
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    r = client.patch(f"/api/catalogs/{catalog.id}", json={"name": "NewName"}, headers=auth(token))
+    assert r.status_code == 404
+
+
+def test_get_catalogs_excludes_archived(client, session, f_user, f_token, f_category, f_catalog):
+    catalog = f_catalog(f_category())
+    catalog.deleted_at = dt(-1)
+    session.add(catalog)
+    session.commit()
+    user = f_user(AccessLevel.USER)
+    token = f_token(user)
+
+    r = client.get("/api/catalogs", headers=auth(token))
+    assert r.status_code == 200
+    ids = [c["id"] for c in r.json()]
+    assert catalog.id not in ids
+
+
+def test_available_items_for_archived_catalog_returns_404(client, session, f_user, f_token, f_category, f_catalog):
+    catalog = f_catalog(f_category())
+    catalog.deleted_at = dt(-1)
+    session.add(catalog)
+    session.commit()
+    user = f_user(AccessLevel.USER)
+    token = f_token(user)
+
+    r = client.get(
+        f"/api/catalogs/{catalog.id}/available-items",
+        params={"start_date": iso(0), "end_date": iso(7)},
+        headers=auth(token),
+    )
+    assert r.status_code == 404
 
 
 def test_available_items_requires_auth(client, session, f_category, f_catalog):

@@ -1404,8 +1404,8 @@
         "tags": [
           "items"
         ],
-        "summary": "Soft Delete Item",
-        "operationId": "items_soft_delete_item",
+        "summary": "Delete Item",
+        "operationId": "items_delete_item",
         "parameters": [
           {
             "name": "item_id",
@@ -1456,6 +1456,9 @@
           },
           "404": {
             "description": "Item not found"
+          },
+          "409": {
+            "description": "Item is part of an active or scheduled loan"
           },
           "422": {
             "description": "Validation Error",
@@ -4113,18 +4116,6 @@
           "deposit_cents": {
             "type": "integer",
             "title": "Deposit Cents"
-          },
-          "deleted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Deleted At"
           }
         },
         "type": "object",

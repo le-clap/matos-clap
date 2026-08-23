@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 
 from models.enums import AccessLevel
+from models.models import Item
 from tests.conftest import auth, dt, iso
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -74,7 +75,7 @@ def test_create_loan_fails_on_duplicate_item_ids(client, session, f_user, f_toke
     assert r.status_code == 422
 
 
-def test_create_loan_fails_on_deleted_item(client, session, f_user, f_token, f_category, f_catalog, f_item):
+def test_create_loan_fails_on_archived_item(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
     catalog = f_catalog(f_category())
     item = f_item(catalog)
     manager = f_user(AccessLevel.MANAGER)
@@ -83,10 +84,30 @@ def test_create_loan_fails_on_deleted_item(client, session, f_user, f_token, f_c
     m_token = f_token(manager)
     c_token = f_token(clap)
 
+    # The item needs loan history, otherwise deleting it purges the row outright.
+    f_loan(borrower, clap, [item], actual_start=dt(-2), actual_return=dt(-1))
     client.delete(f"/api/items/{item.id}", headers=auth(m_token))
 
     r = client.post("/api/loans", json=_loan_body(borrower.id, [item.id]), headers=auth(c_token))
     assert r.status_code == 422
+
+
+def test_create_loan_fails_on_purged_item(client, session, f_user, f_token, f_category, f_catalog, f_item):
+    catalog = f_catalog(f_category())
+    item = f_item(catalog)
+    manager = f_user(AccessLevel.MANAGER)
+    clap = f_user(AccessLevel.CLAP)
+    borrower = f_user(AccessLevel.USER)
+    m_token = f_token(manager)
+    c_token = f_token(clap)
+
+    # No loan history: deleting purges the row outright.
+    r = client.delete(f"/api/items/{item.id}", headers=auth(m_token))
+    assert r.status_code == 204
+    assert session.get(Item, item.id) is None
+
+    r = client.post("/api/loans", json=_loan_body(borrower.id, [item.id]), headers=auth(c_token))
+    assert r.status_code == 404
 
 
 def test_create_loan_naive_datetime_returns_422(client, session, f_user, f_token, f_category, f_catalog, f_item):

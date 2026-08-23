@@ -174,7 +174,7 @@ export function useItemMutations() {
     onSuccess: invalidate,
   });
   const remove = useMutation({
-    mutationFn: (id: number) => unwrap(ItemsService.itemsSoftDeleteItem({ path: { item_id: id } })),
+    mutationFn: (id: number) => unwrap(ItemsService.itemsDeleteItem({ path: { item_id: id } })),
     onSuccess: invalidate,
   });
 

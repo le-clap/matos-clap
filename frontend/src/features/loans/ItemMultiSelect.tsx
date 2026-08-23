@@ -6,7 +6,7 @@ import { formatMoney } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 /**
- * Search-and-pick multiple inventory units. Soft-deleted items are excluded.
+ * Search-and-pick multiple inventory units.
  */
 export function ItemMultiSelect({
   items,
@@ -30,11 +30,7 @@ export function ItemMultiSelect({
     const q = search.trim().toLowerCase();
     if (!q) return [];
     return items
-      .filter(
-        (i) =>
-          !i.deleted_at &&
-          (i.name.toLowerCase().includes(q) || i.catalog.name.toLowerCase().includes(q)),
-      )
+      .filter((i) => i.name.toLowerCase().includes(q) || i.catalog.name.toLowerCase().includes(q))
       .slice(0, 8);
   }, [items, search]);
 

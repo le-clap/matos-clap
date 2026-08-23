@@ -8,7 +8,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlmodel import Field, Relationship, SQLModel, col
 
 from models.enums import AccessLevel, Availability, Condition, LoanStatus, RequestStatus
-from models.timestamps import TimestampSQLModel
+from models.timestamps import SoftDeleteTimestampSQLModel, TimestampSQLModel
 
 # --- User ---
 
@@ -27,15 +27,13 @@ class User(TimestampSQLModel, table=True):
         sa_column=Column(Enum(AccessLevel, name="access_level", native_enum=False), nullable=False),
     )
 
-    sessions: list[UserSession] = Relationship(
-        back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
-    )
-    requests: list[Request] = Relationship(back_populates="borrower")
+    sessions: list[UserSession] = Relationship(back_populates="user", cascade_delete=True, passive_deletes=True)
+    requests: list[Request] = Relationship(back_populates="borrower", passive_deletes=True)
     loans_as_borrower: list[Loan] = Relationship(
-        back_populates="borrower", sa_relationship_kwargs={"foreign_keys": "Loan.borrower_id"}
+        back_populates="borrower", passive_deletes=True, sa_relationship_kwargs={"foreign_keys": "Loan.borrower_id"}
     )
     loans_as_assignee: list[Loan] = Relationship(
-        back_populates="assignee", sa_relationship_kwargs={"foreign_keys": "Loan.assignee_id"}
+        back_populates="assignee", passive_deletes=True, sa_relationship_kwargs={"foreign_keys": "Loan.assignee_id"}
     )
 
 
@@ -55,17 +53,17 @@ class UserSession(TimestampSQLModel, table=True):
 # --- Inventory ---
 
 
-class Category(TimestampSQLModel, table=True):
+class Category(SoftDeleteTimestampSQLModel, table=True):
     """Represents a category of catalogs in the inventory."""
 
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(max_length=255)
     description: str | None = Field(default=None, sa_type=Text)
 
-    catalogs: list[Catalog] = Relationship(back_populates="category")
+    catalogs: list[Catalog] = Relationship(back_populates="category", passive_deletes=True)
 
 
-class Catalog(TimestampSQLModel, table=True):
+class Catalog(SoftDeleteTimestampSQLModel, table=True):
     """Represents a catalog of items in the inventory, linked to a category."""
 
     id: int | None = Field(default=None, primary_key=True)
@@ -75,11 +73,11 @@ class Catalog(TimestampSQLModel, table=True):
     image_path: str | None = Field(default=None, max_length=255)
 
     category: Category = Relationship(back_populates="catalogs")
-    items: list[Item] = Relationship(back_populates="catalog")
-    requested_catalogs: list[RequestedCatalog] = Relationship(back_populates="catalog")
+    items: list[Item] = Relationship(back_populates="catalog", passive_deletes=True)
+    requested_catalogs: list[RequestedCatalog] = Relationship(back_populates="catalog", passive_deletes=True)
 
 
-class Item(TimestampSQLModel, table=True):
+class Item(SoftDeleteTimestampSQLModel, table=True):
     """Represents a physical item in the inventory, linked to a catalog."""
 
     id: int | None = Field(default=None, primary_key=True)
@@ -94,10 +92,9 @@ class Item(TimestampSQLModel, table=True):
         sa_column=Column(Enum(Availability, name="availability", native_enum=False), nullable=False),
     )
     deposit_cents: int = Field(default=0, ge=0)
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     catalog: Catalog = Relationship(back_populates="items")
-    loaned_items: list[LoanedItem] = Relationship(back_populates="item")
+    loaned_items: list[LoanedItem] = Relationship(back_populates="item", passive_deletes=True)
 
 
 # --- Request Flow ---
@@ -119,7 +116,7 @@ class Request(TimestampSQLModel, table=True):
 
     borrower: User = Relationship(back_populates="requests")
     requested_catalogs: list[RequestedCatalog] = Relationship(
-        back_populates="request", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+        back_populates="request", cascade_delete=True, passive_deletes=True
     )
     loan: Optional["Loan"] = Relationship(back_populates="request")  # noqa UP045
 
@@ -178,9 +175,7 @@ class Loan(TimestampSQLModel, table=True):
         back_populates="loans_as_assignee", sa_relationship_kwargs={"foreign_keys": "Loan.assignee_id"}
     )
     request: Request | None = Relationship(back_populates="loan")
-    loaned_items: list[LoanedItem] = Relationship(
-        back_populates="loan", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
-    )
+    loaned_items: list[LoanedItem] = Relationship(back_populates="loan", cascade_delete=True, passive_deletes=True)
 
     # status: hybrid property derived from the actual dates
     model_config = ConfigDict(ignored_types=(hybrid_property,))  # ty: ignore[invalid-assignment]

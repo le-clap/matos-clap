@@ -1,7 +1,8 @@
 """Tests for category CRUD endpoints."""
 
 from models.enums import AccessLevel
-from tests.conftest import auth, make_token, make_user
+from models.models import Category
+from tests.conftest import auth, dt, make_token, make_user
 
 
 def test_get_categories_requires_auth(client):
@@ -86,3 +87,65 @@ def test_delete_category_with_catalogs_returns_409(client, session, f_user, f_to
 
     r = client.delete(f"/api/categories/{cat.id}", headers=auth(token))
     assert r.status_code == 409
+
+
+def test_delete_category_with_only_archived_catalogs_archives(
+    client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan
+):
+    """A category whose only catalog was archived must not be stuck forever."""
+    cat = f_category()
+    catalog = f_catalog(cat)
+    item = f_item(catalog)
+    clap = f_user(AccessLevel.CLAP)
+    borrower = f_user(AccessLevel.USER)
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    f_loan(borrower, clap, [item], actual_start=dt(-5), actual_return=dt(-1))
+    assert client.delete(f"/api/items/{item.id}", headers=auth(token)).status_code == 204
+    assert client.delete(f"/api/catalogs/{catalog.id}", headers=auth(token)).status_code == 204
+
+    r = client.delete(f"/api/categories/{cat.id}", headers=auth(token))
+    assert r.status_code == 204
+
+    archived = session.get(Category, cat.id)
+    assert archived is not None
+    assert archived.deleted_at is not None
+
+
+def test_update_archived_category_returns_404(client, session, f_user, f_token, f_category):
+    cat = f_category()
+    cat.deleted_at = dt(-1)
+    session.add(cat)
+    session.commit()
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    r = client.patch(f"/api/categories/{cat.id}", json={"name": "New Name"}, headers=auth(token))
+    assert r.status_code == 404
+
+
+def test_create_catalog_under_archived_category_returns_404(client, session, f_user, f_token, f_category):
+    cat = f_category()
+    cat.deleted_at = dt(-1)
+    session.add(cat)
+    session.commit()
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    r = client.post("/api/catalogs", json={"name": "X", "category_id": cat.id}, headers=auth(token))
+    assert r.status_code == 404
+
+
+def test_get_categories_excludes_archived(client, session, f_user, f_token, f_category):
+    cat = f_category()
+    cat.deleted_at = dt(-1)
+    session.add(cat)
+    session.commit()
+    user = f_user(AccessLevel.USER)
+    token = f_token(user)
+
+    r = client.get("/api/categories", headers=auth(token))
+    assert r.status_code == 200
+    ids = [c["id"] for c in r.json()]
+    assert cat.id not in ids

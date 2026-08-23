@@ -282,7 +282,6 @@ function Workspace({
     return items
       .filter(
         (i) =>
-          !i.deleted_at &&
           !candidateIds.has(i.id) &&
           (i.name.toLowerCase().includes(q) || i.catalog.name.toLowerCase().includes(q)),
       )

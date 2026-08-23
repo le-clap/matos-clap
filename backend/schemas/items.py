@@ -39,7 +39,6 @@ class ItemPublic(BaseModel):
     condition: Condition
     availability: Availability
     deposit_cents: int
-    deleted_at: datetime | None = None
 
 
 class ItemAvailabilityResponse(BaseModel):

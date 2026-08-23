@@ -1,6 +1,7 @@
 """Tests for item CRUD endpoints."""
 
 from models.enums import AccessLevel, Availability, Condition
+from models.models import Item
 from tests.conftest import auth, dt
 
 
@@ -95,7 +96,7 @@ def test_update_item(client, session, f_user, f_token, f_category, f_catalog, f_
     assert r.json()["condition"] == "degraded"
 
 
-def test_soft_delete_item(client, session, f_user, f_token, f_category, f_catalog, f_item):
+def test_delete_item_without_history_purges(client, session, f_user, f_token, f_category, f_catalog, f_item):
     catalog = f_catalog(f_category())
     item = f_item(catalog)
     manager = f_user(AccessLevel.MANAGER)
@@ -103,9 +104,61 @@ def test_soft_delete_item(client, session, f_user, f_token, f_category, f_catalo
 
     r = client.delete(f"/api/items/{item.id}", headers=auth(token))
     assert r.status_code == 204
+    assert session.get(Item, item.id) is None
 
 
-def test_soft_deleted_item_excluded_from_list(client, session, f_user, f_token, f_category, f_catalog, f_item):
+def test_delete_item_with_history_archives(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
+    catalog = f_catalog(f_category())
+    item = f_item(catalog)
+    clap = f_user(AccessLevel.CLAP)
+    borrower = f_user(AccessLevel.USER)
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    f_loan(borrower, clap, [item], actual_start=dt(-5), actual_return=dt(-1))
+
+    r = client.delete(f"/api/items/{item.id}", headers=auth(token))
+    assert r.status_code == 204
+
+    archived = session.get(Item, item.id)
+    assert archived is not None
+    assert archived.deleted_at is not None
+
+    r = client.get(f"/api/items/{item.id}/history", headers=auth(f_token(clap)))
+    assert r.status_code == 200
+    assert len(r.json()) == 1
+
+
+def test_delete_item_blocked_by_active_loan(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
+    catalog = f_catalog(f_category())
+    item = f_item(catalog)
+    clap = f_user(AccessLevel.CLAP)
+    borrower = f_user(AccessLevel.USER)
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    f_loan(borrower, clap, [item], actual_start=dt(-1))  # started, not returned
+
+    r = client.delete(f"/api/items/{item.id}", headers=auth(token))
+    assert r.status_code == 409
+    assert session.get(Item, item.id) is not None
+
+
+def test_delete_item_blocked_by_scheduled_loan(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
+    catalog = f_catalog(f_category())
+    item = f_item(catalog)
+    clap = f_user(AccessLevel.CLAP)
+    borrower = f_user(AccessLevel.USER)
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    f_loan(borrower, clap, [item], start=dt(1), end=dt(5))  # scheduled, not started
+
+    r = client.delete(f"/api/items/{item.id}", headers=auth(token))
+    assert r.status_code == 409
+
+
+def test_deleted_item_excluded_from_list(client, session, f_user, f_token, f_category, f_catalog, f_item):
     catalog = f_catalog(f_category())
     item = f_item(catalog)
     manager = f_user(AccessLevel.MANAGER)
@@ -116,6 +169,39 @@ def test_soft_deleted_item_excluded_from_list(client, session, f_user, f_token, 
     r = client.get("/api/items", headers=auth(token))
     ids = [i["id"] for i in r.json()]
     assert item.id not in ids
+
+
+def test_update_archived_item_returns_404(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
+    catalog = f_catalog(f_category())
+    item = f_item(catalog)
+    clap = f_user(AccessLevel.CLAP)
+    borrower = f_user(AccessLevel.USER)
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    f_loan(borrower, clap, [item], actual_start=dt(-5), actual_return=dt(-1))
+    client.delete(f"/api/items/{item.id}", headers=auth(token))
+
+    r = client.patch(f"/api/items/{item.id}", json={"condition": "degraded"}, headers=auth(token))
+    assert r.status_code == 404
+
+
+def test_create_item_under_archived_catalog_returns_404(
+    client, session, f_user, f_token, f_category, f_catalog, f_item
+):
+    catalog = f_catalog(f_category())
+    manager = f_user(AccessLevel.MANAGER)
+    token = f_token(manager)
+
+    r = client.delete(f"/api/catalogs/{catalog.id}", headers=auth(token))
+    assert r.status_code == 204
+
+    r = client.post(
+        "/api/items",
+        json={"name": "X", "catalog_id": catalog.id, "condition": "good"},
+        headers=auth(token),
+    )
+    assert r.status_code == 404
 
 
 # ── Item history ──────────────────────────────────────────────────────────

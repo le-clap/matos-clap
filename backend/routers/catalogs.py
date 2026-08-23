@@ -6,7 +6,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, status
 from pydantic import AwareDatetime
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session, col, select
 
@@ -17,6 +16,7 @@ from models.enums import AccessLevel, Availability
 from models.models import Catalog, Category, Item, User
 from schemas.catalogs import CatalogPatch, CatalogPost, CatalogPublic
 from schemas.items import ItemAvailabilityResponse
+from services.deletion import has_live_children, purge_or_archive
 from services.inventory import find_busy_item_ids, item_load_options
 
 router = APIRouter(prefix="/catalogs", tags=["catalogs"])
@@ -38,7 +38,9 @@ MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 @router.get("/", response_model=list[CatalogPublic])
 def get_catalogs(session: SessionDep, _user: CurrentUserDep) -> list[Catalog]:
-    statement = select(Catalog).options(joinedload(Catalog.category))  # ty: ignore[invalid-argument-type]
+    statement = (
+        select(Catalog).where(col(Catalog.deleted_at).is_(None)).options(joinedload(Catalog.category))  # ty: ignore[invalid-argument-type]
+    )
     return list(session.exec(statement).all())
 
 
@@ -76,7 +78,8 @@ def create_catalog(
     _user: ManagerDep,
     catalog: CatalogPost,
 ) -> Catalog:
-    if not session.get(Category, catalog.category_id):
+    category = session.get(Category, catalog.category_id)
+    if not category or category.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Category with ID {catalog.category_id} not found")
 
     db_catalog = Catalog(**catalog.model_dump())
@@ -98,13 +101,15 @@ def update_catalog(
     catalog_patch: CatalogPatch,
 ) -> Catalog:
     db_catalog = session.get(Catalog, catalog_id)
-    if not db_catalog:
+    if not db_catalog or db_catalog.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
     update_data = catalog_patch.model_dump(exclude_unset=True)
 
-    if "category_id" in update_data and not session.get(Category, update_data["category_id"]):
-        raise HTTPException(status_code=404, detail=f"Category with ID {update_data['category_id']} not found")
+    if "category_id" in update_data:
+        category = session.get(Category, update_data["category_id"])
+        if not category or category.deleted_at is not None:
+            raise HTTPException(status_code=404, detail=f"Category with ID {update_data['category_id']} not found")
 
     # If the image is being replaced or cleared, remove the previous file.
     if "image_path" in update_data:
@@ -135,7 +140,7 @@ async def upload_catalog_image(
 ) -> Catalog:
     """Upload (or replace) the illustrative image of a catalog reference."""
     db_catalog = session.get(Catalog, catalog_id)
-    if not db_catalog:
+    if not db_catalog or db_catalog.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
     extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
@@ -177,19 +182,22 @@ def delete_catalog(
     _user: ManagerDep,
     catalog_id: Annotated[int, Path(ge=1)],
 ) -> None:
-    db_catalog = session.get(Catalog, catalog_id)
+    db_catalog = session.get(Catalog, catalog_id, with_for_update=True)
     if not db_catalog:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
-    try:
-        session.delete(db_catalog)
-        session.commit()
-    except IntegrityError as e:
-        session.rollback()
+    if has_live_children(session, Item, col(Item.catalog_id), catalog_id):
         raise HTTPException(
             status_code=409,
-            detail="Cannot delete catalog: still used by items or requests",
-        ) from e
+            detail="Cannot delete catalog: it still contains items",
+        )
+
+    purged = purge_or_archive(session, Catalog, catalog_id)
+
+    if purged:
+        image_path = db_catalog.image_path
+        if image_path and image_path.startswith("/media/catalogs/"):
+            (FilePath(settings.MEDIA_DIR) / "catalogs" / FilePath(image_path).name).unlink(missing_ok=True)
 
 
 @router.get(
@@ -217,7 +225,8 @@ def get_catalog_items_availability(
     if start_date >= end_date:
         raise HTTPException(status_code=422, detail="start_date must be before end_date")
 
-    if not session.get(Catalog, catalog_id):
+    catalog = session.get(Catalog, catalog_id)
+    if not catalog or catalog.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
     all_items = session.exec(

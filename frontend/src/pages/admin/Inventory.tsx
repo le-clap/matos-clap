@@ -485,7 +485,7 @@ function ItemsTab() {
         onClose={() => setToDelete(null)}
         loading={remove.isPending}
         title="Supprimer l'article ?"
-        description={`« ${toDelete?.name} » sera retirée de l'inventaire.`}
+        description={`« ${toDelete?.name} » sera retirée de l'inventaire. Un article dans un prêt en cours ou planifié ne peut pas être supprimé.`}
         confirmLabel="Supprimer"
         onConfirm={async () => {
           try {
