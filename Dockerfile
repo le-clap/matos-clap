@@ -27,4 +27,4 @@ RUN test -f static/index.html
 
 EXPOSE 8000
 
-CMD ["uv", "run", "--no-sync", "fastapi", "run"]
+CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync fastapi run"]
