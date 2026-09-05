@@ -6,6 +6,9 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend/ .
+
+COPY backend/openapi.json /backend/openapi.json
+RUN npm run generate:client
 RUN npm run build
 
 
