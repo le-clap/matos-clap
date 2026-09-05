@@ -6,6 +6,9 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { Dayjs } from 'dayjs';
+import { ThemeProvider } from '@mui/material/styles';
+import { dateTheme } from '@/dateTheme';
+import 'dayjs/locale/fr';
 
 /**
  * Two `datetime-local` inputs for a [start, end] window. Values are raw
@@ -36,26 +39,34 @@ export function DateRangeField({
   stack?: boolean;
 }) {
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <div className="flex flex-col gap-2">
-        <div className={cn('flex flex-col gap-3', !stack && 'sm:flex-row sm:items-end')}>
-          <Field label={startLabel} required={required} className="min-w-0 flex-1">
-            <DateTimePicker value={start} onChange={(v) => onStartChange(v)} className="min-w-0" />
-          </Field>
-          {!stack && (
-            <ArrowRight className="hidden size-4 shrink-0 -translate-y-2.5 text-content-faint sm:block" />
-          )}
-          <Field label={endLabel} required={required} className="min-w-0 flex-1">
-            <DateTimePicker
-              value={end}
-              minDate={start || undefined}
-              onChange={(v) => onEndChange(v)}
-              className="min-w-0"
-            />
-          </Field>
+    <ThemeProvider theme={dateTheme}>
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'fr'}>
+        <div className="flex flex-col gap-2">
+          <div className={cn('flex flex-col gap-3', !stack && 'sm:flex-row sm:items-end')}>
+            <Field label={startLabel} required={required} className="min-w-0 flex-1">
+              <DateTimePicker
+                value={start}
+                timeSteps={{ minutes: 5 }}
+                onChange={(v) => onStartChange(v)}
+                className="min-w-0"
+              />
+            </Field>
+            {!stack && (
+              <ArrowRight className="hidden size-4 shrink-0 -translate-y-2.5 text-content-faint sm:block" />
+            )}
+            <Field label={endLabel} required={required} className="min-w-0 flex-1">
+              <DateTimePicker
+                value={end}
+                timeSteps={{ minutes: 5 }}
+                minDate={start || undefined}
+                onChange={(v) => onEndChange(v)}
+                className="min-w-0"
+              />
+            </Field>
+          </div>
+          {error && <p className="text-xs text-brand-300">{error}</p>}
         </div>
-        {error && <p className="text-xs text-brand-300">{error}</p>}
-      </div>
-    </LocalizationProvider>
+      </LocalizationProvider>
+    </ThemeProvider>
   );
 }
