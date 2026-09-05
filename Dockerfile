@@ -6,6 +6,9 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend/ .
+
+COPY backend/openapi.json /backend/openapi.json
+RUN npm run generate:client
 RUN npm run build
 
 
@@ -27,4 +30,4 @@ RUN test -f static/index.html
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync fastapi run"]
+CMD ["uv", "run", "--no-sync", "fastapi", "run"]

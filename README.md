@@ -200,6 +200,21 @@ docker compose up --build
 
 Application (Frontend + API + médias) : `http://localhost:8000`
 
+## Déploiement
+
+Le workflow `.github/workflows/release.yml` construit et publie l'image sur GHCR à chaque tag `vX.Y.Z` :
+
+```bash
+git tag -a v1.2.3 -m "Description de la release"
+git push origin v1.2.3
+```
+
+Tags d'image produits pour `v1.2.3` : `1.2.3`, `1.2`, `1` et `latest`.
+
+### Releases avec migration
+
+N'oubliez pas d'appliquer la migration sur le serveur, pour que l'image mise à jour démarre correctement.
+
 ## Commandes utiles
 
 ### Gestion de la Base de données (Alembic)
