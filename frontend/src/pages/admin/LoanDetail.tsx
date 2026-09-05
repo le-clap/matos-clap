@@ -29,8 +29,9 @@ import { UserCombobox } from '@/features/loans/UserCombobox';
 import { useItems } from '@/hooks/useInventory';
 import { useLoan, useLoanMutations } from '@/hooks/useLoans';
 import { ApiError } from '@/lib/api';
-import { formatDateTime, formatMoney, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { formatDateTime, formatMoney } from '@/lib/format';
 import { isOverdue } from '@/lib/loanStatus';
+import dayjs, { Dayjs } from 'dayjs';
 
 const CONDITIONS: { value: Condition; label: string }[] = [
   { value: 'new', label: 'Neuf' },
@@ -316,8 +317,8 @@ export function AdminLoanDetailPage() {
 interface EditLoanBody {
   borrower_id?: number;
   item_ids?: number[];
-  start_date: string;
-  end_date: string;
+  start_date: string | undefined;
+  end_date: string | undefined;
   total_deposit_cents: number;
   comments: string | null;
 }
@@ -339,12 +340,12 @@ function EditLoanModal({
 }) {
   const [borrower, setBorrower] = useState<UserBrief | null>(loan.borrower);
   const [itemIds, setItemIds] = useState<number[]>(loan.loaned_items.map((li) => li.item.id));
-  const [start, setStart] = useState(isoToLocalInput(loan.start_date));
-  const [end, setEnd] = useState(isoToLocalInput(loan.end_date));
+  const [start, setStart] = useState<Dayjs | null>(dayjs(loan.start_date));
+  const [end, setEnd] = useState<Dayjs | null>(dayjs(loan.end_date));
   const [deposit, setDeposit] = useState((loan.total_deposit_cents / 100).toFixed(2));
   const [comments, setComments] = useState(loan.comments ?? '');
 
-  const datesValid = !!start && !!end && new Date(start) < new Date(end);
+  const datesValid = !!start && !!end && start.isBefore(end);
 
   return (
     <Modal
@@ -365,8 +366,8 @@ function EditLoanModal({
                 ...(scheduled
                   ? { borrower_id: (borrower ?? loan.borrower).id, item_ids: itemIds }
                   : {}),
-                start_date: localInputToIso(start),
-                end_date: localInputToIso(end),
+                start_date: start?.toISOString(),
+                end_date: end?.toISOString(),
                 total_deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
                 comments: comments.trim() || null,
               })
@@ -572,7 +573,7 @@ function PartialReturnModal({
                       return next;
                     })
                   }
-                  className="size-4 accent-[var(--color-primary)]"
+                  className="size-4 accent-[--color-primary]"
                 />
                 {li.item.name}
               </label>

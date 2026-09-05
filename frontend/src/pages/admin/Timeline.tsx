@@ -8,16 +8,21 @@ import { DateRangeField } from '@/components/ui/DateRangeField';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useLoanTimeline } from '@/hooks/useLoans';
-import { formatDateShort, formatDayMonth, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { formatDateShort, formatDayMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import dayjs, { Dayjs } from 'dayjs';
 
 const DAY = 86_400_000;
 
+interface DateRangeState {
+  start: Dayjs | null;
+  end: Dayjs | null;
+}
+
 function defaultRange() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const end = new Date(start.getTime() + 21 * DAY);
-  return { start: isoToLocalInput(start.toISOString()), end: isoToLocalInput(end.toISOString()) };
+  const start = dayjs().startOf('day');
+  const end = start.add(21, 'day');
+  return { start, end };
 }
 
 const statusBar: Record<string, string> = {
@@ -28,14 +33,14 @@ const statusBar: Record<string, string> = {
 
 export function AdminTimelinePage() {
   const navigate = useNavigate();
-  const [{ start, end }, setRange] = useState(defaultRange);
-  const valid = !!start && !!end && new Date(start) < new Date(end);
-  const startIso = valid ? localInputToIso(start) : '';
-  const endIso = valid ? localInputToIso(end) : '';
+  const [{ start, end }, setRange] = useState<DateRangeState>(defaultRange);
+  const valid = !!start && !!end && start.isBefore(end);
+  const startIso = valid ? start.toISOString() : '';
+  const endIso = valid ? end.toISOString() : '';
   const { data, isLoading } = useLoanTimeline(startIso, endIso, valid);
 
-  const windowStart = new Date(start).getTime();
-  const windowEnd = new Date(end).getTime();
+  const windowStart = start ? start.valueOf() : 0;
+  const windowEnd = end ? end.valueOf() : 0;
   const span = Math.max(1, windowEnd - windowStart);
 
   // Axis ticks — keep the count low (~8 max) so labels never overlap.
@@ -82,7 +87,7 @@ export function AdminTimelinePage() {
       </Card>
 
       {isLoading ? (
-        <Skeleton className="h-72 rounded-[var(--radius-card)]" />
+        <Skeleton className="h-72 rounded-card" />
       ) : !data || data.loans.length === 0 ? (
         <EmptyState
           icon={CalendarRange}
@@ -92,7 +97,7 @@ export function AdminTimelinePage() {
       ) : (
         <Card>
           <CardBody className="overflow-x-auto">
-            <div className="min-w-[640px]">
+            <div className="min-w-160">
               {/* Date axis */}
               <div className="relative mb-3 ml-44 h-5 border-b border-border">
                 {dayMarks.map((m, i) => (
