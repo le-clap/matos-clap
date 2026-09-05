@@ -1,5 +1,5 @@
 import { CalendarRange } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LoanTimelineEntry } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
@@ -8,16 +8,21 @@ import { DateRangeField } from '@/components/ui/DateRangeField';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useLoanTimeline } from '@/hooks/useLoans';
-import { formatDateShort, formatDayMonth, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { formatDateShort, formatDayMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import dayjs, { Dayjs } from 'dayjs';
 
 const DAY = 86_400_000;
 
+interface DateRangeState {
+  start: Dayjs | null;
+  end: Dayjs | null;
+}
+
 function defaultRange() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const end = new Date(start.getTime() + 21 * DAY);
-  return { start: isoToLocalInput(start.toISOString()), end: isoToLocalInput(end.toISOString()) };
+  const start = dayjs().startOf('day');
+  const end = start.add(21, 'day');
+  return { start, end };
 }
 
 const statusBar: Record<string, string> = {
@@ -28,14 +33,25 @@ const statusBar: Record<string, string> = {
 
 export function AdminTimelinePage() {
   const navigate = useNavigate();
-  const [{ start, end }, setRange] = useState(defaultRange);
-  const valid = !!start && !!end && new Date(start) < new Date(end);
-  const startIso = valid ? localInputToIso(start) : '';
-  const endIso = valid ? localInputToIso(end) : '';
+  const [{ start, end }, setRange] = useState<DateRangeState>(defaultRange);
+  const valid = !!start && !!end && start.isBefore(end);
+  const startIso = valid ? start.toISOString() : '';
+  const endIso = valid ? end.toISOString() : '';
   const { data, isLoading } = useLoanTimeline(startIso, endIso, valid);
 
-  const windowStart = new Date(start).getTime();
-  const windowEnd = new Date(end).getTime();
+  const cachedDataRef = useRef(data);
+
+  if (data) {
+    // eslint-disable-next-line react-hooks/refs
+    cachedDataRef.current = data;
+  }
+
+  // eslint-disable-next-line react-hooks/refs
+  const displayData = data || cachedDataRef.current;
+  // eslint-disable-next-line react-hooks/refs
+  const isInitialLoad = isLoading && !displayData;
+  const windowStart = start ? start.valueOf() : 0;
+  const windowEnd = end ? end.valueOf() : 0;
   const span = Math.max(1, windowEnd - windowStart);
 
   // Axis ticks — keep the count low (~8 max) so labels never overlap.
@@ -47,15 +63,15 @@ export function AdminTimelinePage() {
       const t = windowStart + d * DAY;
       marks.push({
         left: ((t - windowStart) / span) * 100,
-        label: formatDayMonth(new Date(t).toISOString()),
+        label: formatDayMonth(dayjs(t).toISOString()),
       });
     }
     return marks;
   }, [windowStart, span]);
 
   const pos = (entry: LoanTimelineEntry) => {
-    const s = new Date(entry.actual_start_date ?? entry.start_date).getTime();
-    const e = new Date(entry.actual_return_date ?? entry.end_date).getTime();
+    const s = dayjs(entry.actual_start_date ?? entry.start_date).valueOf();
+    const e = dayjs(entry.actual_return_date ?? entry.end_date).valueOf();
     const left = Math.max(0, ((s - windowStart) / span) * 100);
     const right = Math.min(100, ((e - windowStart) / span) * 100);
     return { left, width: Math.max(1.5, right - left) };
@@ -81,9 +97,11 @@ export function AdminTimelinePage() {
         </CardBody>
       </Card>
 
-      {isLoading ? (
-        <Skeleton className="h-72 rounded-[var(--radius-card)]" />
-      ) : !data || data.loans.length === 0 ? (
+      {/* eslint-disable-next-line react-hooks/refs */}
+      {isInitialLoad ? (
+        <Skeleton className="h-72 rounded-card" />
+      ) : // eslint-disable-next-line react-hooks/refs
+      !displayData || displayData.loans.length === 0 ? (
         <EmptyState
           icon={CalendarRange}
           title="Aucun prêt sur cette période"
@@ -91,9 +109,8 @@ export function AdminTimelinePage() {
         />
       ) : (
         <Card>
-          <CardBody className="overflow-x-auto">
-            <div className="min-w-[640px]">
-              {/* Date axis */}
+          <CardBody className={cn('overflow-x-auto transition-opacity duration-200')}>
+            <div className="min-w-160">
               <div className="relative mb-3 ml-44 h-5 border-b border-border">
                 {dayMarks.map((m, i) => (
                   <span
@@ -107,7 +124,7 @@ export function AdminTimelinePage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                {data.loans.map((entry) => {
+                {displayData.loans.map((entry) => {
                   const { left, width } = pos(entry);
                   return (
                     <div key={entry.loan_id} className="flex items-center gap-3">

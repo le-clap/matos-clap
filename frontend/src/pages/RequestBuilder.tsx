@@ -15,8 +15,8 @@ import { CatalogThumb } from '@/features/catalog/CatalogCard';
 import { useCart } from '@/features/cart/CartContext';
 import { useRequestMutations } from '@/hooks/useRequests';
 import { ApiError } from '@/lib/api';
-import { daysBetween, localInputToIso } from '@/lib/format';
 import { PHONE_HINT, isValidPhone } from '@/lib/validation';
+import dayjs, { Dayjs } from 'dayjs';
 
 export function RequestBuilderPage() {
   const { user } = useAuth();
@@ -27,11 +27,11 @@ export function RequestBuilderPage() {
 
   const [phone, setPhone] = useState('');
   const [reason, setReason] = useState('');
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
+  const [start, setStart] = useState<Dayjs | null>(dayjs());
+  const [end, setEnd] = useState<Dayjs | null>(dayjs());
   const [error, setError] = useState<string | null>(null);
 
-  const datesValid = !!start && !!end && new Date(start) < new Date(end);
+  const datesValid = !!start && !!end && start.isBefore(end);
 
   const submit = async () => {
     setError(null);
@@ -45,8 +45,8 @@ export function RequestBuilderPage() {
       await create.mutateAsync({
         borrower_id: user.id,
         phone_number: phone.trim(),
-        start_date: localInputToIso(start),
-        end_date: localInputToIso(end),
+        start_date: start.toISOString(),
+        end_date: end.toISOString(),
         reason: reason.trim() || null,
         requested_catalogs: lines.map((l) => ({
           catalog_id: l.catalogId,
@@ -132,9 +132,10 @@ export function RequestBuilderPage() {
             />
             {datesValid && (
               <p className="-mt-1 text-xs text-content-faint">
-                Durée : {daysBetween(start, end)} jour(s)
+                Durée : {end.diff(start, 'day')} jour(s)
               </p>
             )}
+
             <Field
               label="Téléphone"
               required

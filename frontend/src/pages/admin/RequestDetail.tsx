@@ -34,8 +34,9 @@ import { useItems } from '@/hooks/useInventory';
 import { useLoanMutations } from '@/hooks/useLoans';
 import { useRequest, useRequestMutations, useRequestRecommendations } from '@/hooks/useRequests';
 import { ApiError } from '@/lib/api';
-import { formatDateShort, formatMoney, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { formatDateShort, formatMoney } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import dayjs, { Dayjs } from 'dayjs';
 
 export function AdminRequestDetailPage() {
   const { id } = useParams();
@@ -244,8 +245,8 @@ function Workspace({
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(recs.recommendations.flatMap((r) => r.recommended_item_ids)),
   );
-  const [start, setStart] = useState(() => isoToLocalInput(request.start_date));
-  const [end, setEnd] = useState(() => isoToLocalInput(request.end_date));
+  const [start, setStart] = useState<Dayjs | null>(() => dayjs(request.start_date));
+  const [end, setEnd] = useState<Dayjs | null>(() => dayjs(request.end_date));
   const [depositOverride, setDepositOverride] = useState<string | null>(null);
   const [comments, setComments] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -303,7 +304,7 @@ function Workspace({
       return next;
     });
 
-  const datesValid = !!start && !!end && new Date(start) < new Date(end);
+  const datesValid = !!start && !!end && start.isBefore(end);
 
   const submit = async () => {
     setError(null);
@@ -312,8 +313,8 @@ function Workspace({
     try {
       const res = await create.mutateAsync({
         borrower_id: request.borrower.id,
-        start_date: localInputToIso(start),
-        end_date: localInputToIso(end),
+        start_date: start.toISOString(),
+        end_date: end.toISOString(),
         item_ids: [...selected],
         total_deposit_cents: Math.round(parseFloat(depositValue || '0') * 100),
         request_id: request.id,

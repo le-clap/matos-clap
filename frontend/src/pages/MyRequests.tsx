@@ -19,8 +19,9 @@ import { RequestStatusBadge } from '@/components/ui/StatusBadge';
 import { useToast } from '@/components/ui/Toast';
 import { useRequestMutations, useRequests } from '@/hooks/useRequests';
 import { ApiError } from '@/lib/api';
-import { formatDate, formatDateShort, isoToLocalInput, localInputToIso } from '@/lib/format';
+import { formatDate, formatDateShort } from '@/lib/format';
 import { PHONE_HINT, isValidPhone } from '@/lib/validation';
+import dayjs, { Dayjs } from 'dayjs';
 
 const LIMIT = 10;
 
@@ -52,7 +53,7 @@ export function MyRequestsPage() {
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-[var(--radius-card)]" />
+            <Skeleton key={i} className="h-28 rounded-card" />
           ))}
         </div>
       ) : !data || data.items.length === 0 ? (
@@ -177,18 +178,18 @@ function EditRequestModal({
   onClose: () => void;
   onSave: (body: {
     phone_number: string;
-    start_date: string;
-    end_date: string;
+    start_date: string | undefined;
+    end_date: string | undefined;
     reason: string | null;
   }) => void;
   saving: boolean;
 }) {
   const [phone, setPhone] = useState(request.phone_number);
-  const [start, setStart] = useState(isoToLocalInput(request.start_date));
-  const [end, setEnd] = useState(isoToLocalInput(request.end_date));
+  const [start, setStart] = useState<Dayjs | null>(dayjs(request.start_date));
+  const [end, setEnd] = useState<Dayjs | null>(dayjs(request.end_date));
   const [reason, setReason] = useState(request.reason ?? '');
 
-  const datesValid = !!start && !!end && new Date(start) < new Date(end);
+  const datesValid = !!start && !!end && start.isBefore(end);
   const phoneValid = isValidPhone(phone);
 
   return (
@@ -208,8 +209,8 @@ function EditRequestModal({
             onClick={() =>
               onSave({
                 phone_number: phone.trim(),
-                start_date: localInputToIso(start),
-                end_date: localInputToIso(end),
+                start_date: start?.toISOString(),
+                end_date: end?.toISOString(),
                 reason: reason.trim() || null,
               })
             }
