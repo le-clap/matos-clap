@@ -9,6 +9,10 @@ COPY frontend/ .
 
 COPY backend/openapi.json /backend/openapi.json
 RUN npm run generate:client
+
+ARG VITE_ENABLE_DEV_LOGIN=false
+ENV VITE_ENABLE_DEV_LOGIN=$VITE_ENABLE_DEV_LOGIN
+
 RUN npm run build
 
 
@@ -30,4 +34,4 @@ RUN test -f static/index.html
 
 EXPOSE 8000
 
-CMD ["uv", "run", "--no-sync", "fastapi", "run"]
+CMD ["uv", "run", "--no-sync", "--no-cache", "fastapi", "run"]
