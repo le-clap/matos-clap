@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MATOS CLAP",
-    "version": "1.0.0"
+    "version": "1.0.2"
   },
   "paths": {
     "/health": {
