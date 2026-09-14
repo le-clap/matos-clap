@@ -132,15 +132,28 @@ erDiagram
 
 ## Lancement en local
 
+### Prérequis
+
+| Outil      | Version | Utilisé pour        |
+|------------|---------|---------------------|
+| uv         | —       | Dépendences Backend |
+| Python     | 3.14    | Backend             |
+| Node.js    | 22      | Frontend            |
+| PostgreSQL | 18      | Base de données     |
+
 ### 1. Configuration globale (Bypass du SSO en Dev)
 
-L'autentification passe par le SSO de CLA. En développement, vous pouvez la court-circuiter avec le flag
+L'authentification passe par le SSO de CLA. En développement, vous pouvez la court-circuiter avec le flag
 `ENABLE_DEV_LOGIN` : le bouton de connexion ouvrira automatiquement une session admin sur le premier utilisateur de la
-base.
+base de données.
 
 ### 2. Démarrage du Backend
 
-Le backend nécessite `uv` et une instance PostgreSQL active.
+Créez la base de données :
+
+```bash
+createdb matos_clap
+```
 
 Créez un fichier `backend/.env` :
 
@@ -170,35 +183,52 @@ uv run fastapi dev          # Lance l'API sur http://localhost:8000
 
 ### 3. Démarrage du Frontend
 
-Le frontend nécessite Node.js.
+```bash
+cd frontend
+npm install
+npm run generate:client
+npm run dev # Disponible sur http://localhost:5173
+```
 
-Créez un fichier `frontend/.env.local` :
+Créez également un fichier `frontend/.env.local` :
 
 ```dotenv
 VITE_ENABLE_DEV_LOGIN=true
 ```
 
-Lancez ensuite le serveur de développement :
-
-```bash
-cd frontend
-npm install
-npm run dev # Disponible sur http://localhost:5173
-```
-
 > [!NOTE]
 > Les préfixes `/api` et `/media` sont automatiquement proxifiés par Vite vers le serveur backend.
+
+### 4. Créer le premier administrateur
+
+Aucune route d'API ne crée d'utilisateur : les comptes proviennent du SSO de CLA. Sur une base vide, créez
+donc le premier administrateur à la main :
+
+```bash
+cd backend
+uv run python -m db.bootstrap_admin <username> --create
+```
+
+Vous pouvez maintenant vous connecter (bouton de connexion en dev, ou SSO).
 
 ## Déploiement avec Docker
 
 L'image Docker est un monolithe : un build multi-stage compile le frontend puis copie le résultat statique dans l'image
 du backend, qui le sert lui-même via `app.frontend()` en plus de l'API.
 
+`docker-compose.yml` fait tourner cette image en local, avec un service `db` jetable.
+
 ```bash
 docker compose up --build
+docker compose exec app uv run --no-sync alembic upgrade head
+docker compose exec app uv run --no-sync python -m db.bootstrap_admin <username> --create
 ```
 
 Application (Frontend + API + médias) : `http://localhost:8000`
+
+> [!NOTE]
+> La stack locale active `ENABLE_DEV_LOGIN`. Le workflow de release ne passe pas le build arg :
+les images publiées sur GHCR gardent le défaut `false` et n'exposent pas ce bypass.
 
 ## Déploiement
 
@@ -225,6 +255,28 @@ Toutes les commandes s'exécutent depuis le dossier `backend/` :
 * Générer une nouvelle migration : `uv run alembic revision --autogenerate -m "description_du_changement"`
 * Annuler la dernière migration (downgrade) : `uv run alembic downgrade -1`
 
+### Import / export CSV
+
+L'import est un upsert basé sur la colonne `id` : `id` vide insère une nouvelle ligne, `id` renseigné met à jour la
+ligne correspondante. Rien n'est jamais supprimé. Si une seule ligne est invalide, l'import entier est rejeté
+avec un message par ligne fautive, et rien n'est écrit. Le séparateur (`,` ou `;`) est détecté automatiquement.
+
+Les clés étrangères sont référencées **par nom**, il faut donc importer dans cet ordre :
+
+| Ordre | Fichier      | Colonnes obligatoires          | Colonnes facultatives               |
+|-------|--------------|--------------------------------|-------------------------------------|
+| 1     | `categories` | `name`                         | `id`, `description`                 |
+| 2     | `catalogs`   | `name`, `category`             | `id`, `description`, `image_path`   |
+| 3     | `items`      | `name`, `catalog`, `condition` | `id`, `availability`, `deposit_eur` |
+
+* `condition` : `new`, `good` ou `degraded`
+* `availability` : `available`, `maintenance` ou `retired` (défaut : `available`)
+* `deposit_eur` : montant en euros, `.` ou `,` comme séparateur décimal (défaut : `0`)
+
+> [!TIP]
+> Le plus simple pour partir sur de bonnes bases : exporter les trois fichiers depuis l'interface, les remplir, puis
+> les réimporter dans l'ordre ci-dessus.
+
 ### Initialisation du premier administrateur
 
 Pour promouvoir un utilisateur au rôle `admin`, une fois qu'il s'est connecté au moins une fois :
@@ -233,6 +285,8 @@ Pour promouvoir un utilisateur au rôle `admin`, une fois qu'il s'est connecté 
 cd backend
 uv run python -m db.bootstrap_admin <username>
 ```
+
+Sur une base vide où personne ne s'est encore connecté, ajoutez `--create` pour créer le compte.
 
 ### Qualité du code & Tests (CI/CD)
 
