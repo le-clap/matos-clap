@@ -22,7 +22,7 @@ async def validate_ticket(ticket: str) -> dict | None:
             return None
 
     if response.status_code != 200:
-        logger.warning("auth.cla_ticket_rejected", status_code=response.status_code)
+        logger.warning("auth.cla_bad_response", status_code=response.status_code)
         return None
 
     data = response.json()
