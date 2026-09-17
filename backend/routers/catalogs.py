@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path as FilePath
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, status
 from pydantic import AwareDatetime
 from sqlalchemy.orm import joinedload
@@ -18,6 +19,8 @@ from schemas.catalogs import CatalogPatch, CatalogPost, CatalogPublic
 from schemas.items import ItemAvailabilityResponse
 from services.deletion import has_live_children, purge_or_archive
 from services.inventory import find_busy_item_ids, item_load_options
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/catalogs", tags=["catalogs"])
 
@@ -187,6 +190,7 @@ def delete_catalog(
         raise HTTPException(status_code=404, detail=f"Catalog with ID {catalog_id} not found")
 
     if has_live_children(session, Item, col(Item.catalog_id), catalog_id):
+        logger.warning("catalog.delete_blocked", catalog_id=catalog_id)
         raise HTTPException(
             status_code=409,
             detail="Cannot delete catalog: it still contains items",
