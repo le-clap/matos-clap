@@ -13,7 +13,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from pydantic import BaseModel
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, col, select
 
 from db.database import get_session
@@ -76,7 +76,12 @@ _AVAILABILITY_VALUES = ", ".join(a.value for a in Availability)
 @router.get("/catalogs/export")
 def export_catalogs(session: SessionDep, _user: ManagerDep) -> Response:
     catalogs = session.exec(
-        select(Catalog).where(col(Catalog.deleted_at).is_(None)).options(joinedload(Catalog.category))  # ty: ignore[invalid-argument-type]
+        select(Catalog)
+        .where(col(Catalog.deleted_at).is_(None))
+        .options(
+            joinedload(Catalog.category),  # ty: ignore[invalid-argument-type]
+            selectinload(Catalog.images),  # ty: ignore[invalid-argument-type]
+        )
     ).all()
 
     output = io.StringIO()
@@ -268,10 +273,9 @@ async def import_catalogs(
     }
 
     has_description = "description" in header
-    has_image = "image_path" in header
 
     errors: list[str] = []
-    planned: list[tuple] = []  # (target|None, name, description?, category_id, image_path?)
+    planned: list[tuple] = []  # (target|None, name, description?, category_id)
 
     for line, row in records:
         name = row.get("name", "")
@@ -294,7 +298,6 @@ async def import_catalogs(
                 name,
                 row.get("description", "") or None if has_description else None,
                 category.id,
-                row.get("image_path", "") or None if has_image else None,
             )
         )
 
@@ -302,17 +305,15 @@ async def import_catalogs(
         raise HTTPException(status_code=422, detail=errors)
 
     created = updated = 0
-    for target, name, description, category_id, image_path in planned:
+    for target, name, description, category_id in planned:
         if target is None:
-            session.add(Catalog(name=name, description=description, category_id=category_id, image_path=image_path))
+            session.add(Catalog(name=name, description=description, category_id=category_id))
             created += 1
         else:
             target.name = name
             target.category_id = category_id
             if has_description:
                 target.description = description
-            if has_image:
-                target.image_path = image_path
             session.add(target)
             updated += 1
 

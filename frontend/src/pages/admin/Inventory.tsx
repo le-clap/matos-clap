@@ -1,4 +1,14 @@
-import { History, Image as ImageIcon, ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  History,
+  Image as ImageIcon,
+  ImagePlus,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { Availability, CatalogPublic, CategoryPublic, Condition, ItemPublic } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
@@ -64,7 +74,7 @@ export function AdminInventoryPage() {
 function CatalogsTab() {
   const { data, isLoading } = useCatalogs();
   const { data: categories } = useCategories();
-  const { create, update, remove, uploadImage } = useCatalogMutations();
+  const { create, update, remove, uploadImage, deleteImage, reorderImages } = useCatalogMutations();
   const toast = useToast();
   const [editing, setEditing] = useState<CatalogPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<CatalogPublic | null>(null);
@@ -106,17 +116,21 @@ function CatalogsTab() {
         <CatalogModal
           catalog={editing === 'new' ? null : editing}
           categories={categories ?? []}
-          saving={create.isPending || update.isPending || uploadImage.isPending}
+          saving={
+            create.isPending ||
+            update.isPending ||
+            uploadImage.isPending ||
+            deleteImage.isPending ||
+            reorderImages.isPending
+          }
           onClose={() => setEditing(null)}
-          onSave={async (body, file, removeImage) => {
+          onSave={async (body, gallery) => {
             let catalogId: number;
             try {
               if (editing === 'new') {
                 catalogId = (await create.mutateAsync(body)).id;
               } else {
-                // Clearing the image is a patch of image_path → null.
-                const patch = removeImage && !file ? { ...body, image_path: null } : body;
-                await update.mutateAsync({ id: editing.id, body: patch });
+                await update.mutateAsync({ id: editing.id, body });
                 catalogId = editing.id;
               }
             } catch (err) {
@@ -127,17 +141,47 @@ function CatalogsTab() {
               return;
             }
 
-            if (file) {
-              try {
-                await uploadImage.mutateAsync({ id: catalogId, file });
-              } catch (err) {
-                toast.error(
-                  'Référence enregistrée, mais image refusée',
-                  err instanceof ApiError ? err.detail : undefined,
-                );
-                setEditing(null);
-                return;
+            try {
+              const originalIds = new Set(
+                editing === 'new' ? [] : (editing.images ?? []).map((image) => image.id),
+              );
+              const keptIds = new Set(
+                gallery.filter((item) => item.kind === 'existing').map((item) => item.id),
+              );
+              for (const id of originalIds) {
+                if (!keptIds.has(id)) {
+                  await deleteImage.mutateAsync({ catalogId, imageId: id });
+                }
               }
+
+              // Sequential: each upload response is used to identify the
+              // image just created, so they can't run in parallel.
+              const newIds = new Map<string, number>();
+              for (const item of gallery) {
+                if (item.kind !== 'new') continue;
+                const known = new Set([...keptIds, ...newIds.values()]);
+                const updated = await uploadImage.mutateAsync({ id: catalogId, file: item.file });
+                const created = (updated.images ?? []).find((image) => !known.has(image.id));
+                if (created) newIds.set(item.key, created.id);
+              }
+
+              // Establish the final order in one authoritative call — it
+              // doesn't matter what position uploads/deletes left behind.
+              if (editing !== 'new') {
+                const finalIds = gallery
+                  .map((item) => (item.kind === 'existing' ? item.id : newIds.get(item.key)))
+                  .filter((id): id is number => id !== undefined);
+                if (finalIds.length > 0) {
+                  await reorderImages.mutateAsync({ catalogId, imageIds: finalIds });
+                }
+              }
+            } catch (err) {
+              toast.error(
+                'Référence enregistrée, mais la mise à jour des images a échoué',
+                err instanceof ApiError ? err.detail : undefined,
+              );
+              setEditing(null);
+              return;
             }
 
             toast.success(editing === 'new' ? 'Référence créée' : 'Référence mise à jour');
@@ -168,6 +212,9 @@ function CatalogsTab() {
   );
 }
 
+type GalleryItem =
+  { kind: 'existing'; id: number; image_path: string } | { kind: 'new'; key: string; file: File };
+
 function CatalogModal({
   catalog,
   categories,
@@ -184,30 +231,48 @@ function CatalogModal({
       description: string | null;
       category_id: number;
     },
-    file: File | null,
-    removeImage: boolean,
+    gallery: GalleryItem[],
   ) => void;
   saving: boolean;
 }) {
   const [name, setName] = useState(catalog?.name ?? '');
   const [description, setDescription] = useState(catalog?.description ?? '');
   const [categoryId, setCategoryId] = useState<number | null>(catalog?.category.id ?? null);
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(catalog?.image_path ?? null);
-  const [removeImage, setRemoveImage] = useState(false);
+  // Existing (already-saved) and newly-picked images share one ordered list.
+  // Nothing here hits the network — add/remove/reorder all happen locally,
+  // and are only synced to the server when "Enregistrer" is pressed.
+  const [gallery, setGallery] = useState<GalleryItem[]>(
+    (catalog?.images ?? []).map((image) => ({
+      kind: 'existing',
+      id: image.id,
+      image_path: image.image_path,
+    })),
+  );
   const selectedCategoryId = categoryId ?? categories[0]?.id ?? 0;
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = e.target.files?.[0] ?? null;
-    setFile(picked);
-    setRemoveImage(false);
-    if (picked) setPreview(URL.createObjectURL(picked));
+    // Snapshot the files before resetting e.target.value below — that reset
+    // also clears e.target.files, and setState's updater only reads it later.
+    const picked = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    setGallery((prev) => [
+      ...prev,
+      ...picked.map((file) => ({ kind: 'new' as const, key: crypto.randomUUID(), file })),
+    ]);
   };
 
-  const onRemove = () => {
-    setFile(null);
-    setPreview(null);
-    setRemoveImage(true);
+  const onRemove = (index: number) => {
+    setGallery((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const move = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    setGallery((prev) => {
+      if (target < 0 || target >= prev.length) return prev;
+      const reordered = [...prev];
+      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+      return reordered;
+    });
   };
 
   return (
@@ -230,8 +295,7 @@ function CatalogModal({
                   description: description.trim() || null,
                   category_id: selectedCategoryId,
                 },
-                file,
-                removeImage,
+                gallery,
               )
             }
           >
@@ -241,37 +305,70 @@ function CatalogModal({
       }
     >
       <div className="flex flex-col gap-4">
-        <Field label="Image">
-          <div className="flex items-center gap-3">
-            <div className="size-20 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-raised">
-              {preview ? (
-                <img src={preview} alt="" className="size-full object-cover" />
-              ) : (
-                <div className="flex size-full items-center justify-center text-content-faint">
-                  <ImageIcon className="size-6" />
+        <Field label="Images">
+          <div className="flex flex-wrap gap-3">
+            {gallery.map((item, index) => (
+              <div
+                key={item.kind === 'existing' ? item.id : item.key}
+                className="relative size-20 shrink-0"
+              >
+                <img
+                  src={item.kind === 'existing' ? item.image_path : URL.createObjectURL(item.file)}
+                  alt=""
+                  className={`size-full rounded-lg border object-cover ${
+                    item.kind === 'new' ? 'border-dashed border-border-strong' : 'border-border'
+                  }`}
+                />
+                <div className="absolute inset-x-0 bottom-0 flex justify-center gap-0.5 rounded-b-lg bg-ink-950/70 py-0.5 backdrop-blur">
+                  <button
+                    type="button"
+                    aria-label="Déplacer avant"
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                    className="rounded p-0.5 text-white disabled:opacity-30"
+                  >
+                    <ChevronUp className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Déplacer après"
+                    disabled={index === gallery.length - 1}
+                    onClick={() => move(index, 1)}
+                    className="rounded p-0.5 text-white disabled:opacity-30"
+                  >
+                    <ChevronDown className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={item.kind === 'existing' ? "Supprimer l'image" : 'Retirer'}
+                    onClick={() => onRemove(index)}
+                    className="rounded p-0.5 text-white"
+                  >
+                    {item.kind === 'existing' ? (
+                      <Trash2 className="size-3.5" />
+                    ) : (
+                      <X className="size-3.5" />
+                    )}
+                  </button>
                 </div>
-              )}
-            </div>
-            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface-raised px-3 text-sm font-medium text-content transition-colors hover:bg-surface-hover">
-              <ImagePlus className="size-4" />
-              {preview ? "Changer l'image" : 'Choisir une image'}
+              </div>
+            ))}
+            {gallery.length === 0 && (
+              <div className="flex size-20 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-content-faint">
+                <ImageIcon className="size-6" />
+              </div>
+            )}
+            <label className="flex size-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-content-faint transition-colors hover:border-border-strong hover:text-content-muted">
+              <ImagePlus className="size-5" />
+              <span className="text-[11px] font-medium">Ajouter</span>
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif"
+                multiple
                 className="hidden"
                 onChange={onPick}
               />
             </label>
-            {preview && (
-              <button
-                type="button"
-                onClick={onRemove}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-content-faint transition-colors hover:bg-danger-bg hover:text-brand-300"
-              >
-                <Trash2 className="size-4" />
-                Supprimer
-              </button>
-            )}
           </div>
         </Field>
         <Field label="Nom" required>

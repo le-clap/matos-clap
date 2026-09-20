@@ -8,7 +8,7 @@ import { DateRangeField } from '@/components/ui/DateRangeField';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { QuantityStepper } from '@/components/ui/QuantityStepper';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { CatalogThumb } from '@/features/catalog/CatalogCard';
+import { CatalogCarousel } from '@/features/catalog/CatalogCarousel';
 import { useCart } from '@/features/cart/CartContext';
 import { useCatalog, useCatalogAvailability } from '@/hooks/useInventory';
 import { defaultBookingEnd, defaultBookingStart } from '@/lib/dateRange';
@@ -55,7 +55,7 @@ export function CatalogDetailPage() {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card className="overflow-hidden">
           <div className="aspect-video w-full">
-            <CatalogThumb imagePath={catalog.image_path} />
+            <CatalogCarousel images={catalog.images ?? []} />
           </div>
           {catalog.description && (
             <CardBody>

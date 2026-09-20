@@ -44,9 +44,9 @@ def _request_load_options():
     return [
         joinedload(Request.borrower),  # ty: ignore[invalid-argument-type]
         selectinload(Request.loan),  # ty: ignore[invalid-argument-type]
-        selectinload(Request.requested_catalogs).joinedload(  # ty: ignore[invalid-argument-type]
-            RequestedCatalog.catalog  # ty: ignore[invalid-argument-type]
-        ),
+        selectinload(Request.requested_catalogs)  # ty: ignore[invalid-argument-type]
+        .joinedload(RequestedCatalog.catalog)  # ty: ignore[invalid-argument-type]
+        .selectinload(Catalog.images),  # ty: ignore[invalid-argument-type]
     ]
 
 
