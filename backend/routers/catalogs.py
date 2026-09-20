@@ -167,8 +167,6 @@ async def upload_catalog_image(
     filename = f"{uuid.uuid4().hex}{extension}"
     (catalogs_media_dir / filename).write_bytes(contents)
 
-    # max(...) + 1, not len(...): a prior delete can leave positions with gaps
-    # (e.g. [0, 2]), and len() would collide with a surviving position.
     next_position = max((image.position for image in db_catalog.images), default=-1) + 1
     db_image = CatalogImage(
         catalog_id=catalog_id,

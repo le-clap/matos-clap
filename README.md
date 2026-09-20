@@ -280,9 +280,6 @@ Les clés étrangères sont référencées **par nom**, il faut donc importer da
 * `availability` : `available`, `maintenance` ou `retired` (défaut : `available`)
 * `deposit_eur` : montant en euros, `.` ou `,` comme séparateur décimal (défaut : `0`)
 
-> [!NOTE]
-> L'export `catalogs` inclut une colonne `image_path` pour repérer les catalogs sans image. Elle est ignorée à l'import.
-
 > [!TIP]
 > Le plus simple pour partir sur de bonnes bases : exporter les trois fichiers depuis l'interface, les remplir, puis
 > les réimporter dans l'ordre ci-dessus.

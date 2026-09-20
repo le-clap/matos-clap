@@ -26,7 +26,7 @@ def test_export_catalogs(client, session, f_user, f_token, f_category, f_catalog
     assert r.status_code == 200
     assert "text/csv" in r.headers["content-type"]
     lines = r.text.splitlines()
-    assert lines[0] == "id,name,description,category,image_path"
+    assert lines[0] == "id,name,description,category"
     assert any("Sony A7" in line and "Caméras" in line for line in lines[1:])
 
 

@@ -165,8 +165,6 @@ function CatalogsTab() {
                 if (created) newIds.set(item.key, created.id);
               }
 
-              // Establish the final order in one authoritative call — it
-              // doesn't matter what position uploads/deletes left behind.
               if (editing !== 'new') {
                 const finalIds = gallery
                   .map((item) => (item.kind === 'existing' ? item.id : newIds.get(item.key)))
@@ -238,9 +236,6 @@ function CatalogModal({
   const [name, setName] = useState(catalog?.name ?? '');
   const [description, setDescription] = useState(catalog?.description ?? '');
   const [categoryId, setCategoryId] = useState<number | null>(catalog?.category.id ?? null);
-  // Existing (already-saved) and newly-picked images share one ordered list.
-  // Nothing here hits the network — add/remove/reorder all happen locally,
-  // and are only synced to the server when "Enregistrer" is pressed.
   const [gallery, setGallery] = useState<GalleryItem[]>(
     (catalog?.images ?? []).map((image) => ({
       kind: 'existing',
@@ -251,8 +246,6 @@ function CatalogModal({
   const selectedCategoryId = categoryId ?? categories[0]?.id ?? 0;
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Snapshot the files before resetting e.target.value below — that reset
-    // also clears e.target.files, and setState's updater only reads it later.
     const picked = Array.from(e.target.files ?? []);
     e.target.value = '';
     setGallery((prev) => [
