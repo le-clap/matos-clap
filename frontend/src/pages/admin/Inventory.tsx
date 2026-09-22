@@ -1,6 +1,6 @@
 import {
-  ChevronDown,
-  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   History,
   Image as ImageIcon,
   ImagePlus,
@@ -9,7 +9,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Availability, CatalogPublic, CategoryPublic, Condition, ItemPublic } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -154,15 +154,11 @@ function CatalogsTab() {
                 }
               }
 
-              // Sequential: each upload response is used to identify the
-              // image just created, so they can't run in parallel.
               const newIds = new Map<string, number>();
               for (const item of gallery) {
                 if (item.kind !== 'new') continue;
-                const known = new Set([...keptIds, ...newIds.values()]);
-                const updated = await uploadImage.mutateAsync({ id: catalogId, file: item.file });
-                const created = (updated.images ?? []).find((image) => !known.has(image.id));
-                if (created) newIds.set(item.key, created.id);
+                const created = await uploadImage.mutateAsync({ id: catalogId, file: item.file });
+                newIds.set(item.key, created.id);
               }
 
               if (editing !== 'new') {
@@ -211,7 +207,8 @@ function CatalogsTab() {
 }
 
 type GalleryItem =
-  { kind: 'existing'; id: number; image_path: string } | { kind: 'new'; key: string; file: File };
+  | { kind: 'existing'; id: number; image_path: string }
+  | { kind: 'new'; key: string; file: File; previewUrl: string };
 
 function CatalogModal({
   catalog,
@@ -250,13 +247,36 @@ function CatalogModal({
     e.target.value = '';
     setGallery((prev) => [
       ...prev,
-      ...picked.map((file) => ({ kind: 'new' as const, key: crypto.randomUUID(), file })),
+      ...picked.map((file) => ({
+        kind: 'new' as const,
+        key: crypto.randomUUID(),
+        file,
+        previewUrl: URL.createObjectURL(file),
+      })),
     ]);
   };
 
   const onRemove = (index: number) => {
-    setGallery((prev) => prev.filter((_, i) => i !== index));
+    setGallery((prev) => {
+      const item = prev[index];
+      if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
   };
+
+  // Revoke any pending preview URLs when the modal closes, whether saved or cancelled.
+  const galleryRef = useRef(gallery);
+  useEffect(() => {
+    galleryRef.current = gallery;
+  });
+  useEffect(
+    () => () => {
+      for (const item of galleryRef.current) {
+        if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl);
+      }
+    },
+    [],
+  );
 
   const move = (index: number, direction: -1 | 1) => {
     const target = index + direction;
@@ -306,7 +326,7 @@ function CatalogModal({
                 className="relative size-20 shrink-0"
               >
                 <img
-                  src={item.kind === 'existing' ? item.image_path : URL.createObjectURL(item.file)}
+                  src={item.kind === 'existing' ? item.image_path : item.previewUrl}
                   alt=""
                   className={`size-full rounded-lg border object-cover ${
                     item.kind === 'new' ? 'border-dashed border-border-strong' : 'border-border'
@@ -320,7 +340,7 @@ function CatalogModal({
                     onClick={() => move(index, -1)}
                     className="rounded p-0.5 text-white disabled:opacity-30"
                   >
-                    <ChevronUp className="size-3.5" />
+                    <ChevronLeft className="size-3.5" />
                   </button>
                   <button
                     type="button"
@@ -329,7 +349,7 @@ function CatalogModal({
                     onClick={() => move(index, 1)}
                     className="rounded p-0.5 text-white disabled:opacity-30"
                   >
-                    <ChevronDown className="size-3.5" />
+                    <ChevronRight className="size-3.5" />
                   </button>
                   <button
                     type="button"

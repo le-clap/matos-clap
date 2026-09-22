@@ -55,7 +55,7 @@ export function CatalogDetailPage() {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card className="overflow-hidden">
           <div className="aspect-video w-full">
-            <CatalogCarousel images={catalog.images ?? []} />
+            <CatalogCarousel key={catalog.id} images={catalog.images ?? []} />
           </div>
           {catalog.description && (
             <CardBody>

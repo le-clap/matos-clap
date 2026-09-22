@@ -954,7 +954,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CatalogPublic"
+                  "$ref": "#/components/schemas/CatalogImagePublic"
                 }
               }
             }

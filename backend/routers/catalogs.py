@@ -15,7 +15,7 @@ from db.database import get_session
 from dependencies.auth import get_current_user, require_role
 from models.enums import AccessLevel, Availability
 from models.models import Catalog, CatalogImage, Category, Item, User
-from schemas.catalogs import CatalogImageOrder, CatalogPatch, CatalogPost, CatalogPublic
+from schemas.catalogs import CatalogImageOrder, CatalogImagePublic, CatalogPatch, CatalogPost, CatalogPublic
 from schemas.items import ItemAvailabilityResponse
 from services.deletion import has_live_children, purge_or_archive
 from services.inventory import find_busy_item_ids, item_load_options
@@ -135,7 +135,7 @@ def update_catalog(
 
 @router.post(
     "/{catalog_id}/images",
-    response_model=CatalogPublic,
+    response_model=CatalogImagePublic,
     status_code=status.HTTP_201_CREATED,
     responses={
         404: {"description": "Catalog not found"},
@@ -147,7 +147,7 @@ async def upload_catalog_image(
     _user: ManagerDep,
     catalog_id: Annotated[int, Path(ge=1)],
     file: Annotated[UploadFile, File()],
-) -> Catalog:
+) -> CatalogImage:
     """Add an image to a catalog reference's gallery."""
     db_catalog = session.get(Catalog, catalog_id)
     if not db_catalog or db_catalog.deleted_at is not None:
@@ -175,8 +175,8 @@ async def upload_catalog_image(
     )
     session.add(db_image)
     session.commit()
-    session.refresh(db_catalog)
-    return db_catalog
+    session.refresh(db_image)
+    return db_image
 
 
 @router.delete(

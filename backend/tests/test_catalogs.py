@@ -285,8 +285,7 @@ def test_upload_catalog_image(client, session, f_user, f_token, f_category, f_ca
     assert r.status_code == 201
     data = r.json()
     assert data["image_path"].startswith("/media/catalogs/")
-    assert len(data["images"]) == 1
-    assert data["images"][0]["position"] == 0
+    assert data["position"] == 0
     assert list((tmp_path / "catalogs").iterdir())
 
 
@@ -300,10 +299,11 @@ def test_upload_catalog_image_appends(client, session, f_user, f_token, f_catego
 
     first = _upload_image(client, token, catalog.id, "one.png").json()
     second = _upload_image(client, token, catalog.id, "two.png").json()
+    assert [first["position"], second["position"]] == [0, 1]
 
-    assert len(second["images"]) == 2
-    assert [img["position"] for img in second["images"]] == [0, 1]
-    assert second["image_path"] == first["images"][0]["image_path"]
+    catalog_data = client.get(f"/api/catalogs/{catalog.id}", headers=auth(token)).json()
+    assert [img["position"] for img in catalog_data["images"]] == [0, 1]
+    assert catalog_data["image_path"] == first["image_path"]
 
 
 def test_upload_catalog_image_after_delete_avoids_position_collision(
@@ -316,14 +316,15 @@ def test_upload_catalog_image_after_delete_avoids_position_collision(
     catalog = f_catalog(cat)
     token = f_token(f_user(AccessLevel.MANAGER))
 
-    images = [_upload_image(client, token, catalog.id, f"{n}.png").json()["images"][-1] for n in range(3)]
+    images = [_upload_image(client, token, catalog.id, f"{n}.png").json() for n in range(3)]
     middle = images[1]
 
     r = client.delete(f"/api/catalogs/{catalog.id}/images/{middle['id']}", headers=auth(token))
     assert r.status_code == 204
 
-    data = _upload_image(client, token, catalog.id, "fourth.png").json()
-    positions = [img["position"] for img in data["images"]]
+    _upload_image(client, token, catalog.id, "fourth.png")
+    catalog_data = client.get(f"/api/catalogs/{catalog.id}", headers=auth(token)).json()
+    positions = [img["position"] for img in catalog_data["images"]]
     assert len(positions) == len(set(positions))  # no two images share a position
 
 
@@ -366,7 +367,7 @@ def test_delete_catalog_image(client, session, f_user, f_token, f_category, f_ca
     catalog = f_catalog(cat)
     token = f_token(f_user(AccessLevel.MANAGER))
 
-    image = _upload_image(client, token, catalog.id).json()["images"][0]
+    image = _upload_image(client, token, catalog.id).json()
     assert list((tmp_path / "catalogs").iterdir())
 
     r = client.delete(f"/api/catalogs/{catalog.id}/images/{image['id']}", headers=auth(token))
@@ -389,7 +390,7 @@ def test_delete_catalog_image_wrong_catalog_returns_404(
     catalog_b = f_catalog(cat, "B")
     token = f_token(f_user(AccessLevel.MANAGER))
 
-    image = _upload_image(client, token, catalog_a.id).json()["images"][0]
+    image = _upload_image(client, token, catalog_a.id).json()
 
     r = client.delete(f"/api/catalogs/{catalog_b.id}/images/{image['id']}", headers=auth(token))
     assert r.status_code == 404
@@ -406,7 +407,7 @@ def test_delete_catalog_image_requires_manager(
     manager_token = f_token(f_user(AccessLevel.MANAGER))
     clap_token = f_token(f_user(AccessLevel.CLAP))
 
-    image = _upload_image(client, manager_token, catalog.id).json()["images"][0]
+    image = _upload_image(client, manager_token, catalog.id).json()
 
     r = client.delete(f"/api/catalogs/{catalog.id}/images/{image['id']}", headers=auth(clap_token))
     assert r.status_code == 403
@@ -420,9 +421,9 @@ def test_reorder_catalog_images(client, session, f_user, f_token, f_category, f_
     catalog = f_catalog(cat)
     token = f_token(f_user(AccessLevel.MANAGER))
 
-    _upload_image(client, token, catalog.id, "one.png")
-    images = _upload_image(client, token, catalog.id, "two.png").json()["images"]
-    reversed_ids = [img["id"] for img in reversed(images)]
+    first = _upload_image(client, token, catalog.id, "one.png").json()
+    second = _upload_image(client, token, catalog.id, "two.png").json()
+    reversed_ids = [second["id"], first["id"]]
 
     r = client.put(
         f"/api/catalogs/{catalog.id}/images/order",

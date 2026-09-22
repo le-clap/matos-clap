@@ -13,6 +13,7 @@ def item_load_options():
     """SQLAlchemy load options for eager-loading item relationships."""
     return [
         joinedload(Item.catalog).joinedload(Catalog.category),  # ty: ignore[invalid-argument-type]
+        joinedload(Item.catalog).selectinload(Catalog.images),  # ty: ignore[invalid-argument-type]
     ]
 
 
