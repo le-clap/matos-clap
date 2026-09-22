@@ -4294,7 +4294,7 @@
             "title": "Name"
           },
           "catalog": {
-            "$ref": "#/components/schemas/CatalogPublic"
+            "$ref": "#/components/schemas/CatalogBrief"
           },
           "condition": {
             "$ref": "#/components/schemas/Condition"

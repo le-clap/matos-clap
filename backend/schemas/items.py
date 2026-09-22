@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from models.enums import Availability, Condition, LoanStatus
-from schemas.catalogs import CatalogPublic
+from schemas.catalogs import CatalogBrief
 from schemas.users import UserBrief
 
 
@@ -35,7 +35,7 @@ class ItemPublic(BaseModel):
 
     id: int
     name: str
-    catalog: CatalogPublic
+    catalog: CatalogBrief
     condition: Condition
     availability: Availability
     deposit_cents: int
