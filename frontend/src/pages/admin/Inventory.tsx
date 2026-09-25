@@ -1,4 +1,4 @@
-import { History, Image as ImageIcon, ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { History, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Availability, CatalogPublic, CategoryPublic, Condition, ItemPublic } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
@@ -13,6 +13,7 @@ import { AvailabilityBadge, ConditionBadge } from '@/components/ui/StatusBadge';
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
 import { Tabs } from '@/components/ui/Tabs';
 import { useToast } from '@/components/ui/Toast';
+import { CatalogGalleryEditor, type GalleryItem } from '@/features/inventory/CatalogGalleryEditor';
 import { ImportExportButtons } from '@/features/inventory/ImportExportButtons';
 import { ItemHistoryModal } from '@/features/inventory/ItemHistoryModal';
 import {
@@ -64,7 +65,7 @@ export function AdminInventoryPage() {
 function CatalogsTab() {
   const { data, isLoading } = useCatalogs();
   const { data: categories } = useCategories();
-  const { create, update, remove, uploadImage } = useCatalogMutations();
+  const { create, update, remove, uploadImage, deleteImage, reorderImages } = useCatalogMutations();
   const toast = useToast();
   const [editing, setEditing] = useState<CatalogPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<CatalogPublic | null>(null);
@@ -83,6 +84,7 @@ function CatalogsTab() {
             <Tr>
               <Th>Nom</Th>
               <Th>Catégorie</Th>
+              <Th>Images</Th>
               <Th>Description</Th>
               <Th className="w-px" />
             </Tr>
@@ -92,6 +94,7 @@ function CatalogsTab() {
               <Tr key={c.id}>
                 <Td className="font-medium">{c.name}</Td>
                 <Td className="text-content-muted">{c.category.name}</Td>
+                <Td className="tabular-nums text-content-muted">{c.images?.length || '—'}</Td>
                 <Td className="max-w-xs truncate text-content-muted">{c.description ?? '—'}</Td>
                 <Td>
                   <RowActions onEdit={() => setEditing(c)} onDelete={() => setToDelete(c)} />
@@ -106,17 +109,21 @@ function CatalogsTab() {
         <CatalogModal
           catalog={editing === 'new' ? null : editing}
           categories={categories ?? []}
-          saving={create.isPending || update.isPending || uploadImage.isPending}
+          saving={
+            create.isPending ||
+            update.isPending ||
+            uploadImage.isPending ||
+            deleteImage.isPending ||
+            reorderImages.isPending
+          }
           onClose={() => setEditing(null)}
-          onSave={async (body, file, removeImage) => {
+          onSave={async (body, gallery) => {
             let catalogId: number;
             try {
               if (editing === 'new') {
                 catalogId = (await create.mutateAsync(body)).id;
               } else {
-                // Clearing the image is a patch of image_path → null.
-                const patch = removeImage && !file ? { ...body, image_path: null } : body;
-                await update.mutateAsync({ id: editing.id, body: patch });
+                await update.mutateAsync({ id: editing.id, body });
                 catalogId = editing.id;
               }
             } catch (err) {
@@ -127,17 +134,41 @@ function CatalogsTab() {
               return;
             }
 
-            if (file) {
-              try {
-                await uploadImage.mutateAsync({ id: catalogId, file });
-              } catch (err) {
-                toast.error(
-                  'Référence enregistrée, mais image refusée',
-                  err instanceof ApiError ? err.detail : undefined,
-                );
-                setEditing(null);
-                return;
+            try {
+              const originalIds = new Set(
+                editing === 'new' ? [] : (editing.images ?? []).map((image) => image.id),
+              );
+              const keptIds = new Set(
+                gallery.filter((item) => item.kind === 'existing').map((item) => item.id),
+              );
+              for (const id of originalIds) {
+                if (!keptIds.has(id)) {
+                  await deleteImage.mutateAsync({ catalogId, imageId: id });
+                }
               }
+
+              const newIds = new Map<string, number>();
+              for (const item of gallery) {
+                if (item.kind !== 'new') continue;
+                const created = await uploadImage.mutateAsync({ id: catalogId, file: item.file });
+                newIds.set(item.key, created.id);
+              }
+
+              if (editing !== 'new') {
+                const finalIds = gallery
+                  .map((item) => (item.kind === 'existing' ? item.id : newIds.get(item.key)))
+                  .filter((id): id is number => id !== undefined);
+                if (finalIds.length > 0) {
+                  await reorderImages.mutateAsync({ catalogId, imageIds: finalIds });
+                }
+              }
+            } catch (err) {
+              toast.error(
+                'Référence enregistrée, mais la mise à jour des images a échoué',
+                err instanceof ApiError ? err.detail : undefined,
+              );
+              setEditing(null);
+              return;
             }
 
             toast.success(editing === 'new' ? 'Référence créée' : 'Référence mise à jour');
@@ -184,31 +215,21 @@ function CatalogModal({
       description: string | null;
       category_id: number;
     },
-    file: File | null,
-    removeImage: boolean,
+    gallery: GalleryItem[],
   ) => void;
   saving: boolean;
 }) {
   const [name, setName] = useState(catalog?.name ?? '');
   const [description, setDescription] = useState(catalog?.description ?? '');
   const [categoryId, setCategoryId] = useState<number | null>(catalog?.category.id ?? null);
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(catalog?.image_path ?? null);
-  const [removeImage, setRemoveImage] = useState(false);
+  const [gallery, setGallery] = useState<GalleryItem[]>(
+    (catalog?.images ?? []).map((image) => ({
+      kind: 'existing',
+      id: image.id,
+      image_path: image.image_path,
+    })),
+  );
   const selectedCategoryId = categoryId ?? categories[0]?.id ?? 0;
-
-  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = e.target.files?.[0] ?? null;
-    setFile(picked);
-    setRemoveImage(false);
-    if (picked) setPreview(URL.createObjectURL(picked));
-  };
-
-  const onRemove = () => {
-    setFile(null);
-    setPreview(null);
-    setRemoveImage(true);
-  };
 
   return (
     <Modal
@@ -230,8 +251,7 @@ function CatalogModal({
                   description: description.trim() || null,
                   category_id: selectedCategoryId,
                 },
-                file,
-                removeImage,
+                gallery,
               )
             }
           >
@@ -241,38 +261,8 @@ function CatalogModal({
       }
     >
       <div className="flex flex-col gap-4">
-        <Field label="Image">
-          <div className="flex items-center gap-3">
-            <div className="size-20 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-raised">
-              {preview ? (
-                <img src={preview} alt="" className="size-full object-cover" />
-              ) : (
-                <div className="flex size-full items-center justify-center text-content-faint">
-                  <ImageIcon className="size-6" />
-                </div>
-              )}
-            </div>
-            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface-raised px-3 text-sm font-medium text-content transition-colors hover:bg-surface-hover">
-              <ImagePlus className="size-4" />
-              {preview ? "Changer l'image" : 'Choisir une image'}
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                className="hidden"
-                onChange={onPick}
-              />
-            </label>
-            {preview && (
-              <button
-                type="button"
-                onClick={onRemove}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-content-faint transition-colors hover:bg-danger-bg hover:text-brand-300"
-              >
-                <Trash2 className="size-4" />
-                Supprimer
-              </button>
-            )}
-          </div>
+        <Field label="Images">
+          <CatalogGalleryEditor gallery={gallery} onChange={setGallery} />
         </Field>
         <Field label="Nom" required>
           <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
@@ -694,7 +684,7 @@ function Section({
         </Button>
       </div>
       {loading ? (
-        <Skeleton className="h-64 rounded-[var(--radius-card)]" />
+        <Skeleton className="h-64 rounded-card" />
       ) : empty ? (
         <EmptyState
           title="Rien ici pour le moment"

@@ -25,6 +25,7 @@ catalogue, gestion des articles et flux des prêts) :
 erDiagram
     Category ||--o{ Catalog: "regroupe"
     Catalog ||--|{ Item: "contient"
+    Catalog ||--o{ CatalogImage: "illustre"
     User ||--o{ UserSession: "possède"
     User ||--o{ Request: "effectue"
     User ||--o{ Loan: "emprunte (borrower)"
@@ -68,10 +69,16 @@ erDiagram
         string name
         string description
         int category_id FK
-        string image_path
         datetime created_at
         datetime updated_at
         datetime deleted_at
+    }
+
+    CatalogImage {
+        int id PK
+        int catalog_id FK
+        string image_path
+        int position
     }
 
     Item {
@@ -266,7 +273,7 @@ Les clés étrangères sont référencées **par nom**, il faut donc importer da
 | Ordre | Fichier      | Colonnes obligatoires          | Colonnes facultatives               |
 |-------|--------------|--------------------------------|-------------------------------------|
 | 1     | `categories` | `name`                         | `id`, `description`                 |
-| 2     | `catalogs`   | `name`, `category`             | `id`, `description`, `image_path`   |
+| 2     | `catalogs`   | `name`, `category`             | `id`, `description`                 |
 | 3     | `items`      | `name`, `catalog`, `condition` | `id`, `availability`, `deposit_eur` |
 
 * `condition` : `new`, `good` ou `degraded`

@@ -262,7 +262,15 @@ def test_available_items_busy_item_moves_to_unavailable(
     assert item.id in unavailable_ids
 
 
-# ── Image upload ────────────────────────────────────────────────────────────
+# ── Image gallery ───────────────────────────────────────────────────────────
+
+
+def _upload_image(client, token, catalog_id, filename="photo.png"):
+    return client.post(
+        f"/api/catalogs/{catalog_id}/images",
+        files={"file": (filename, b"\x89PNG\r\n\x1a\nfake-bytes", "image/png")},
+        headers=auth(token),
+    )
 
 
 def test_upload_catalog_image(client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch):
@@ -273,14 +281,51 @@ def test_upload_catalog_image(client, session, f_user, f_token, f_category, f_ca
     catalog = f_catalog(cat)
     token = f_token(f_user(AccessLevel.MANAGER))
 
-    r = client.post(
-        f"/api/catalogs/{catalog.id}/image",
-        files={"file": ("photo.png", b"\x89PNG\r\n\x1a\nfake-bytes", "image/png")},
-        headers=auth(token),
-    )
-    assert r.status_code == 200
-    assert r.json()["image_path"].startswith("/media/catalogs/")
+    r = _upload_image(client, token, catalog.id)
+    assert r.status_code == 201
+    data = r.json()
+    assert data["image_path"].startswith("/media/catalogs/")
+    assert data["position"] == 0
     assert list((tmp_path / "catalogs").iterdir())
+
+
+def test_upload_catalog_image_appends(client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog = f_catalog(cat)
+    token = f_token(f_user(AccessLevel.MANAGER))
+
+    first = _upload_image(client, token, catalog.id, "one.png").json()
+    second = _upload_image(client, token, catalog.id, "two.png").json()
+    assert [first["position"], second["position"]] == [0, 1]
+
+    catalog_data = client.get(f"/api/catalogs/{catalog.id}", headers=auth(token)).json()
+    assert [img["position"] for img in catalog_data["images"]] == [0, 1]
+    assert catalog_data["image_path"] == first["image_path"]
+
+
+def test_upload_catalog_image_after_delete_avoids_position_collision(
+    client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch
+):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog = f_catalog(cat)
+    token = f_token(f_user(AccessLevel.MANAGER))
+
+    images = [_upload_image(client, token, catalog.id, f"{n}.png").json() for n in range(3)]
+    middle = images[1]
+
+    r = client.delete(f"/api/catalogs/{catalog.id}/images/{middle['id']}", headers=auth(token))
+    assert r.status_code == 204
+
+    _upload_image(client, token, catalog.id, "fourth.png")
+    catalog_data = client.get(f"/api/catalogs/{catalog.id}", headers=auth(token)).json()
+    positions = [img["position"] for img in catalog_data["images"]]
+    assert len(positions) == len(set(positions))  # no two images share a position
 
 
 def test_upload_catalog_image_rejects_non_image(
@@ -294,7 +339,7 @@ def test_upload_catalog_image_rejects_non_image(
     token = f_token(f_user(AccessLevel.MANAGER))
 
     r = client.post(
-        f"/api/catalogs/{catalog.id}/image",
+        f"/api/catalogs/{catalog.id}/images",
         files={"file": ("notes.txt", b"hello", "text/plain")},
         headers=auth(token),
     )
@@ -307,8 +352,124 @@ def test_upload_catalog_image_requires_manager(client, session, f_user, f_token,
     token = f_token(f_user(AccessLevel.CLAP))
 
     r = client.post(
-        f"/api/catalogs/{catalog.id}/image",
+        f"/api/catalogs/{catalog.id}/images",
         files={"file": ("photo.png", b"x", "image/png")},
         headers=auth(token),
     )
     assert r.status_code == 403
+
+
+def test_delete_catalog_image(client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog = f_catalog(cat)
+    token = f_token(f_user(AccessLevel.MANAGER))
+
+    image = _upload_image(client, token, catalog.id).json()
+    assert list((tmp_path / "catalogs").iterdir())
+
+    r = client.delete(f"/api/catalogs/{catalog.id}/images/{image['id']}", headers=auth(token))
+    assert r.status_code == 204
+    assert not list((tmp_path / "catalogs").iterdir())
+
+    updated = client.get(f"/api/catalogs/{catalog.id}", headers=auth(token)).json()
+    assert updated["images"] == []
+    assert updated["image_path"] is None
+
+
+def test_delete_catalog_image_wrong_catalog_returns_404(
+    client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch
+):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog_a = f_catalog(cat, "A")
+    catalog_b = f_catalog(cat, "B")
+    token = f_token(f_user(AccessLevel.MANAGER))
+
+    image = _upload_image(client, token, catalog_a.id).json()
+
+    r = client.delete(f"/api/catalogs/{catalog_b.id}/images/{image['id']}", headers=auth(token))
+    assert r.status_code == 404
+
+
+def test_delete_catalog_image_requires_manager(
+    client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch
+):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog = f_catalog(cat)
+    manager_token = f_token(f_user(AccessLevel.MANAGER))
+    clap_token = f_token(f_user(AccessLevel.CLAP))
+
+    image = _upload_image(client, manager_token, catalog.id).json()
+
+    r = client.delete(f"/api/catalogs/{catalog.id}/images/{image['id']}", headers=auth(clap_token))
+    assert r.status_code == 403
+
+
+def test_reorder_catalog_images(client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog = f_catalog(cat)
+    token = f_token(f_user(AccessLevel.MANAGER))
+
+    first = _upload_image(client, token, catalog.id, "one.png").json()
+    second = _upload_image(client, token, catalog.id, "two.png").json()
+    reversed_ids = [second["id"], first["id"]]
+
+    r = client.put(
+        f"/api/catalogs/{catalog.id}/images/order",
+        json={"image_ids": reversed_ids},
+        headers=auth(token),
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert [img["id"] for img in data["images"]] == reversed_ids
+    assert data["image_path"] == data["images"][0]["image_path"]
+
+
+def test_reorder_catalog_images_rejects_mismatched_ids(
+    client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch
+):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog = f_catalog(cat)
+    token = f_token(f_user(AccessLevel.MANAGER))
+
+    _upload_image(client, token, catalog.id)
+
+    r = client.put(
+        f"/api/catalogs/{catalog.id}/images/order",
+        json={"image_ids": [999999]},
+        headers=auth(token),
+    )
+    assert r.status_code == 422
+
+
+def test_delete_catalog_purges_all_image_files(
+    client, session, f_user, f_token, f_category, f_catalog, tmp_path, monkeypatch
+):
+    from core.config import settings
+
+    monkeypatch.setattr(settings, "MEDIA_DIR", str(tmp_path))
+    cat = f_category()
+    catalog = f_catalog(cat)
+    token = f_token(f_user(AccessLevel.MANAGER))
+
+    _upload_image(client, token, catalog.id, "one.png")
+    _upload_image(client, token, catalog.id, "two.png")
+    assert len(list((tmp_path / "catalogs").iterdir())) == 2
+
+    r = client.delete(f"/api/catalogs/{catalog.id}", headers=auth(token))
+    assert r.status_code == 204
+    assert not list((tmp_path / "catalogs").iterdir())

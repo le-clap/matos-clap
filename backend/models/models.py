@@ -70,11 +70,34 @@ class Catalog(SoftDeleteTimestampSQLModel, table=True):
     name: str = Field(max_length=255)
     description: str | None = Field(default=None, sa_type=Text)
     category_id: int = Field(foreign_key="category.id", index=True, ondelete="RESTRICT")
-    image_path: str | None = Field(default=None, max_length=255)
 
     category: Category = Relationship(back_populates="catalogs")
     items: list[Item] = Relationship(back_populates="catalog", passive_deletes=True)
     requested_catalogs: list[RequestedCatalog] = Relationship(back_populates="catalog", passive_deletes=True)
+    images: list[CatalogImage] = Relationship(
+        back_populates="catalog",
+        cascade_delete=True,
+        passive_deletes=True,
+        sa_relationship_kwargs={"order_by": "CatalogImage.position"},
+    )
+
+    @property
+    def image_path(self) -> str | None:
+        """Cover image (i.e. first by position)."""
+        return self.images[0].image_path if self.images else None
+
+
+class CatalogImage(SQLModel, table=True):
+    """Represents one image in a catalog's ordered gallery."""
+
+    __tablename__ = "catalog_image"
+
+    id: int | None = Field(default=None, primary_key=True)
+    catalog_id: int = Field(foreign_key="catalog.id", index=True, ondelete="CASCADE")
+    image_path: str = Field(max_length=255)
+    position: int = Field(default=0)
+
+    catalog: Catalog = Relationship(back_populates="images")
 
 
 class Item(SoftDeleteTimestampSQLModel, table=True):
