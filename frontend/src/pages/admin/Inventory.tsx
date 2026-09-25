@@ -1,4 +1,4 @@
-import { History, Image as ImageIcon, Pencil, Plus, Trash2 } from 'lucide-react';
+import { History, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Availability, CatalogPublic, CategoryPublic, Condition, ItemPublic } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
@@ -94,9 +94,7 @@ function CatalogsTab() {
               <Tr key={c.id}>
                 <Td className="font-medium">{c.name}</Td>
                 <Td className="text-content-muted">{c.category.name}</Td>
-                <Td>
-                  <ImageCount count={c.images?.length ?? 0} />
-                </Td>
+                <Td className="tabular-nums text-content-muted">{c.images?.length || '—'}</Td>
                 <Td className="max-w-xs truncate text-content-muted">{c.description ?? '—'}</Td>
                 <Td>
                   <RowActions onEdit={() => setEditing(c)} onDelete={() => setToDelete(c)} />
@@ -702,28 +700,6 @@ function Section({
         children
       )}
     </div>
-  );
-}
-
-const MAX_IMAGE_ICONS = 4;
-
-function ImageCount({ count }: { count: number }) {
-  if (count === 0) return <span className="text-content-faint">—</span>;
-  const label = `${count} image${count > 1 ? 's' : ''}`;
-  return (
-    <span
-      role="img"
-      aria-label={label}
-      title={label}
-      className="inline-flex items-center gap-0.5 text-content-muted"
-    >
-      {Array.from({ length: Math.min(count, MAX_IMAGE_ICONS) }, (_, i) => (
-        <ImageIcon key={i} className="size-3.5" aria-hidden />
-      ))}
-      {count > MAX_IMAGE_ICONS && (
-        <span className="ml-0.5 text-xs tabular-nums">+{count - MAX_IMAGE_ICONS}</span>
-      )}
-    </span>
   );
 }
 
