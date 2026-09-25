@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Image as ImageIcon, ImagePlus, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ImagePlus, Trash2, X } from 'lucide-react';
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
@@ -173,11 +173,6 @@ export function CatalogGalleryEditor({
           </div>
         </div>
       ))}
-      {gallery.length === 0 && (
-        <div className="flex size-20 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-content-faint">
-          <ImageIcon className="size-6" />
-        </div>
-      )}
       <label className="flex size-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-content-faint transition-colors hover:border-border-strong hover:text-content-muted">
         <ImagePlus className="size-5" />
         <span className="text-[11px] font-medium">Ajouter</span>
