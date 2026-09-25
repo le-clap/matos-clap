@@ -1,15 +1,5 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  History,
-  Image as ImageIcon,
-  ImagePlus,
-  Pencil,
-  Plus,
-  Trash2,
-  X,
-} from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { History, Image as ImageIcon, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import type { Availability, CatalogPublic, CategoryPublic, Condition, ItemPublic } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +13,7 @@ import { AvailabilityBadge, ConditionBadge } from '@/components/ui/StatusBadge';
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
 import { Tabs } from '@/components/ui/Tabs';
 import { useToast } from '@/components/ui/Toast';
+import { CatalogGalleryEditor, type GalleryItem } from '@/features/inventory/CatalogGalleryEditor';
 import { ImportExportButtons } from '@/features/inventory/ImportExportButtons';
 import { ItemHistoryModal } from '@/features/inventory/ItemHistoryModal';
 import {
@@ -93,6 +84,7 @@ function CatalogsTab() {
             <Tr>
               <Th>Nom</Th>
               <Th>Catégorie</Th>
+              <Th>Images</Th>
               <Th>Description</Th>
               <Th className="w-px" />
             </Tr>
@@ -102,6 +94,9 @@ function CatalogsTab() {
               <Tr key={c.id}>
                 <Td className="font-medium">{c.name}</Td>
                 <Td className="text-content-muted">{c.category.name}</Td>
+                <Td>
+                  <ImageCount count={c.images?.length ?? 0} />
+                </Td>
                 <Td className="max-w-xs truncate text-content-muted">{c.description ?? '—'}</Td>
                 <Td>
                   <RowActions onEdit={() => setEditing(c)} onDelete={() => setToDelete(c)} />
@@ -206,10 +201,6 @@ function CatalogsTab() {
   );
 }
 
-type GalleryItem =
-  | { kind: 'existing'; id: number; image_path: string }
-  | { kind: 'new'; key: string; file: File; previewUrl: string };
-
 function CatalogModal({
   catalog,
   categories,
@@ -242,52 +233,6 @@ function CatalogModal({
   );
   const selectedCategoryId = categoryId ?? categories[0]?.id ?? 0;
 
-  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = Array.from(e.target.files ?? []);
-    e.target.value = '';
-    setGallery((prev) => [
-      ...prev,
-      ...picked.map((file) => ({
-        kind: 'new' as const,
-        key: crypto.randomUUID(),
-        file,
-        previewUrl: URL.createObjectURL(file),
-      })),
-    ]);
-  };
-
-  const onRemove = (index: number) => {
-    setGallery((prev) => {
-      const item = prev[index];
-      if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
-
-  // Revoke any pending preview URLs when the modal closes, whether saved or cancelled.
-  const galleryRef = useRef(gallery);
-  useEffect(() => {
-    galleryRef.current = gallery;
-  });
-  useEffect(
-    () => () => {
-      for (const item of galleryRef.current) {
-        if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl);
-      }
-    },
-    [],
-  );
-
-  const move = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    setGallery((prev) => {
-      if (target < 0 || target >= prev.length) return prev;
-      const reordered = [...prev];
-      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
-      return reordered;
-    });
-  };
-
   return (
     <Modal
       open
@@ -319,70 +264,7 @@ function CatalogModal({
     >
       <div className="flex flex-col gap-4">
         <Field label="Images">
-          <div className="flex flex-wrap gap-3">
-            {gallery.map((item, index) => (
-              <div
-                key={item.kind === 'existing' ? item.id : item.key}
-                className="relative size-20 shrink-0"
-              >
-                <img
-                  src={item.kind === 'existing' ? item.image_path : item.previewUrl}
-                  alt=""
-                  className={`size-full rounded-lg border object-cover ${
-                    item.kind === 'new' ? 'border-dashed border-border-strong' : 'border-border'
-                  }`}
-                />
-                <div className="absolute inset-x-0 bottom-0 flex justify-center gap-0.5 rounded-b-lg bg-ink-950/70 py-0.5 backdrop-blur">
-                  <button
-                    type="button"
-                    aria-label="Déplacer avant"
-                    disabled={index === 0}
-                    onClick={() => move(index, -1)}
-                    className="rounded p-0.5 text-white disabled:opacity-30"
-                  >
-                    <ChevronLeft className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Déplacer après"
-                    disabled={index === gallery.length - 1}
-                    onClick={() => move(index, 1)}
-                    className="rounded p-0.5 text-white disabled:opacity-30"
-                  >
-                    <ChevronRight className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={item.kind === 'existing' ? "Supprimer l'image" : 'Retirer'}
-                    onClick={() => onRemove(index)}
-                    className="rounded p-0.5 text-white"
-                  >
-                    {item.kind === 'existing' ? (
-                      <Trash2 className="size-3.5" />
-                    ) : (
-                      <X className="size-3.5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
-            {gallery.length === 0 && (
-              <div className="flex size-20 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-content-faint">
-                <ImageIcon className="size-6" />
-              </div>
-            )}
-            <label className="flex size-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-content-faint transition-colors hover:border-border-strong hover:text-content-muted">
-              <ImagePlus className="size-5" />
-              <span className="text-[11px] font-medium">Ajouter</span>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                multiple
-                className="hidden"
-                onChange={onPick}
-              />
-            </label>
-          </div>
+          <CatalogGalleryEditor gallery={gallery} onChange={setGallery} />
         </Field>
         <Field label="Nom" required>
           <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
@@ -804,7 +686,7 @@ function Section({
         </Button>
       </div>
       {loading ? (
-        <Skeleton className="h-64 rounded-[var(--radius-card)]" />
+        <Skeleton className="h-64 rounded-card" />
       ) : empty ? (
         <EmptyState
           title="Rien ici pour le moment"
@@ -820,6 +702,28 @@ function Section({
         children
       )}
     </div>
+  );
+}
+
+const MAX_IMAGE_ICONS = 4;
+
+function ImageCount({ count }: { count: number }) {
+  if (count === 0) return <span className="text-content-faint">—</span>;
+  const label = `${count} image${count > 1 ? 's' : ''}`;
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className="inline-flex items-center gap-0.5 text-content-muted"
+    >
+      {Array.from({ length: Math.min(count, MAX_IMAGE_ICONS) }, (_, i) => (
+        <ImageIcon key={i} className="size-3.5" aria-hidden />
+      ))}
+      {count > MAX_IMAGE_ICONS && (
+        <span className="ml-0.5 text-xs tabular-nums">+{count - MAX_IMAGE_ICONS}</span>
+      )}
+    </span>
   );
 }
 
