@@ -96,8 +96,8 @@ def get_item_history(
         entries.append(
             ItemHistoryEntry(
                 loan_id=loan.id,  # ty: ignore[invalid-argument-type]
-                borrower=loan.borrower,  # ty: ignore[invalid-argument-type]
-                assignee=loan.assignee,  # ty: ignore[invalid-argument-type]
+                borrower=loan.borrower,
+                assignee=loan.assignee,
                 start_date=loan.start_date,
                 end_date=loan.end_date,
                 actual_start_date=loan.actual_start_date,

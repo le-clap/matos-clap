@@ -8,14 +8,14 @@ class TimestampSQLModel(SQLModel):
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         nullable=False,
-        sa_type=DateTime(timezone=True),  # ty: ignore[invalid-argument-type]
+        sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": func.now()},
     )
 
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         nullable=False,
-        sa_type=DateTime(timezone=True),  # ty: ignore[invalid-argument-type]
+        sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()},
     )
 
@@ -25,5 +25,5 @@ class SoftDeleteTimestampSQLModel(TimestampSQLModel):
         default=None,
         nullable=True,
         index=True,
-        sa_type=DateTime(timezone=True),  # ty: ignore[invalid-argument-type]
+        sa_type=DateTime(timezone=True),
     )
