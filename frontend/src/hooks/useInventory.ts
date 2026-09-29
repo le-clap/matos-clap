@@ -128,8 +128,27 @@ export function useCatalogMutations() {
       ),
     onSuccess: invalidate,
   });
+  const deleteImage = useMutation({
+    mutationFn: ({ catalogId, imageId }: { catalogId: number; imageId: number }) =>
+      unwrap(
+        CatalogsService.catalogsDeleteCatalogImage({
+          path: { catalog_id: catalogId, image_id: imageId },
+        }),
+      ),
+    onSuccess: invalidate,
+  });
+  const reorderImages = useMutation({
+    mutationFn: ({ catalogId, imageIds }: { catalogId: number; imageIds: number[] }) =>
+      unwrap(
+        CatalogsService.catalogsReorderCatalogImages({
+          path: { catalog_id: catalogId },
+          body: { image_ids: imageIds },
+        }),
+      ),
+    onSuccess: invalidate,
+  });
 
-  return { create, update, remove, uploadImage };
+  return { create, update, remove, uploadImage, deleteImage, reorderImages };
 }
 
 /* ---------------------------------- Items --------------------------------- */

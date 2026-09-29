@@ -26,8 +26,8 @@ export function CatalogCard({ catalog }: { catalog: CatalogPublic }) {
   const inCart = has(catalog.id);
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface transition-all hover:border-border-strong hover:shadow-card">
-      <Link to={`/catalog/${catalog.id}`} className="relative aspect-[4/3] overflow-hidden">
+    <div className="group flex flex-col overflow-hidden rounded-card border border-border bg-surface transition-all hover:border-border-strong hover:shadow-card">
+      <Link to={`/catalog/${catalog.id}`} className="relative aspect-4/3 overflow-hidden">
         <CatalogThumb imagePath={catalog.image_path} />
         <span className="absolute left-2.5 top-2.5 rounded-full border border-border bg-ink-950/70 px-2 py-0.5 text-[11px] font-medium text-content-muted backdrop-blur">
           {catalog.category.name}

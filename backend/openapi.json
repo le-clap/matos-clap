@@ -886,13 +886,13 @@
         }
       }
     },
-    "/api/catalogs/{catalog_id}/image": {
+    "/api/catalogs/{catalog_id}/images": {
       "post": {
         "tags": [
           "catalogs"
         ],
         "summary": "Upload Catalog Image",
-        "description": "Upload (or replace) the illustrative image of a catalog reference.",
+        "description": "Add an image to a catalog reference's gallery.",
         "operationId": "catalogs_upload_catalog_image",
         "parameters": [
           {
@@ -949,6 +949,170 @@
           }
         },
         "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogImagePublic"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Catalog not found"
+          },
+          "422": {
+            "description": "Unsupported or oversized image"
+          }
+        }
+      }
+    },
+    "/api/catalogs/{catalog_id}/images/{image_id}": {
+      "delete": {
+        "tags": [
+          "catalogs"
+        ],
+        "summary": "Delete Catalog Image",
+        "description": "Remove one image from a catalog's gallery.",
+        "operationId": "catalogs_delete_catalog_image",
+        "parameters": [
+          {
+            "name": "catalog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Image Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Image not found on this catalog"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/{catalog_id}/images/order": {
+      "put": {
+        "tags": [
+          "catalogs"
+        ],
+        "summary": "Reorder Catalog Images",
+        "description": "Reorder a catalog's gallery to match the given list of image IDs.",
+        "operationId": "catalogs_reorder_catalog_images",
+        "parameters": [
+          {
+            "name": "catalog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Catalog Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogImageOrder"
+              }
+            }
+          }
+        },
+        "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
@@ -963,7 +1127,7 @@
             "description": "Catalog not found"
           },
           "422": {
-            "description": "Unsupported or oversized image"
+            "description": "image_ids must match the catalog's existing images"
           }
         }
       }
@@ -3634,6 +3798,45 @@
         ],
         "title": "CatalogBrief"
       },
+      "CatalogImageOrder": {
+        "properties": {
+          "image_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Image Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "image_ids"
+        ],
+        "title": "CatalogImageOrder"
+      },
+      "CatalogImagePublic": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "image_path": {
+            "type": "string",
+            "title": "Image Path"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "image_path",
+          "position"
+        ],
+        "title": "CatalogImagePublic"
+      },
       "CatalogPatch": {
         "properties": {
           "name": {
@@ -3668,17 +3871,6 @@
               }
             ],
             "title": "Category Id"
-          },
-          "image_path": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Image Path"
           }
         },
         "type": "object",
@@ -3704,17 +3896,6 @@
           "category_id": {
             "type": "integer",
             "title": "Category Id"
-          },
-          "image_path": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Image Path"
           }
         },
         "type": "object",
@@ -3758,6 +3939,14 @@
               }
             ],
             "title": "Image Path"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogImagePublic"
+            },
+            "type": "array",
+            "title": "Images",
+            "default": []
           }
         },
         "type": "object",
@@ -4105,7 +4294,7 @@
             "title": "Name"
           },
           "catalog": {
-            "$ref": "#/components/schemas/CatalogPublic"
+            "$ref": "#/components/schemas/CatalogBrief"
           },
           "condition": {
             "$ref": "#/components/schemas/Condition"
