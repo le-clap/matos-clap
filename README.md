@@ -227,8 +227,8 @@ du backend, qui le sert lui-même via `app.frontend()` en plus de l'API.
 
 ```bash
 docker compose up --build
-docker compose exec app uv run --no-sync alembic upgrade head
-docker compose exec app uv run --no-sync python -m db.bootstrap_admin <username> --create
+docker compose exec app uv run --no-sync --no-cache alembic upgrade head
+docker compose exec app uv run --no-sync --no-cache python -m db.bootstrap_admin <username> --create
 ```
 
 Application (Frontend + API + médias) : `http://localhost:8000`
