@@ -308,4 +308,4 @@ def get_catalog_items_availability(
         else:
             unavailable.append(item)
 
-    return ItemAvailabilityResponse(available=available, unavailable=unavailable)  # ty: ignore[invalid-argument-type]
+    return ItemAvailabilityResponse(available=available, unavailable=unavailable)

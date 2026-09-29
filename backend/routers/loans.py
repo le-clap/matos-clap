@@ -133,14 +133,14 @@ def get_loans_timeline(
     timeline_entries = [
         LoanTimelineEntry(
             loan_id=loan.id,  # ty: ignore[invalid-argument-type]
-            borrower=loan.borrower,  # ty: ignore[invalid-argument-type]
-            assignee=loan.assignee,  # ty: ignore[invalid-argument-type]
+            borrower=loan.borrower,
+            assignee=loan.assignee,
             start_date=loan.start_date,
             end_date=loan.end_date,
             actual_start_date=loan.actual_start_date,
             actual_return_date=loan.actual_return_date,
             status=loan.status,
-            items=[item.item for item in loan.loaned_items],  # ty: ignore[invalid-argument-type]
+            items=[item.item for item in loan.loaned_items],
         )
         for loan in loans
     ]
@@ -269,7 +269,7 @@ def create_loan(
         raise HTTPException(status_code=500, detail="Loan was created but could not be reloaded")
 
     logger.info("loan.created", loan_id=created_loan.id, borrower_id=payload.borrower_id, request_id=payload.request_id)
-    return LoanPostResponse(loan=created_loan, warnings=warnings)  # ty: ignore[invalid-argument-type]
+    return LoanPostResponse(loan=created_loan, warnings=warnings)
 
 
 @router.post(

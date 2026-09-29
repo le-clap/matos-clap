@@ -26,7 +26,7 @@ export class ApiError extends Error {
 interface RequestResult<T> {
   data?: T;
   error?: unknown;
-  response: Response;
+  response?: Response;
 }
 
 function extractDetail(error: unknown): string | undefined {
@@ -47,8 +47,8 @@ function extractDetail(error: unknown): string | undefined {
  */
 export async function unwrap<T>(promise: Promise<RequestResult<T>>): Promise<T> {
   const { data, error, response } = await promise;
-  if (!response.ok || error !== undefined) {
-    throw new ApiError(response.status, extractDetail(error));
+  if (!response?.ok || error !== undefined) {
+    throw new ApiError(response?.status ?? 0, extractDetail(error));
   }
   return data as T;
 }
