@@ -5,7 +5,7 @@ utilisateur (catalogue, demandes, prêts) et le **backoffice** de gestion (deman
 
 ## Stack
 
-- **React 19** + **Vite 7** + **TypeScript**
+- **React 19** + **Vite 8** + **TypeScript**
 - **TailwindCSS 4** — thème sombre « rouge / gris charbon » défini dans `src/index.css`
 - **TanStack Query** — état serveur et cache
 - **React Router 7** — routage
