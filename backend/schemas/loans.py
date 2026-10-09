@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from models.enums import Condition, LoanStatus
@@ -12,7 +10,7 @@ class LoanedItemPublic(BaseModel):
 
     id: int
     item: ItemBrief
-    actual_return_date: datetime | None = None
+    actual_return_date: AwareDatetime | None = None
     return_condition: Condition | None = None
 
 
@@ -84,11 +82,11 @@ class LoanPublic(BaseModel):
     borrower: UserBrief
     assignee: UserBrief
     status: LoanStatus
-    start_date: datetime
-    end_date: datetime
+    start_date: AwareDatetime
+    end_date: AwareDatetime
     total_deposit_cents: int
-    actual_start_date: datetime | None = None
-    actual_return_date: datetime | None = None
+    actual_start_date: AwareDatetime | None = None
+    actual_return_date: AwareDatetime | None = None
     retained_deposit_cents: int | None = None
     request_id: int | None = None
     comments: str | None = None

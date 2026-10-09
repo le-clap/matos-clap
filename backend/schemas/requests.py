@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -73,10 +72,10 @@ class RequestPublic(BaseModel):
     id: int
     borrower: UserBrief
     phone_number: str
-    start_date: datetime
-    end_date: datetime
+    start_date: AwareDatetime
+    end_date: AwareDatetime
     reason: str | None = None
-    created_at: datetime
+    created_at: AwareDatetime
     processed: bool
     refused: bool
     status: RequestStatus
@@ -103,6 +102,6 @@ class RequestedCatalogRecommendation(BaseModel):
 
 class RequestRecommendationsResponse(BaseModel):
     request_id: int
-    start_date: datetime
-    end_date: datetime
+    start_date: AwareDatetime
+    end_date: AwareDatetime
     recommendations: list[RequestedCatalogRecommendation]
