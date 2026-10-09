@@ -1,29 +1,27 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, func
+from pydantic import AwareDatetime
+from sqlalchemy import func
 from sqlmodel import Field, SQLModel
 
 
 class TimestampSQLModel(SQLModel):
-    created_at: datetime = Field(
+    created_at: AwareDatetime = Field(
         default_factory=lambda: datetime.now(UTC),
         nullable=False,
-        sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": func.now()},
     )
 
-    updated_at: datetime = Field(
+    updated_at: AwareDatetime = Field(
         default_factory=lambda: datetime.now(UTC),
         nullable=False,
-        sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()},
     )
 
 
 class SoftDeleteTimestampSQLModel(TimestampSQLModel):
-    deleted_at: datetime | None = Field(
+    deleted_at: AwareDatetime | None = Field(
         default=None,
         nullable=True,
         index=True,
-        sa_type=DateTime(timezone=True),
     )

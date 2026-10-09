@@ -1,7 +1,6 @@
 """Shared inventory utilities for querying items and their availability."""
 
-from datetime import datetime
-
+from pydantic import AwareDatetime
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session, col, select
@@ -19,8 +18,8 @@ def item_load_options():
 def find_busy_item_ids(
     session: Session,
     item_ids: list[int],
-    start_date: datetime,
-    end_date: datetime,
+    start_date: AwareDatetime,
+    end_date: AwareDatetime,
 ) -> set[int]:
     """Find item IDs that have overlapping loans in the given date range.
 

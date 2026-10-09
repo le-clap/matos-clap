@@ -1,9 +1,8 @@
 import secrets
-from datetime import datetime
 from typing import Optional
 
-from pydantic import ConfigDict, EmailStr
-from sqlalchemy import Column, DateTime, Enum, Text, case
+from pydantic import AwareDatetime, ConfigDict, EmailStr
+from sqlalchemy import Column, Enum, Text, case
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlmodel import Field, Relationship, SQLModel, col
 
@@ -45,7 +44,7 @@ class UserSession(TimestampSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     token: str = Field(max_length=64, unique=True, index=True, default_factory=lambda: secrets.token_urlsafe(32))
     user_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="CASCADE")
-    expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False, index=True))
+    expires_at: AwareDatetime = Field(nullable=False, index=True)
 
     user: User = Relationship(back_populates="sessions")
 
@@ -129,8 +128,8 @@ class Request(TimestampSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
     phone_number: str = Field(max_length=20)
-    start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
-    end_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    start_date: AwareDatetime = Field(nullable=False)
+    end_date: AwareDatetime = Field(nullable=False)
     reason: str | None = Field(default=None, max_length=255)
     status: RequestStatus = Field(
         default=RequestStatus.PENDING,
@@ -182,11 +181,11 @@ class Loan(TimestampSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
     assignee_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
-    start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
-    end_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    start_date: AwareDatetime = Field(nullable=False)
+    end_date: AwareDatetime = Field(nullable=False)
     total_deposit_cents: int = Field(default=0, ge=0)
-    actual_start_date: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
-    actual_return_date: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    actual_start_date: AwareDatetime | None = Field(default=None, nullable=True)
+    actual_return_date: AwareDatetime | None = Field(default=None, nullable=True)
     retained_deposit_cents: int | None = Field(default=None, ge=0)
     request_id: int | None = Field(default=None, foreign_key="request.id", index=True, ondelete="SET NULL")
     comments: str | None = Field(default=None, sa_type=Text)
@@ -229,7 +228,7 @@ class LoanedItem(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     loan_id: int = Field(foreign_key="loan.id", index=True, ondelete="CASCADE")
     item_id: int = Field(foreign_key="item.id", index=True, ondelete="RESTRICT")
-    actual_return_date: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    actual_return_date: AwareDatetime | None = Field(default=None, nullable=True)
     return_condition: Condition | None = Field(
         default=None,
         sa_column=Column(Enum(Condition, name="condition", native_enum=False), nullable=True),

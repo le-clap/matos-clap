@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from pydantic import BaseModel
+from pydantic import AwareDatetime, BaseModel
 
 from models.enums import LoanStatus
 from schemas.items import ItemBrief
@@ -13,10 +11,10 @@ class LoanTimelineEntry(BaseModel):
     loan_id: int
     borrower: UserBrief
     assignee: UserBrief
-    start_date: datetime
-    end_date: datetime
-    actual_start_date: datetime | None = None
-    actual_return_date: datetime | None = None
+    start_date: AwareDatetime
+    end_date: AwareDatetime
+    actual_start_date: AwareDatetime | None = None
+    actual_return_date: AwareDatetime | None = None
     status: LoanStatus
     items: list[ItemBrief]
 
@@ -24,6 +22,6 @@ class LoanTimelineEntry(BaseModel):
 class LoanTimelineResponse(BaseModel):
     """Response for loans timeline query."""
 
-    start_date: datetime
-    end_date: datetime
+    start_date: AwareDatetime
+    end_date: AwareDatetime
     loans: list[LoanTimelineEntry]
