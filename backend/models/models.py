@@ -2,7 +2,7 @@ import secrets
 from typing import Optional
 
 from pydantic import AwareDatetime, ConfigDict, EmailStr
-from sqlalchemy import Column, Enum, Text, case
+from sqlalchemy import Enum, Text, case
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlmodel import Field, Relationship, SQLModel, col
 
@@ -23,7 +23,7 @@ class User(TimestampSQLModel, table=True):
     email: EmailStr = Field(max_length=255, unique=True, index=True)
     access_level: AccessLevel = Field(
         default=AccessLevel.USER,
-        sa_column=Column(Enum(AccessLevel, name="access_level", native_enum=False), nullable=False),
+        sa_type=Enum(AccessLevel, name="access_level", native_enum=False),
     )
 
     sessions: list[UserSession] = Relationship(back_populates="user", cascade_delete=True, passive_deletes=True)
@@ -44,7 +44,7 @@ class UserSession(TimestampSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     token: str = Field(max_length=64, unique=True, index=True, default_factory=lambda: secrets.token_urlsafe(32))
     user_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="CASCADE")
-    expires_at: AwareDatetime = Field(nullable=False, index=True)
+    expires_at: AwareDatetime = Field(index=True)
 
     user: User = Relationship(back_populates="sessions")
 
@@ -107,11 +107,11 @@ class Item(SoftDeleteTimestampSQLModel, table=True):
     catalog_id: int = Field(foreign_key="catalog.id", index=True, ondelete="RESTRICT")
     condition: Condition = Field(
         default=Condition.NEW,
-        sa_column=Column(Enum(Condition, name="condition", native_enum=False), nullable=False),
+        sa_type=Enum(Condition, name="condition", native_enum=False),
     )
     availability: Availability = Field(
         default=Availability.AVAILABLE,
-        sa_column=Column(Enum(Availability, name="availability", native_enum=False), nullable=False),
+        sa_type=Enum(Availability, name="availability", native_enum=False),
     )
     deposit_cents: int = Field(default=0, ge=0)
 
@@ -128,19 +128,19 @@ class Request(TimestampSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
     phone_number: str = Field(max_length=20)
-    start_date: AwareDatetime = Field(nullable=False)
-    end_date: AwareDatetime = Field(nullable=False)
+    start_date: AwareDatetime
+    end_date: AwareDatetime
     reason: str | None = Field(default=None, max_length=255)
     status: RequestStatus = Field(
         default=RequestStatus.PENDING,
-        sa_column=Column(Enum(RequestStatus, name="request_status", native_enum=False), nullable=False),
+        sa_type=Enum(RequestStatus, name="request_status", native_enum=False),
     )
 
     borrower: User = Relationship(back_populates="requests")
     requested_catalogs: list[RequestedCatalog] = Relationship(
         back_populates="request", cascade_delete=True, passive_deletes=True
     )
-    loan: Optional["Loan"] = Relationship(back_populates="request")  # noqa UP045
+    loan: Optional[Loan] = Relationship(back_populates="request")  # noqa: UP045
 
     @property
     def loan_id(self) -> int | None:
@@ -181,11 +181,11 @@ class Loan(TimestampSQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     borrower_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
     assignee_id: int = Field(foreign_key="matos_user.id", index=True, ondelete="RESTRICT")
-    start_date: AwareDatetime = Field(nullable=False)
-    end_date: AwareDatetime = Field(nullable=False)
+    start_date: AwareDatetime
+    end_date: AwareDatetime
     total_deposit_cents: int = Field(default=0, ge=0)
-    actual_start_date: AwareDatetime | None = Field(default=None, nullable=True)
-    actual_return_date: AwareDatetime | None = Field(default=None, nullable=True)
+    actual_start_date: AwareDatetime | None = None
+    actual_return_date: AwareDatetime | None = None
     retained_deposit_cents: int | None = Field(default=None, ge=0)
     request_id: int | None = Field(default=None, foreign_key="request.id", index=True, ondelete="SET NULL")
     comments: str | None = Field(default=None, sa_type=Text)
@@ -228,10 +228,10 @@ class LoanedItem(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     loan_id: int = Field(foreign_key="loan.id", index=True, ondelete="CASCADE")
     item_id: int = Field(foreign_key="item.id", index=True, ondelete="RESTRICT")
-    actual_return_date: AwareDatetime | None = Field(default=None, nullable=True)
+    actual_return_date: AwareDatetime | None = None
     return_condition: Condition | None = Field(
         default=None,
-        sa_column=Column(Enum(Condition, name="condition", native_enum=False), nullable=True),
+        sa_type=Enum(Condition, name="condition", native_enum=False),
     )
 
     loan: Loan = Relationship(back_populates="loaned_items")
