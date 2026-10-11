@@ -155,6 +155,14 @@ function RoleModal({ user, onClose }: { user: UserPublic; onClose: () => void })
     <Modal
       open
       onClose={onClose}
+      onSubmit={async () => {
+        await updateRole.mutateAsync({
+          id: user.id,
+          body: { access_level: role },
+        });
+        toast.success('Rôle mis à jour');
+        onClose();
+      }}
       title="Modifier le rôle"
       description={user.name}
       size="sm"
@@ -166,14 +174,7 @@ function RoleModal({ user, onClose }: { user: UserPublic; onClose: () => void })
           <Button
             loading={updateRole.isPending}
             disabled={role === user.access_level}
-            onClick={async () => {
-              await updateRole.mutateAsync({
-                id: user.id,
-                body: { access_level: role },
-              });
-              toast.success('Rôle mis à jour');
-              onClose();
-            }}
+            type="submit"
           >
             Enregistrer
           </Button>

@@ -66,7 +66,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     return (
-      <button ref={ref} className={classes} disabled={disabled || loading} {...props}>
+      <button type="button" ref={ref} className={classes} disabled={disabled || loading} {...props}>
         {loading && <Loader2 className="size-4 animate-spin" />}
         {children}
       </button>

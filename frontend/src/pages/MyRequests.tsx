@@ -196,6 +196,14 @@ function EditRequestModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={() =>
+        onSave({
+          phone_number: phone.trim(),
+          start_date: start?.toISOString(),
+          end_date: end?.toISOString(),
+          reason: reason.trim() || null,
+        })
+      }
       title="Modifier la demande"
       description="Vous pouvez modifier les dates, le téléphone et le motif tant que la demande est en attente."
       footer={
@@ -203,18 +211,7 @@ function EditRequestModal({
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            loading={saving}
-            disabled={!phoneValid || !datesValid}
-            onClick={() =>
-              onSave({
-                phone_number: phone.trim(),
-                start_date: start?.toISOString(),
-                end_date: end?.toISOString(),
-                reason: reason.trim() || null,
-              })
-            }
-          >
+          <Button loading={saving} disabled={!phoneValid || !datesValid} type="submit">
             Enregistrer
           </Button>
         </>

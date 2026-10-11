@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { type SubmitEvent, type ReactNode, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,8 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   /** Hide the close (X) button. */
   hideClose?: boolean;
+  /** Wraps the modal in a <form>: Enter or a `type="submit"` footer button calls this. */
+  onSubmit?: () => void;
 }
 
 const sizes = {
@@ -31,6 +33,7 @@ export function Modal({
   footer,
   size = 'md',
   hideClose = false,
+  onSubmit,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -48,6 +51,8 @@ export function Modal({
 
   if (!open) return null;
 
+  const Container = onSubmit ? 'form' : 'div';
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6">
       <div
@@ -55,13 +60,20 @@ export function Modal({
         onClick={onClose}
         aria-hidden
       />
-      <div
+      <Container
         role="dialog"
         aria-modal="true"
         className={cn(
-          'relative z-10 mt-[6vh] w-full animate-pop-in rounded-[var(--radius-card)] border border-border-strong bg-surface shadow-pop',
+          'relative z-10 mt-[6vh] w-full animate-pop-in rounded-card border border-border-strong bg-surface shadow-pop',
           sizes[size],
         )}
+        onSubmit={
+          onSubmit &&
+          ((e: SubmitEvent) => {
+            e.preventDefault();
+            onSubmit();
+          })
+        }
       >
         {(title || !hideClose) && (
           <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
@@ -71,6 +83,7 @@ export function Modal({
             </div>
             {!hideClose && (
               <button
+                type="button"
                 onClick={onClose}
                 className="-mr-1.5 -mt-1 rounded-lg p-1.5 text-content-faint transition-colors hover:bg-surface-hover hover:text-content"
                 aria-label="Fermer"
@@ -86,7 +99,7 @@ export function Modal({
             {footer}
           </div>
         )}
-      </div>
+      </Container>
     </div>,
     document.body,
   );

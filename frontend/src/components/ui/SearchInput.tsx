@@ -23,6 +23,7 @@ export function SearchInput({
       />
       {value && (
         <button
+          type="button"
           onClick={() => onChange('')}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-content-faint transition-colors hover:text-content"
           aria-label="Effacer"
