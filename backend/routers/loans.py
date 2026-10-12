@@ -32,11 +32,6 @@ logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/loans", tags=["loans"])
 
 
-def _ensure_aware(dt: datetime) -> datetime:
-    """Normalize a potentially naive datetime to UTC-aware."""
-    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
-
-
 # Dependency type aliases
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
@@ -319,7 +314,7 @@ def partial_return_loan_items(
         )
 
     returned_at = datetime.now(UTC)
-    if returned_at < _ensure_aware(db_loan.actual_start_date):
+    if returned_at < db_loan.actual_start_date:
         raise HTTPException(status_code=422, detail="Partial return date cannot be before actual_start_date")
 
     for item in partial_return_data.items:
@@ -390,11 +385,11 @@ def return_loan(
             session.add(db_loaned_item)
 
     returned_at = datetime.now(UTC)
-    if returned_at < _ensure_aware(db_loan.actual_start_date):
+    if returned_at < db_loan.actual_start_date:
         raise HTTPException(status_code=422, detail="Return date cannot be before actual_start_date")
 
     for loaned_item in db_loan.loaned_items:
-        if loaned_item.actual_return_date is not None and _ensure_aware(loaned_item.actual_return_date) > returned_at:
+        if loaned_item.actual_return_date is not None and loaned_item.actual_return_date > returned_at:
             raise HTTPException(
                 status_code=422,
                 detail=(
@@ -441,7 +436,7 @@ def update_loan(
     # The resulting period must stay valid even when only one bound is patched.
     new_start = loan_patch.start_date or db_loan.start_date
     new_end = loan_patch.end_date or db_loan.end_date
-    if _ensure_aware(new_start) >= _ensure_aware(new_end):
+    if new_start >= new_end:
         raise HTTPException(status_code=422, detail="start_date must be before end_date")
 
     # Structural edits (items, borrower) are only allowed before the loan starts.

@@ -1,6 +1,5 @@
 """Request management endpoints."""
 
-from datetime import UTC, datetime
 from typing import Annotated
 
 import structlog
@@ -33,11 +32,6 @@ router = APIRouter(prefix="/requests", tags=["requests"])
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
 ClapDep = Annotated[User, Depends(require_role(AccessLevel.CLAP))]
-
-
-def _ensure_aware(dt: datetime) -> datetime:
-    """Normalize a potentially naive datetime to UTC."""
-    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
 
 
 def _request_load_options():
@@ -293,7 +287,7 @@ def update_request(
     # The resulting period must stay valid even when only one bound is patched.
     new_start = request_patch.start_date or db_request.start_date
     new_end = request_patch.end_date or db_request.end_date
-    if _ensure_aware(new_start) >= _ensure_aware(new_end):
+    if new_start >= new_end:
         raise HTTPException(status_code=422, detail="start_date must be before end_date")
 
     db_request.sqlmodel_update(request_patch.model_dump(exclude_unset=True))

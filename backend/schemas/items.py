@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from pydantic import BaseModel, ConfigDict
+from pydantic import AwareDatetime, BaseModel, ConfigDict
 
 from models.enums import Availability, Condition, LoanStatus
 from schemas.catalogs import CatalogBrief
@@ -52,9 +50,9 @@ class ItemHistoryEntry(BaseModel):
     loan_id: int
     borrower: UserBrief
     assignee: UserBrief
-    start_date: datetime
-    end_date: datetime
-    actual_start_date: datetime | None = None
-    actual_return_date: datetime | None = None
+    start_date: AwareDatetime
+    end_date: AwareDatetime
+    actual_start_date: AwareDatetime | None = None
+    actual_return_date: AwareDatetime | None = None
     return_condition: Condition | None = None
     status: LoanStatus
