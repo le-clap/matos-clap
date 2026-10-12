@@ -54,6 +54,7 @@ def get_catalogs(session: SessionDep, _user: CurrentUserDep) -> list[Catalog]:
             joinedload(Catalog.category),  # ty: ignore[invalid-argument-type]
             selectinload(Catalog.images),  # ty: ignore[invalid-argument-type]
         )
+        .order_by(col(Catalog.name), col(Catalog.id))
     )
     return list(session.exec(statement).all())
 

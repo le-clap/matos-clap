@@ -36,7 +36,7 @@ def get_items(
         statement = statement.where(Item.availability == availability)
     if condition is not None:
         statement = statement.where(Item.condition == condition)
-    return list(session.exec(statement).all())
+    return list(session.exec(statement.order_by(col(Item.name), col(Item.id))).all())
 
 
 @router.get(

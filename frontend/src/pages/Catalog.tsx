@@ -1,32 +1,31 @@
 import { PackageSearch } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import type { CatalogPublic } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CatalogCard } from '@/features/catalog/CatalogCard';
 import { useCatalogs, useCategories } from '@/hooks/useInventory';
+import { useTableView, type ViewConfig } from '@/lib/tableView';
 import { cn } from '@/lib/utils';
+
+const CATALOG_VIEW = {
+  searchText: (c) => `${c.name} ${c.description ?? ''} ${c.category.name}`,
+  sorters: { name: (c) => c.name, category: (c) => c.category.name },
+  initial: { key: 'category', dir: 'asc' },
+  tiebreak: ['category', 'name'],
+} as const satisfies ViewConfig<CatalogPublic>;
 
 export function CatalogPage() {
   const { data: catalogs, isLoading } = useCatalogs();
   const { data: categories } = useCategories();
-  const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
-
-  const filtered = useMemo(() => {
-    if (!catalogs) return [];
-    const q = search.trim().toLowerCase();
-    return catalogs.filter((c) => {
-      if (categoryId !== null && c.category.id !== categoryId) return false;
-      if (!q) return true;
-      return (
-        c.name.toLowerCase().includes(q) ||
-        c.description?.toLowerCase().includes(q) ||
-        c.category.name.toLowerCase().includes(q)
-      );
-    });
-  }, [catalogs, search, categoryId]);
+  const inCategory = useMemo(
+    () => catalogs?.filter((c) => categoryId === null || c.category.id === categoryId),
+    [catalogs, categoryId],
+  );
+  const { rows: filtered, search, setSearch } = useTableView(inCategory, CATALOG_VIEW);
 
   return (
     <div>
