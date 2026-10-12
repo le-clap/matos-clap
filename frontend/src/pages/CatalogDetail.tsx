@@ -52,7 +52,7 @@ export function CatalogDetailPage() {
         back={{ to: '/catalog', label: 'Catalogue' }}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card className="overflow-hidden">
           <div className="aspect-video w-full">
             <CatalogCarousel key={catalog.id} images={catalog.images ?? []} />

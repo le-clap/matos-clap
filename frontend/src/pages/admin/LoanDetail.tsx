@@ -351,6 +351,15 @@ function EditLoanModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={() =>
+        onSave({
+          ...(scheduled ? { borrower_id: (borrower ?? loan.borrower).id, item_ids: itemIds } : {}),
+          start_date: start?.toISOString(),
+          end_date: end?.toISOString(),
+          total_deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
+          comments: comments.trim() || null,
+        })
+      }
       title="Modifier le prêt"
       description={scheduled ? "Le prêt n'a pas démarré." : 'Le prêt a démarré.'}
       footer={
@@ -361,17 +370,7 @@ function EditLoanModal({
           <Button
             loading={saving}
             disabled={!datesValid || (scheduled && (itemIds.length === 0 || !borrower))}
-            onClick={() =>
-              onSave({
-                ...(scheduled
-                  ? { borrower_id: (borrower ?? loan.borrower).id, item_ids: itemIds }
-                  : {}),
-                start_date: start?.toISOString(),
-                end_date: end?.toISOString(),
-                total_deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
-                comments: comments.trim() || null,
-              })
-            }
+            type="submit"
           >
             Enregistrer
           </Button>
@@ -436,6 +435,16 @@ function ReturnModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={() =>
+        onSubmit({
+          retained_deposit_cents: Math.round(parseFloat(retained || '0') * 100),
+          item_return_conditions: items.map((li) => ({
+            item_id: li.item.id,
+            return_condition: conditions[li.item.id] ?? 'good',
+          })),
+          comments: comments.trim() || null,
+        })
+      }
       title="Enregistrer le retour"
       description="Renseignez l'état du matériel et la caution éventuellement retenue."
       footer={
@@ -443,19 +452,7 @@ function ReturnModal({
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            loading={saving}
-            onClick={() =>
-              onSubmit({
-                retained_deposit_cents: Math.round(parseFloat(retained || '0') * 100),
-                item_return_conditions: items.map((li) => ({
-                  item_id: li.item.id,
-                  return_condition: conditions[li.item.id] ?? 'good',
-                })),
-                comments: comments.trim() || null,
-              })
-            }
-          >
+          <Button loading={saving} type="submit">
             Confirmer le retour
           </Button>
         </>
@@ -529,6 +526,14 @@ function PartialReturnModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={() =>
+        onSubmit({
+          items: [...selected].map((itemId) => ({
+            item_id: itemId,
+            return_condition: conditions[itemId] ?? 'good',
+          })),
+        })
+      }
       title="Retour partiel"
       description="Sélectionnez les articles rendus. Au moins un doit rester en cours."
       footer={
@@ -536,18 +541,7 @@ function PartialReturnModal({
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            loading={saving}
-            disabled={selected.size === 0 || tooMany}
-            onClick={() =>
-              onSubmit({
-                items: [...selected].map((itemId) => ({
-                  item_id: itemId,
-                  return_condition: conditions[itemId] ?? 'good',
-                })),
-              })
-            }
-          >
+          <Button loading={saving} disabled={selected.size === 0 || tooMany} type="submit">
             Valider le retour partiel
           </Button>
         </>

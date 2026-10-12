@@ -27,6 +27,7 @@ export function ConfirmDialog({
     <Modal
       open={open}
       onClose={onClose}
+      onSubmit={onConfirm}
       title={title}
       size="sm"
       footer={
@@ -36,7 +37,8 @@ export function ConfirmDialog({
           </Button>
           <Button
             variant={tone === 'danger' ? 'danger' : 'primary'}
-            onClick={onConfirm}
+            type="submit"
+            autoFocus
             loading={loading}
           >
             {confirmLabel}

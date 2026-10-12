@@ -260,26 +260,23 @@ function CatalogModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={() =>
+        onSave(
+          {
+            name: name.trim(),
+            description: description.trim() || null,
+            category_id: selectedCategoryId,
+          },
+          gallery,
+        )
+      }
       title={catalog ? 'Modifier la référence' : 'Nouvelle référence'}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            loading={saving}
-            disabled={!name.trim() || !selectedCategoryId}
-            onClick={() =>
-              onSave(
-                {
-                  name: name.trim(),
-                  description: description.trim() || null,
-                  category_id: selectedCategoryId,
-                },
-                gallery,
-              )
-            }
-          >
+          <Button loading={saving} disabled={!name.trim() || !selectedCategoryId} type="submit">
             Enregistrer
           </Button>
         </>
@@ -435,17 +432,14 @@ function CategoryModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={() => onSave({ name: name.trim(), description: description.trim() || null })}
       title={category ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            loading={saving}
-            disabled={!name.trim()}
-            onClick={() => onSave({ name: name.trim(), description: description.trim() || null })}
-          >
+          <Button loading={saving} disabled={!name.trim()} type="submit">
             Enregistrer
           </Button>
         </>
@@ -642,28 +636,25 @@ function ItemModal({
     <Modal
       open
       onClose={onClose}
+      onSubmit={() =>
+        onSave(
+          {
+            name: name.trim(),
+            catalog_id: selectedCatalogId,
+            condition,
+            availability,
+            deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
+          },
+          !item,
+        )
+      }
       title={item ? "Modifier l'article" : 'Nouvel article'}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            loading={saving}
-            disabled={!name.trim() || !selectedCatalogId}
-            onClick={() =>
-              onSave(
-                {
-                  name: name.trim(),
-                  catalog_id: selectedCatalogId,
-                  condition,
-                  availability,
-                  deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
-                },
-                !item,
-              )
-            }
-          >
+          <Button loading={saving} disabled={!name.trim() || !selectedCatalogId} type="submit">
             Enregistrer
           </Button>
         </>
