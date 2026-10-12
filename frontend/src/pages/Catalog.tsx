@@ -10,12 +10,12 @@ import { useCatalogs, useCategories } from '@/hooks/useInventory';
 import { useTableView, type ViewConfig } from '@/lib/tableView';
 import { cn } from '@/lib/utils';
 
-const CATALOG_VIEW: ViewConfig<CatalogPublic> = {
+const CATALOG_VIEW = {
   searchText: (c) => `${c.name} ${c.description ?? ''} ${c.category.name}`,
   sorters: { name: (c) => c.name, category: (c) => c.category.name },
   initial: { key: 'category', dir: 'asc' },
   tiebreak: ['category', 'name'],
-};
+} as const satisfies ViewConfig<CatalogPublic>;
 
 export function CatalogPage() {
   const { data: catalogs, isLoading } = useCatalogs();

@@ -1,36 +1,32 @@
 import { useMemo, useState } from 'react';
 
 type Value = string | number | null | undefined;
-export type Sorters<T> = Record<string, (row: T) => Value>;
-export type Sort = { key: string; dir: 'asc' | 'desc' };
+export type Sort<K extends string = string> = { key: K; dir: 'asc' | 'desc' };
 
 const collator = new Intl.Collator('fr', { sensitivity: 'base', numeric: true });
 
-export const normalize = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+const normalize = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
-function compareValues(a: Value, b: Value) {
-  if (a == null || a === '') return b == null || b === '' ? 0 : 1; // empty values last
+function compareValues(a: Value, b: Value, sign: number) {
+  if (a == null || a === '') return b == null || b === '' ? 0 : 1;
   if (b == null || b === '') return -1;
-  if (typeof a === 'number' && typeof b === 'number') return a - b;
-  return collator.compare(String(a), String(b));
+  if (typeof a === 'number' && typeof b === 'number') return (a - b) * sign;
+  return collator.compare(String(a), String(b)) * sign;
 }
 
-export type ViewConfig<T> = {
+export type ViewConfig<T, K extends string = string> = {
   searchText: (row: T) => string;
-  sorters: Sorters<T>;
-  initial: Sort;
-  tiebreak: string[];
+  sorters: Record<K, (row: T) => Value>;
+  initial: Sort<NoInfer<K>>;
+  tiebreak: readonly NoInfer<K>[];
 };
 
-/**
- * Search + sort for a list. `config` must be a module-level constant so memoization holds.
- */
-export function useTableView<T extends { id: number }>(
+export function useTableView<T extends { id: number }, K extends string>(
   rows: T[] | undefined,
-  config: ViewConfig<T>,
+  config: ViewConfig<T, K>,
 ) {
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<Sort>(config.initial);
+  const [sort, setSort] = useState<Sort<K>>(config.initial);
 
   const view = useMemo(() => {
     const { searchText, sorters, tiebreak } = config;
@@ -40,14 +36,14 @@ export function useTableView<T extends { id: number }>(
     const sign = sort.dir === 'asc' ? 1 : -1;
     return filtered.sort((a, b) => {
       for (const [i, k] of keys.entries()) {
-        const c = compareValues(sorters[k](a), sorters[k](b));
-        if (c) return i === 0 ? c * sign : c; // direction applies to the chosen column only
+        const c = compareValues(sorters[k](a), sorters[k](b), i === 0 ? sign : 1);
+        if (c) return c;
       }
       return a.id - b.id;
     });
   }, [rows, config, search, sort]);
 
-  const toggle = (key: string) =>
+  const toggle = (key: K) =>
     setSort((s) => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }));
 
   return { rows: view, search, setSearch, sort, toggle };

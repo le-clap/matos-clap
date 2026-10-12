@@ -49,16 +49,15 @@ export function Td({ className, ...props }: TdHTMLAttributes<HTMLTableCellElemen
   return <td className={cn('px-4 py-3 align-middle text-content', className)} {...props} />;
 }
 
-/** Clickable header cell for column `k` of a `useTableView` view. */
-export function SortTh({
+export function SortTh<K extends string>({
   children,
   view,
   k,
   className,
 }: {
   children: React.ReactNode;
-  view: { sort: Sort; toggle: (key: string) => void };
-  k: string;
+  view: { sort: Sort<K>; toggle: (key: K) => void };
+  k: K;
   className?: string;
 }) {
   const dir = view.sort.key === k ? view.sort.dir : undefined;

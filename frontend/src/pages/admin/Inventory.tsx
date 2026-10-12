@@ -64,7 +64,7 @@ export function AdminInventoryPage() {
 
 /* -------------------------------- Catalogs -------------------------------- */
 
-const CATALOG_VIEW: ViewConfig<CatalogPublic> = {
+const CATALOG_VIEW = {
   searchText: (c) => `${c.name} ${c.category.name} ${c.description ?? ''}`,
   sorters: {
     name: (c) => c.name,
@@ -74,7 +74,7 @@ const CATALOG_VIEW: ViewConfig<CatalogPublic> = {
   },
   initial: { key: 'category', dir: 'asc' },
   tiebreak: ['category', 'name'],
-};
+} as const satisfies ViewConfig<CatalogPublic>;
 
 function CatalogsTab() {
   const { data, isLoading } = useCatalogs();
@@ -318,12 +318,12 @@ function CatalogModal({
 
 /* ------------------------------- Categories ------------------------------- */
 
-const CATEGORY_VIEW: ViewConfig<CategoryPublic> = {
+const CATEGORY_VIEW = {
   searchText: (c) => `${c.name} ${c.description ?? ''}`,
   sorters: { name: (c) => c.name, description: (c) => c.description },
   initial: { key: 'name', dir: 'asc' },
   tiebreak: ['name'],
-};
+} as const satisfies ViewConfig<CategoryPublic>;
 
 function CategoriesTab() {
   const { data, isLoading } = useCategories();
@@ -476,7 +476,7 @@ const AVAILABILITIES: { value: Availability; label: string }[] = [
   { value: 'retired', label: 'Retiré' },
 ];
 
-const ITEM_VIEW: ViewConfig<ItemPublic> = {
+const ITEM_VIEW = {
   searchText: (i) =>
     `${i.name} ${i.catalog.name} ${CONDITIONS.find((c) => c.value === i.condition)?.label} ${AVAILABILITIES.find((a) => a.value === i.availability)?.label}`,
   sorters: {
@@ -488,7 +488,7 @@ const ITEM_VIEW: ViewConfig<ItemPublic> = {
   },
   initial: { key: 'catalog', dir: 'asc' },
   tiebreak: ['catalog', 'name'],
-};
+} as const satisfies ViewConfig<ItemPublic>;
 
 function ItemsTab() {
   const { data, isLoading } = useItems();
