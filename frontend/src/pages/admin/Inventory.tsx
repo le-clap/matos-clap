@@ -10,7 +10,8 @@ import { Input, Select, Textarea } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { AvailabilityBadge, ConditionBadge } from '@/components/ui/StatusBadge';
-import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { SortTh, Table, TBody, Td, Th, THead, Tr } from '@/components/ui/Table';
 import { Tabs } from '@/components/ui/Tabs';
 import { useToast } from '@/components/ui/Toast';
 import { CatalogGalleryEditor, type GalleryItem } from '@/features/inventory/CatalogGalleryEditor';
@@ -26,6 +27,7 @@ import {
 } from '@/hooks/useInventory';
 import { ApiError } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
+import { useTableView, type ViewConfig } from '@/lib/tableView';
 
 type Tab = 'catalogs' | 'categories' | 'items';
 
@@ -62,6 +64,18 @@ export function AdminInventoryPage() {
 
 /* -------------------------------- Catalogs -------------------------------- */
 
+const CATALOG_VIEW: ViewConfig<CatalogPublic> = {
+  searchText: (c) => `${c.name} ${c.category.name} ${c.description ?? ''}`,
+  sorters: {
+    name: (c) => c.name,
+    category: (c) => c.category.name,
+    images: (c) => c.images?.length ?? 0,
+    description: (c) => c.description,
+  },
+  initial: { key: 'category', dir: 'asc' },
+  tiebreak: ['category', 'name'],
+};
+
 function CatalogsTab() {
   const { data, isLoading } = useCatalogs();
   const { data: categories } = useCategories();
@@ -69,6 +83,7 @@ function CatalogsTab() {
   const toast = useToast();
   const [editing, setEditing] = useState<CatalogPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<CatalogPublic | null>(null);
+  const view = useTableView(data, CATALOG_VIEW);
 
   return (
     <>
@@ -76,21 +91,31 @@ function CatalogsTab() {
         onAdd={() => setEditing('new')}
         addLabel="Nouvelle référence"
         leading={<ImportExportButtons entity="catalogs" />}
+        search={{ value: view.search, onChange: view.setSearch }}
+        noMatch={view.rows.length === 0}
         empty={!isLoading && (!data || data.length === 0)}
         loading={isLoading}
       >
         <Table>
           <THead>
             <Tr>
-              <Th>Nom</Th>
-              <Th>Catégorie</Th>
-              <Th>Images</Th>
-              <Th>Description</Th>
+              <SortTh view={view} k="name">
+                Nom
+              </SortTh>
+              <SortTh view={view} k="category">
+                Catégorie
+              </SortTh>
+              <SortTh view={view} k="images">
+                Images
+              </SortTh>
+              <SortTh view={view} k="description">
+                Description
+              </SortTh>
               <Th className="w-px" />
             </Tr>
           </THead>
           <TBody>
-            {data?.map((c) => (
+            {view.rows.map((c) => (
               <Tr key={c.id}>
                 <Td className="font-medium">{c.name}</Td>
                 <Td className="text-content-muted">{c.category.name}</Td>
@@ -293,12 +318,20 @@ function CatalogModal({
 
 /* ------------------------------- Categories ------------------------------- */
 
+const CATEGORY_VIEW: ViewConfig<CategoryPublic> = {
+  searchText: (c) => `${c.name} ${c.description ?? ''}`,
+  sorters: { name: (c) => c.name, description: (c) => c.description },
+  initial: { key: 'name', dir: 'asc' },
+  tiebreak: ['name'],
+};
+
 function CategoriesTab() {
   const { data, isLoading } = useCategories();
   const { create, update, remove } = useCategoryMutations();
   const toast = useToast();
   const [editing, setEditing] = useState<CategoryPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<CategoryPublic | null>(null);
+  const view = useTableView(data, CATEGORY_VIEW);
 
   return (
     <>
@@ -306,19 +339,25 @@ function CategoriesTab() {
         onAdd={() => setEditing('new')}
         addLabel="Nouvelle catégorie"
         leading={<ImportExportButtons entity="categories" />}
+        search={{ value: view.search, onChange: view.setSearch }}
+        noMatch={view.rows.length === 0}
         empty={!isLoading && (!data || data.length === 0)}
         loading={isLoading}
       >
         <Table>
           <THead>
             <Tr>
-              <Th>Nom</Th>
-              <Th>Description</Th>
+              <SortTh view={view} k="name">
+                Nom
+              </SortTh>
+              <SortTh view={view} k="description">
+                Description
+              </SortTh>
               <Th className="w-px" />
             </Tr>
           </THead>
           <TBody>
-            {data?.map((c) => (
+            {view.rows.map((c) => (
               <Tr key={c.id}>
                 <Td className="font-medium">{c.name}</Td>
                 <Td className="max-w-md truncate text-content-muted">{c.description ?? '—'}</Td>
@@ -437,6 +476,20 @@ const AVAILABILITIES: { value: Availability; label: string }[] = [
   { value: 'retired', label: 'Retiré' },
 ];
 
+const ITEM_VIEW: ViewConfig<ItemPublic> = {
+  searchText: (i) =>
+    `${i.name} ${i.catalog.name} ${CONDITIONS.find((c) => c.value === i.condition)?.label} ${AVAILABILITIES.find((a) => a.value === i.availability)?.label}`,
+  sorters: {
+    name: (i) => i.name,
+    catalog: (i) => i.catalog.name,
+    condition: (i) => CONDITIONS.findIndex((c) => c.value === i.condition),
+    availability: (i) => AVAILABILITIES.findIndex((a) => a.value === i.availability),
+    deposit: (i) => i.deposit_cents,
+  },
+  initial: { key: 'catalog', dir: 'asc' },
+  tiebreak: ['catalog', 'name'],
+};
+
 function ItemsTab() {
   const { data, isLoading } = useItems();
   const { data: catalogs } = useCatalogs();
@@ -445,6 +498,7 @@ function ItemsTab() {
   const [editing, setEditing] = useState<ItemPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<ItemPublic | null>(null);
   const [history, setHistory] = useState<ItemPublic | null>(null);
+  const view = useTableView(data, ITEM_VIEW);
 
   return (
     <>
@@ -452,22 +506,34 @@ function ItemsTab() {
         onAdd={() => setEditing('new')}
         addLabel="Nouvel article"
         leading={<ImportExportButtons entity="items" />}
+        search={{ value: view.search, onChange: view.setSearch }}
+        noMatch={view.rows.length === 0}
         empty={!isLoading && (!data || data.length === 0)}
         loading={isLoading}
       >
         <Table>
           <THead>
             <Tr>
-              <Th>Article</Th>
-              <Th>Référence</Th>
-              <Th>État</Th>
-              <Th>Statut</Th>
-              <Th>Caution</Th>
+              <SortTh view={view} k="name">
+                Article
+              </SortTh>
+              <SortTh view={view} k="catalog">
+                Référence
+              </SortTh>
+              <SortTh view={view} k="condition">
+                État
+              </SortTh>
+              <SortTh view={view} k="availability">
+                Statut
+              </SortTh>
+              <SortTh view={view} k="deposit">
+                Caution
+              </SortTh>
               <Th className="w-px" />
             </Tr>
           </THead>
           <TBody>
-            {data?.map((item) => (
+            {view.rows.map((item) => (
               <Tr key={item.id}>
                 <Td className="font-medium">{item.name}</Td>
                 <Td className="text-content-muted">{item.catalog.name}</Td>
@@ -665,6 +731,8 @@ function Section({
   empty,
   loading,
   leading,
+  search,
+  noMatch,
   children,
 }: {
   onAdd: () => void;
@@ -672,12 +740,22 @@ function Section({
   empty: boolean;
   loading: boolean;
   leading?: React.ReactNode;
+  search: { value: string; onChange: (v: string) => void };
+  noMatch: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>{leading}</div>
+        <div className="flex flex-wrap items-center gap-3">
+          <SearchInput
+            value={search.value}
+            onChange={search.onChange}
+            className="w-64"
+            placeholder="Rechercher…"
+          />
+          {leading}
+        </div>
         <Button onClick={onAdd}>
           <Plus className="size-4" />
           {addLabel}
@@ -696,6 +774,8 @@ function Section({
             </Button>
           }
         />
+      ) : noMatch ? (
+        <EmptyState title="Aucun résultat" description="Aucun élément ne correspond au filtre." />
       ) : (
         children
       )}

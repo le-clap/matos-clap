@@ -25,7 +25,9 @@ ManagerDep = Annotated[User, Depends(require_role(AccessLevel.MANAGER))]
 
 @router.get("/", response_model=list[CategoryPublic])
 def get_categories(session: SessionDep, _user: CurrentUserDep) -> list[Category]:
-    statement = select(Category).where(col(Category.deleted_at).is_(None))
+    statement = (
+        select(Category).where(col(Category.deleted_at).is_(None)).order_by(col(Category.name), col(Category.id))
+    )
     return list(session.exec(statement).all())
 
 
