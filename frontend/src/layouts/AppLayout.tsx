@@ -1,5 +1,5 @@
 import { ClipboardList, Package, ShoppingBag } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
 import { UserMenu } from '@/components/UserMenu';
 import { useCart } from '@/features/cart/CartContext';
@@ -87,7 +87,8 @@ export function AppLayout() {
       </main>
 
       <footer className="border-t border-border py-6 text-center text-xs text-content-faint">
-        Matos CLAP · Centrale Lille Audiovisuel Production
+        Matos CLAP · Centrale Lille Audiovisuel Production ·{' '}
+        <Link to="/mentions-legales">Mentions légales</Link>
       </footer>
     </div>
   );

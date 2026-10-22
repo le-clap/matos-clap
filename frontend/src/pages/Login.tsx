@@ -1,5 +1,5 @@
-import { ArrowRight, LogIn } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { LogIn } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { PageSpinner } from '@/components/ui/Spinner';
@@ -35,11 +35,10 @@ export function LoginPage() {
           <Button size="lg" className="mt-8 w-full" onClick={login}>
             <LogIn className="size-4" />
             Se connecter avec CLA
-            <ArrowRight className="size-4" />
           </Button>
 
-          <p className="mt-4 text-center text-xs text-content-faint">
-            Authentification via Centrale Lille Associations
+          <p className="mt-2 text-center text-xs text-content-faint">
+            <Link to="/mentions-legales">Mentions légales</Link>
           </p>
         </div>
       </div>

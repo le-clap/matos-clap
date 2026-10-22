@@ -7,6 +7,7 @@ import { AppLayout } from '@/layouts/AppLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 
 import { LoginPage } from '@/pages/Login';
+import { LegalNoticePage } from '@/pages/LegalNotice';
 import { NotFound } from '@/pages/NotFound';
 import { CatalogPage } from '@/pages/Catalog';
 import { CatalogDetailPage } from '@/pages/CatalogDetail';
@@ -34,6 +35,7 @@ export function App() {
     <CartProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/mentions-legales" element={<LegalNoticePage />} />
 
         {/* User-facing app */}
         <Route
