@@ -131,6 +131,7 @@ def f_item(session):
         availability: Availability = Availability.AVAILABLE,
         condition: Condition = Condition.GOOD,
         deposit_cents: int = 0,
+        deleted: bool = False,
     ) -> Item:
         n = next(c)
         item = Item(
@@ -139,6 +140,7 @@ def f_item(session):
             availability=availability,
             condition=condition,
             deposit_cents=deposit_cents,
+            deleted_at=dt(-1) if deleted else None,
         )
         session.add(item)
         session.commit()

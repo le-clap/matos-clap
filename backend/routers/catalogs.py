@@ -8,11 +8,11 @@ import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, status
 from pydantic import AwareDatetime
 from sqlalchemy.orm import joinedload, selectinload
-from sqlmodel import Session, col, select
+from sqlmodel import Session, col, exists, select
 
 from core.config import settings
 from db.database import get_session
-from dependencies.auth import get_current_user, require_role
+from dependencies.auth import get_current_user, has_role, require_role
 from models.enums import AccessLevel, Availability
 from models.models import Catalog, CatalogImage, Category, Item, User
 from schemas.catalogs import CatalogImageOrder, CatalogImagePublic, CatalogPatch, CatalogPost, CatalogPublic
@@ -46,7 +46,7 @@ def _delete_media_file(image_path: str) -> None:
 
 
 @router.get("/", response_model=list[CatalogPublic])
-def get_catalogs(session: SessionDep, _user: CurrentUserDep) -> list[Catalog]:
+def get_catalogs(session: SessionDep, user: CurrentUserDep) -> list[Catalog]:
     statement = (
         select(Catalog)
         .where(col(Catalog.deleted_at).is_(None))
@@ -56,6 +56,14 @@ def get_catalogs(session: SessionDep, _user: CurrentUserDep) -> list[Catalog]:
         )
         .order_by(col(Catalog.name), col(Catalog.id))
     )
+    if not has_role(user, AccessLevel.CLAP):
+        statement = statement.where(
+            exists().where(
+                col(Item.catalog_id) == Catalog.id,
+                col(Item.availability) == Availability.AVAILABLE,
+                col(Item.deleted_at).is_(None),
+            )
+        )
     return list(session.exec(statement).all())
 
 

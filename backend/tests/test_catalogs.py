@@ -10,15 +10,33 @@ def test_get_catalogs_requires_auth(client):
     assert r.status_code == 401
 
 
-def test_get_catalogs(client, session, f_user, f_token, f_category, f_catalog):
+def test_get_catalogs(client, session, f_user, f_token, f_category, f_catalog, f_item):
     cat = f_category()
-    f_catalog(cat, "Sony A7III")
+    f_item(f_catalog(cat, "Sony A7III"))
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
     r = client.get("/api/catalogs", headers=auth(token))
     assert r.status_code == 200
     assert any(c["name"] == "Sony A7III" for c in r.json())
+
+
+def test_get_catalogs_hides_unavailable_below_clap(client, session, f_user, f_token, f_category, f_catalog, f_item):
+    cat = f_category()
+    available = f_catalog(cat, "Available")
+    f_item(available)
+    f_item(available, availability=Availability.UNLOANABLE)
+    f_item(f_catalog(cat, "Unloanable"), availability=Availability.UNLOANABLE)
+    f_item(f_catalog(cat, "ArchivedItem"), deleted=True)
+    f_catalog(cat, "Empty")
+
+    def names(level):
+        r = client.get("/api/catalogs", headers=auth(f_token(f_user(level))))
+        assert r.status_code == 200
+        return {c["name"] for c in r.json()}
+
+    assert names(AccessLevel.USER) == {"Available"}
+    assert names(AccessLevel.CLAP) == {"Available", "Unloanable", "ArchivedItem", "Empty"}
 
 
 def test_create_catalog_requires_manager(client, session, f_user, f_token, f_category):

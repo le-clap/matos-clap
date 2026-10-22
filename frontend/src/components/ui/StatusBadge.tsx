@@ -20,6 +20,7 @@ export function AvailabilityBadge({ availability }: { availability: string }) {
   const map: Record<string, { label: string; tone: Parameters<typeof Badge>[0]['tone'] }> = {
     available: { label: 'Disponible', tone: 'success' },
     maintenance: { label: 'Maintenance', tone: 'warning' },
+    unloanable: { label: 'Non prêtable', tone: 'info' },
     retired: { label: 'Retiré', tone: 'neutral' },
   };
   const cfg = map[availability] ?? { label: availability, tone: 'neutral' as const };
