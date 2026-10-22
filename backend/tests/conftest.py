@@ -96,9 +96,9 @@ def f_token(session):
 def f_category(session):
     c = itertools.count()
 
-    def _f(name: str | None = None) -> Category:
+    def _f(name: str | None = None, deleted: bool = False) -> Category:
         n = next(c)
-        cat = Category(name=name or f"Cat{n}")
+        cat = Category(name=name or f"Cat{n}", deleted_at=dt(-1) if deleted else None)
         session.add(cat)
         session.commit()
         session.refresh(cat)
@@ -111,9 +111,9 @@ def f_category(session):
 def f_catalog(session):
     c = itertools.count()
 
-    def _f(category: Category, name: str | None = None) -> Catalog:
+    def _f(category: Category, name: str | None = None, deleted: bool = False) -> Catalog:
         n = next(c)
-        cat = Catalog(name=name or f"Catalog{n}", category_id=category.id)
+        cat = Catalog(name=name or f"Catalog{n}", category_id=category.id, deleted_at=dt(-1) if deleted else None)
         session.add(cat)
         session.commit()
         session.refresh(cat)

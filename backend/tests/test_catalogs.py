@@ -154,10 +154,7 @@ def test_delete_catalog_referenced_by_request_archives(client, session, f_user, 
 
 
 def test_update_archived_catalog_returns_404(client, session, f_user, f_token, f_category, f_catalog):
-    catalog = f_catalog(f_category())
-    catalog.deleted_at = dt(-1)
-    session.add(catalog)
-    session.commit()
+    catalog = f_catalog(f_category(), deleted=True)
     manager = f_user(AccessLevel.MANAGER)
     token = f_token(manager)
 
@@ -166,10 +163,7 @@ def test_update_archived_catalog_returns_404(client, session, f_user, f_token, f
 
 
 def test_get_catalogs_excludes_archived(client, session, f_user, f_token, f_category, f_catalog):
-    catalog = f_catalog(f_category())
-    catalog.deleted_at = dt(-1)
-    session.add(catalog)
-    session.commit()
+    catalog = f_catalog(f_category(), deleted=True)
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
@@ -180,10 +174,7 @@ def test_get_catalogs_excludes_archived(client, session, f_user, f_token, f_cate
 
 
 def test_available_items_for_archived_catalog_returns_404(client, session, f_user, f_token, f_category, f_catalog):
-    catalog = f_catalog(f_category())
-    catalog.deleted_at = dt(-1)
-    session.add(catalog)
-    session.commit()
+    catalog = f_catalog(f_category(), deleted=True)
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
