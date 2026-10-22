@@ -1,5 +1,5 @@
 import { History, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Availability, CatalogPublic, CategoryPublic, Condition, ItemPublic } from '@/client';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -64,26 +64,35 @@ export function AdminInventoryPage() {
 
 /* -------------------------------- Catalogs -------------------------------- */
 
+type CatalogRow = CatalogPublic & { itemCount: number };
+
 const CATALOG_VIEW = {
   searchText: (c) => `${c.name} ${c.category.name} ${c.description ?? ''}`,
   sorters: {
     name: (c) => c.name,
     category: (c) => c.category.name,
     images: (c) => c.images?.length ?? 0,
+    items: (c) => c.itemCount,
     description: (c) => c.description,
   },
   initial: { key: 'category', dir: 'asc' },
   tiebreak: ['category', 'name'],
-} as const satisfies ViewConfig<CatalogPublic>;
+} as const satisfies ViewConfig<CatalogRow>;
 
 function CatalogsTab() {
   const { data, isLoading } = useCatalogs();
+  const { data: items } = useItems();
   const { data: categories } = useCategories();
   const { create, update, remove, uploadImage, deleteImage, reorderImages } = useCatalogMutations();
   const toast = useToast();
   const [editing, setEditing] = useState<CatalogPublic | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<CatalogPublic | null>(null);
-  const view = useTableView(data, CATALOG_VIEW);
+  const rows = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const i of items ?? []) counts.set(i.catalog.id, (counts.get(i.catalog.id) ?? 0) + 1);
+    return data?.map((c) => ({ ...c, itemCount: counts.get(c.id) ?? 0 }));
+  }, [data, items]);
+  const view = useTableView(rows, CATALOG_VIEW);
 
   return (
     <>
@@ -105,6 +114,9 @@ function CatalogsTab() {
               <SortTh view={view} k="category">
                 Catégorie
               </SortTh>
+              <SortTh view={view} k="items">
+                Articles
+              </SortTh>
               <SortTh view={view} k="images">
                 Images
               </SortTh>
@@ -119,6 +131,7 @@ function CatalogsTab() {
               <Tr key={c.id}>
                 <Td className="font-medium">{c.name}</Td>
                 <Td className="text-content-muted">{c.category.name}</Td>
+                <Td className="tabular-nums text-content-muted">{c.itemCount || '—'}</Td>
                 <Td className="tabular-nums text-content-muted">{c.images?.length || '—'}</Td>
                 <Td className="max-w-xs truncate text-content-muted">{c.description ?? '—'}</Td>
                 <Td>
