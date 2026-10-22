@@ -25,8 +25,8 @@ def test_get_catalogs_hides_unavailable_below_clap(client, session, f_user, f_to
     cat = f_category()
     available = f_catalog(cat, "Available")
     f_item(available)
-    f_item(available, availability=Availability.UNLOANABLE)
-    f_item(f_catalog(cat, "Unloanable"), availability=Availability.UNLOANABLE)
+    f_item(available, availability=Availability.PRIVATE)
+    f_item(f_catalog(cat, "Private"), availability=Availability.PRIVATE)
     f_item(f_catalog(cat, "ArchivedItem"), deleted=True)
     f_catalog(cat, "Empty")
 
@@ -36,7 +36,7 @@ def test_get_catalogs_hides_unavailable_below_clap(client, session, f_user, f_to
         return {c["name"] for c in r.json()}
 
     assert names(AccessLevel.USER) == {"Available"}
-    assert names(AccessLevel.CLAP) == {"Available", "Unloanable", "ArchivedItem", "Empty"}
+    assert names(AccessLevel.CLAP) == {"Available", "Private", "ArchivedItem", "Empty"}
 
 
 def test_create_catalog_requires_manager(client, session, f_user, f_token, f_category):

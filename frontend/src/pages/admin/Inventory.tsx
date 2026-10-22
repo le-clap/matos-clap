@@ -480,7 +480,7 @@ const CONDITIONS: { value: Condition; label: string }[] = [
 const AVAILABILITIES: { value: Availability; label: string }[] = [
   { value: 'available', label: 'Disponible' },
   { value: 'maintenance', label: 'Maintenance' },
-  { value: 'unloanable', label: 'Non prêtable' },
+  { value: 'private', label: 'Privé' },
   { value: 'retired', label: 'Retiré' },
 ];
 
