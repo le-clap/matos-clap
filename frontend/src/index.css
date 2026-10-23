@@ -62,6 +62,8 @@
   --color-warning-bg: rgba(245, 176, 74, 0.12);
   --color-info: #6e8bff;
   --color-info-bg: rgba(110, 139, 255, 0.12);
+  --color-accent: #c084fc;
+  --color-accent-bg: rgba(192, 132, 252, 0.12);
   --color-danger: var(--color-brand-500);
   --color-danger-bg: rgba(234, 57, 67, 0.12);
 
@@ -96,16 +98,19 @@
     scrollbar-width: thin;
     scrollbar-color: var(--color-ink-600) transparent;
   }
+
   *::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
+
   *::-webkit-scrollbar-thumb {
     background-color: var(--color-ink-600);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
+
   *::-webkit-scrollbar-thumb:hover {
     background-color: var(--color-ink-500);
   }
@@ -204,6 +209,7 @@
     overflow: hidden;
     background-color: var(--color-ink-800);
   }
+
   .skeleton::after {
     content: '';
     position: absolute;

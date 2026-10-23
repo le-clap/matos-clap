@@ -1,7 +1,7 @@
 import { type HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
-type Tone = 'neutral' | 'brand' | 'success' | 'warning' | 'info' | 'danger';
+type Tone = 'neutral' | 'brand' | 'success' | 'warning' | 'info' | 'accent' | 'danger';
 
 const tones: Record<Tone, string> = {
   neutral: 'bg-surface-hover text-content-muted border-border',
@@ -9,6 +9,7 @@ const tones: Record<Tone, string> = {
   success: 'bg-success-bg text-success border-success/30',
   warning: 'bg-warning-bg text-warning border-warning/30',
   info: 'bg-info-bg text-info border-info/30',
+  accent: 'bg-accent-bg text-accent border-accent/30',
   danger: 'bg-danger-bg text-brand-300 border-primary/30',
 };
 
