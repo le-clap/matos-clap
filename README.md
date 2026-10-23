@@ -143,7 +143,7 @@ erDiagram
 
 | Outil      | Version | Utilisé pour        |
 |------------|---------|---------------------|
-| uv         | —       | Dépendences Backend |
+| uv         | ≥0.13.4 | Dépendences Backend |
 | Python     | 3.14    | Backend             |
 | Node.js    | 22      | Frontend            |
 | PostgreSQL | 18      | Base de données     |
@@ -180,7 +180,7 @@ Lancez ensuite les commandes suivantes :
 
 ```bash
 cd backend
-uv sync                     # Installe les dépendances
+uv sync --locked            # Installe les dépendances figées
 uv run alembic upgrade head # Applique les dernières migrations
 uv run fastapi dev          # Lance l'API sur http://localhost:8000
 ```
@@ -192,7 +192,7 @@ uv run fastapi dev          # Lance l'API sur http://localhost:8000
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run generate:client
 npm run dev # Disponible sur http://localhost:5173
 ```
