@@ -1,15 +1,14 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------ *
- *  Matos CLAP — design tokens
- *  A deliberately dark, charcoal-grey surface with a confident
- *  crimson-red accent. Dark-only by design.
+ *  Matos CLAP Dark Theme
+ *  A dark, charcoal-grey surface with a crimson-red accent.
  * ------------------------------------------------------------------ */
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  /* Charcoal greys — the structural palette */
+  /* Charcoal greys */
   --color-ink-950: #0d0d0f;
   --color-ink-900: #141417;
   --color-ink-850: #18181b;
@@ -24,7 +23,7 @@
   --color-ink-100: #d8d8de;
   --color-ink-50: #f3f3f5;
 
-  /* Crimson red — the brand accent */
+  /* Crimson red */
   --color-brand-50: #fff1f1;
   --color-brand-100: #ffdfe0;
   --color-brand-200: #ffc4c6;
