@@ -23,6 +23,7 @@ class Availability(StrEnum):
 
     AVAILABLE = "available"
     MAINTENANCE = "maintenance"
+    PRIVATE = "private"
     RETIRED = "retired"
 
 

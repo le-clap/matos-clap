@@ -120,7 +120,7 @@ def upgrade() -> None:
         ),
         sa.Column(
             "availability",
-            sa.Enum("AVAILABLE", "MAINTENANCE", "RETIRED", name="availability", native_enum=False),
+            sa.Enum("AVAILABLE", "MAINTENANCE", "PRIVATE", "RETIRED", name="availability", native_enum=False),
             nullable=False,
         ),
         sa.Column("deposit_cents", sa.Integer(), nullable=False),

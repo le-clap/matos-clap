@@ -3708,6 +3708,7 @@
         "enum": [
           "available",
           "maintenance",
+          "private",
           "retired"
         ],
         "title": "Availability",

@@ -114,10 +114,7 @@ def test_delete_category_with_only_archived_catalogs_archives(
 
 
 def test_update_archived_category_returns_404(client, session, f_user, f_token, f_category):
-    cat = f_category()
-    cat.deleted_at = dt(-1)
-    session.add(cat)
-    session.commit()
+    cat = f_category(deleted=True)
     manager = f_user(AccessLevel.MANAGER)
     token = f_token(manager)
 
@@ -126,10 +123,7 @@ def test_update_archived_category_returns_404(client, session, f_user, f_token, 
 
 
 def test_create_catalog_under_archived_category_returns_404(client, session, f_user, f_token, f_category):
-    cat = f_category()
-    cat.deleted_at = dt(-1)
-    session.add(cat)
-    session.commit()
+    cat = f_category(deleted=True)
     manager = f_user(AccessLevel.MANAGER)
     token = f_token(manager)
 
@@ -138,10 +132,7 @@ def test_create_catalog_under_archived_category_returns_404(client, session, f_u
 
 
 def test_get_categories_excludes_archived(client, session, f_user, f_token, f_category):
-    cat = f_category()
-    cat.deleted_at = dt(-1)
-    session.add(cat)
-    session.commit()
+    cat = f_category(deleted=True)
     user = f_user(AccessLevel.USER)
     token = f_token(user)
 
