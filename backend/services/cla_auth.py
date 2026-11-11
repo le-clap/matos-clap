@@ -1,4 +1,4 @@
-import httpx
+import httpx2
 import structlog
 from sqlmodel import select
 
@@ -14,10 +14,10 @@ def get_auth_url() -> str:
 
 async def validate_ticket(ticket: str) -> dict | None:
     url = f"{settings.CLA_HOST}/authentification/{settings.CLA_IDENTIFIER}/{ticket}"
-    async with httpx.AsyncClient(timeout=5.0) as client:
+    async with httpx2.AsyncClient(timeout=5.0) as client:
         try:
             response = await client.get(url)
-        except httpx.HTTPError:
+        except httpx2.HTTPError:
             logger.error("auth.cla_unreachable", exc_info=True)
             return None
 
