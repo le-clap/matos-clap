@@ -1,10 +1,14 @@
 """Export the FastAPI OpenAPI schema to openapi.json."""
 
 import json
+import os
 from pathlib import Path
 
-from main import app
+# Production mode tries to serve the built frontend from ./static, which doesn't necessarily exist.
+os.environ.setdefault("ENV", "development")
 
-output = Path(__file__).parent / "openapi.json"
+from main import app  # noqa: E402
+
+output = Path(__file__).resolve().parent / "openapi.json"
 output.write_text(json.dumps(app.openapi(), indent=2) + "\n", encoding="utf-8")
 print(f"OpenAPI schema written to {output}")
