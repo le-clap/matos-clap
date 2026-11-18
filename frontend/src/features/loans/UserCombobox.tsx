@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
-import type { UserBrief } from '@/client';
+import type { AccessLevel, UserBrief } from '@/client';
 import { Avatar } from '@/components/ui/Avatar';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -16,16 +16,21 @@ export function UserCombobox({
   value,
   onChange,
   placeholder = 'Rechercher un membre…',
+  minAccessLevel,
 }: {
   value: UserBrief | null;
   onChange: (user: UserBrief | null) => void;
   placeholder?: string;
+  minAccessLevel?: AccessLevel;
 }) {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search);
   const query = debouncedSearch.trim();
 
-  const { data, isFetching } = useUsers({ search: query, limit: RESULTS_LIMIT }, query.length > 0);
+  const { data, isFetching } = useUsers(
+    { search: query, limit: RESULTS_LIMIT, minAccessLevel },
+    query.length > 0,
+  );
   const matches = data?.items ?? [];
 
   if (value) {

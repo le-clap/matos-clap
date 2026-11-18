@@ -4,8 +4,8 @@ import {
   PlayCircle,
   Trash2,
   Undo2,
-  UserCheck,
   User as UserIcon,
+  UserCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -47,9 +47,10 @@ export function AdminLoanDetailPage() {
 
   const { data: loan, isLoading } = useLoan(loanId);
   const { data: allItems } = useItems();
-  const { update, returnLoan, partialReturn, remove } = useLoanMutations();
+  const { update, returnLoan, partialReturn, updateReturnCondition, remove } = useLoanMutations();
 
   const [modal, setModal] = useState<null | 'edit' | 'return' | 'partial'>(null);
+  const [editingItem, setEditingItem] = useState<LoanedItemPublic | null>(null);
   const [confirmStart, setConfirmStart] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -128,12 +129,13 @@ export function AdminLoanDetailPage() {
               </div>
             }
           />
-          <Table className="rounded-none border-0">
+          <Table bare>
             <THead>
               <Tr>
                 <Th>Article</Th>
                 <Th>État au retour</Th>
                 <Th>Retour</Th>
+                <Th />
               </Tr>
             </THead>
             <TBody>
@@ -150,6 +152,18 @@ export function AdminLoanDetailPage() {
                       </span>
                     ) : (
                       <Badge tone="info">En cours</Badge>
+                    )}
+                  </Td>
+                  <Td className="text-right">
+                    {li.actual_return_date && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Corriger l'état au retour"
+                        onClick={() => setEditingItem(li)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
                     )}
                   </Td>
                 </Tr>
@@ -284,6 +298,27 @@ export function AdminLoanDetailPage() {
         />
       )}
 
+      {editingItem && (
+        <ConditionModal
+          item={editingItem}
+          saving={updateReturnCondition.isPending}
+          onClose={() => setEditingItem(null)}
+          onSubmit={async (condition) => {
+            try {
+              await updateReturnCondition.mutateAsync({
+                id: loan.id,
+                itemId: editingItem.item.id,
+                condition,
+              });
+              toast.success('État corrigé');
+              setEditingItem(null);
+            } catch (err) {
+              toast.error('Échec', err instanceof ApiError ? err.detail : undefined);
+            }
+          }}
+        />
+      )}
+
       <ConfirmDialog
         open={confirmStart}
         onClose={() => setConfirmStart(false)}
@@ -316,10 +351,12 @@ export function AdminLoanDetailPage() {
 
 interface EditLoanBody {
   borrower_id?: number;
+  assignee_id?: number;
   item_ids?: number[];
   start_date: string | undefined;
   end_date: string | undefined;
   total_deposit_cents: number;
+  retained_deposit_cents?: number;
   comments: string | null;
 }
 
@@ -339,12 +376,17 @@ function EditLoanModal({
   saving: boolean;
 }) {
   const [borrower, setBorrower] = useState<UserBrief | null>(loan.borrower);
+  const [assignee, setAssignee] = useState<UserBrief | null>(loan.assignee);
   const [itemIds, setItemIds] = useState<number[]>(loan.loaned_items.map((li) => li.item.id));
   const [start, setStart] = useState<Dayjs | null>(dayjs(loan.start_date));
   const [end, setEnd] = useState<Dayjs | null>(dayjs(loan.end_date));
   const [deposit, setDeposit] = useState((loan.total_deposit_cents / 100).toFixed(2));
+  const [retained, setRetained] = useState(((loan.retained_deposit_cents ?? 0) / 100).toFixed(2));
   const [comments, setComments] = useState(loan.comments ?? '');
+  const ended = !!loan.actual_return_date;
 
+  const toCents = (v: string) => Math.round(parseFloat(v || '0') * 100);
+  const depositInvalid = ended && toCents(retained) > toCents(deposit);
   const datesValid = !!start && !!end && start.isBefore(end);
 
   return (
@@ -353,15 +395,28 @@ function EditLoanModal({
       onClose={onClose}
       onSubmit={() =>
         onSave({
-          ...(scheduled ? { borrower_id: (borrower ?? loan.borrower).id, item_ids: itemIds } : {}),
+          ...(scheduled
+            ? {
+                borrower_id: borrower!.id,
+                assignee_id: assignee!.id,
+                item_ids: itemIds,
+              }
+            : {}),
           start_date: start?.toISOString(),
           end_date: end?.toISOString(),
-          total_deposit_cents: Math.round(parseFloat(deposit || '0') * 100),
+          total_deposit_cents: toCents(deposit),
+          ...(ended ? { retained_deposit_cents: toCents(retained) } : {}),
           comments: comments.trim() || null,
         })
       }
       title="Modifier le prêt"
-      description={scheduled ? "Le prêt n'a pas démarré." : 'Le prêt a démarré.'}
+      description={
+        scheduled
+          ? "Le prêt n'a pas démarré."
+          : ended
+            ? 'Le prêt est terminé : seuls les dates, les cautions et le commentaire sont modifiables.'
+            : 'Le prêt a démarré.'
+      }
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -369,7 +424,11 @@ function EditLoanModal({
           </Button>
           <Button
             loading={saving}
-            disabled={!datesValid || (scheduled && (itemIds.length === 0 || !borrower))}
+            disabled={
+              !datesValid ||
+              depositInvalid ||
+              (scheduled && (itemIds.length === 0 || !borrower || !assignee))
+            }
             type="submit"
           >
             Enregistrer
@@ -382,6 +441,9 @@ function EditLoanModal({
           <>
             <Field label="Emprunteur">
               <UserCombobox value={borrower} onChange={setBorrower} />
+            </Field>
+            <Field label="Responsable">
+              <UserCombobox value={assignee} onChange={setAssignee} minAccessLevel="clap" />
             </Field>
             <Field label="Matériel">
               <ItemMultiSelect items={items} selected={itemIds} onChange={setItemIds} />
@@ -398,6 +460,20 @@ function EditLoanModal({
             onChange={(e) => setDeposit(e.target.value)}
           />
         </Field>
+        {ended && (
+          <Field
+            label="Caution retenue (€)"
+            error={depositInvalid ? 'Ne peut pas dépasser la caution.' : undefined}
+          >
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={retained}
+              onChange={(e) => setRetained(e.target.value)}
+            />
+          </Field>
+        )}
         <Field label="Commentaire">
           <Textarea value={comments} onChange={(e) => setComments(e.target.value)} />
         </Field>
@@ -598,6 +674,57 @@ function PartialReturnModal({
           Pour un retour total, utilisez « Enregistrer le retour ».
         </p>
       )}
+    </Modal>
+  );
+}
+
+function ConditionModal({
+  item,
+  onClose,
+  onSubmit,
+  saving,
+}: {
+  item: LoanedItemPublic;
+  onClose: () => void;
+  onSubmit: (condition: Condition) => void;
+  saving: boolean;
+}) {
+  const [condition, setCondition] = useState<Condition>(item.return_condition ?? 'good');
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      onSubmit={() => onSubmit(condition)}
+      title="Corriger l'état au retour"
+      description={item.item.name}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button loading={saving} type="submit">
+            Enregistrer
+          </Button>
+        </>
+      }
+    >
+      <Select
+        value={condition}
+        onChange={(e) => setCondition(e.target.value as Condition)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.currentTarget.form?.requestSubmit();
+          }
+        }}
+        autoFocus
+      >
+        {CONDITIONS.map((c) => (
+          <option key={c.value} value={c.value}>
+            {c.label}
+          </option>
+        ))}
+      </Select>
     </Modal>
   );
 }

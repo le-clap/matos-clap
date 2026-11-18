@@ -31,8 +31,13 @@ def get_users(
     _user: ClapDep,
     pagination: Annotated[PaginationParams, Depends()],
     access_level: AccessLevel | None = None,
+    min_access_level: AccessLevel | None = None,
 ) -> PaginatedResponse[User]:
     base_statement = select(User)
+
+    if min_access_level is not None:
+        levels = list(AccessLevel)
+        base_statement = base_statement.where(col(User.access_level).in_(levels[levels.index(min_access_level) :]))
 
     if access_level is not None:
         base_statement = base_statement.where(User.access_level == access_level)
@@ -97,8 +102,6 @@ def update_user(
 
     old_level = db_user.access_level
     db_user.sqlmodel_update(user_patch.model_dump(exclude_unset=True))
-
-    session.add(db_user)
     session.commit()
     session.refresh(db_user)
 

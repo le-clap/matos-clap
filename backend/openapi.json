@@ -1745,6 +1745,22 @@
             }
           },
           {
+            "name": "min_access_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AccessLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Access Level"
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -3296,6 +3312,101 @@
         }
       }
     },
+    "/api/loans/{loan_id}/items/{item_id}/return-condition": {
+      "patch": {
+        "tags": [
+          "loans"
+        ],
+        "summary": "Update Return Condition",
+        "description": "Correct the recorded return condition of an already-returned item.",
+        "operationId": "loans_update_return_condition",
+        "parameters": [
+          {
+            "name": "loan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Loan Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Item Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanItemConditionPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanPublic"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Loan not found"
+          },
+          "409": {
+            "description": "Item not returned yet"
+          },
+          "422": {
+            "description": "Item not present in this loan"
+          }
+        }
+      }
+    },
     "/api/io/catalogs/export": {
       "get": {
         "tags": [
@@ -3841,14 +3952,7 @@
       "CatalogPatch": {
         "properties": {
           "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Name"
           },
           "description": {
@@ -3863,14 +3967,7 @@
             "title": "Description"
           },
           "category_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Category Id"
           }
         },
@@ -3961,14 +4058,7 @@
       "CategoryPatch": {
         "properties": {
           "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Name"
           },
           "description": {
@@ -4197,56 +4287,21 @@
       "ItemPatch": {
         "properties": {
           "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Name"
           },
           "catalog_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Catalog Id"
           },
           "condition": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Condition"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/Condition"
           },
           "availability": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Availability"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/Availability"
           },
           "deposit_cents": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Deposit Cents"
           }
         },
@@ -4319,6 +4374,18 @@
         ],
         "title": "ItemPublic"
       },
+      "LoanItemConditionPatch": {
+        "properties": {
+          "return_condition": {
+            "$ref": "#/components/schemas/Condition"
+          }
+        },
+        "type": "object",
+        "required": [
+          "return_condition"
+        ],
+        "title": "LoanItemConditionPatch"
+      },
       "LoanPartialReturnItem": {
         "properties": {
           "item_id": {
@@ -4362,51 +4429,27 @@
       "LoanPatch": {
         "properties": {
           "borrower_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Borrower Id"
           },
+          "assignee_id": {
+            "type": "integer",
+            "title": "Assignee Id"
+          },
           "start_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date-time",
             "title": "Start Date"
           },
           "end_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date-time",
             "title": "End Date"
           },
           "total_deposit_cents": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Deposit Cents"
+            "type": "integer",
+            "title": "Total Deposit Cents",
+            "ge": 0
           },
           "actual_start_date": {
             "anyOf": [
@@ -4456,18 +4499,11 @@
             "title": "Comments"
           },
           "item_ids": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array",
-                "minItems": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minLength": 1,
             "title": "Item Ids"
           }
         },
@@ -5032,38 +5068,17 @@
       "RequestPatch": {
         "properties": {
           "phone_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Phone Number"
           },
           "start_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date-time",
             "title": "Start Date"
           },
           "end_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date-time",
             "title": "End Date"
           },
           "reason": {
@@ -5078,14 +5093,8 @@
             "title": "Reason"
           },
           "status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/RequestStatus"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/RequestStatus",
+            "title": "Status"
           }
         },
         "type": "object",

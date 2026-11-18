@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LoansService,
+  type Condition,
   type LoanPartialReturnPost,
   type LoanPatch,
   type LoanPost,
@@ -92,10 +93,20 @@ export function useLoanMutations() {
       ),
     onSuccess: invalidate,
   });
+  const updateReturnCondition = useMutation({
+    mutationFn: ({ id, itemId, condition }: { id: number; itemId: number; condition: Condition }) =>
+      unwrap(
+        LoansService.loansUpdateReturnCondition({
+          path: { loan_id: id, item_id: itemId },
+          body: { return_condition: condition },
+        }),
+      ),
+    onSuccess: invalidate,
+  });
   const remove = useMutation({
     mutationFn: (id: number) => unwrap(LoansService.loansDeleteLoan({ path: { loan_id: id } })),
     onSuccess: invalidate,
   });
 
-  return { create, update, returnLoan, partialReturn, remove };
+  return { create, update, returnLoan, partialReturn, updateReturnCondition, remove };
 }

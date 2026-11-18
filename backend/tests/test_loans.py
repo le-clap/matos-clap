@@ -635,3 +635,70 @@ def test_delete_loan_reopens_request(client, session, f_user, f_token, f_categor
     req = client.get(f"/api/requests/{req_id}", headers=auth(c_token)).json()
     assert req["status"] == "pending"
     assert req["loan_id"] is None
+
+
+# ── Return condition correction ───────────────────────────────────────────────
+
+
+def test_update_return_condition(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
+    catalog = f_catalog(f_category())
+    item_a = f_item(catalog)
+    item_b = f_item(catalog)
+    clap = f_user(AccessLevel.CLAP)
+    headers = auth(f_token(clap))
+    loan = f_loan(f_user(AccessLevel.USER), clap, [item_a, item_b], actual_start=datetime.now(UTC) - timedelta(hours=2))
+
+    url = f"/api/loans/{loan.id}/items/{item_a.id}/return-condition"
+    # Not returned yet -> 409
+    assert client.patch(url, json={"return_condition": "good"}, headers=headers).status_code == 409
+
+    client.post(
+        f"/api/loans/{loan.id}/partial-return",
+        json={"items": [{"item_id": item_a.id, "return_condition": "good"}]},
+        headers=headers,
+    )
+    # Fix after partial return
+    r = client.patch(url, json={"return_condition": "degraded"}, headers=headers)
+    assert r.status_code == 200
+    li = next(li for li in r.json()["loaned_items"] if li["item"]["id"] == item_a.id)
+    assert li["return_condition"] == "degraded"
+
+    # Fix after full return
+    client.post(f"/api/loans/{loan.id}/return", json={"retained_deposit_cents": 0}, headers=headers)
+    r = client.patch(url, json={"return_condition": "good"}, headers=headers)
+    assert r.status_code == 200
+
+    # Unknown item -> 422
+    assert (
+        client.patch(
+            f"/api/loans/{loan.id}/items/99999/return-condition", json={"return_condition": "good"}, headers=headers
+        ).status_code
+        == 422
+    )
+
+
+# ── Assignee / deposit edits ──────────────────────────────────────────────────
+
+
+def test_update_assignee_and_retained_deposit(client, session, f_user, f_token, f_category, f_catalog, f_item, f_loan):
+    item = f_item(f_catalog(f_category()))
+    clap, other_clap, plain = f_user(AccessLevel.CLAP), f_user(AccessLevel.CLAP), f_user(AccessLevel.USER)
+    headers = auth(f_token(clap))
+    borrower = f_user(AccessLevel.USER)
+
+    scheduled = f_loan(borrower, clap, [item], total_deposit_cents=1000)
+    url = f"/api/loans/{scheduled.id}"
+    assert client.patch(url, json={"assignee_id": plain.id}, headers=headers).status_code == 422
+    assert client.patch(url, json={"assignee_id": 99999}, headers=headers).status_code == 404
+    r = client.patch(url, json={"assignee_id": other_clap.id}, headers=headers)
+    assert r.status_code == 200 and r.json()["assignee"]["id"] == other_clap.id
+
+    now = datetime.now(UTC)
+    ended = f_loan(
+        borrower, clap, [item], actual_start=now - timedelta(hours=3), actual_return=now, total_deposit_cents=1000
+    )
+    url = f"/api/loans/{ended.id}"
+    assert client.patch(url, json={"assignee_id": other_clap.id}, headers=headers).status_code == 409
+    assert client.patch(url, json={"retained_deposit_cents": 2000}, headers=headers).status_code == 422
+    r = client.patch(url, json={"retained_deposit_cents": 500}, headers=headers)
+    assert r.status_code == 200 and r.json()["retained_deposit_cents"] == 500

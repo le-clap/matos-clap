@@ -5,20 +5,22 @@ import { qk } from '@/lib/queryKeys';
 
 export interface UserFilters {
   accessLevel?: AccessLevel;
+  minAccessLevel?: AccessLevel;
   page?: number;
   limit?: number;
   search?: string;
 }
 
 export function useUsers(filters: UserFilters = {}, enabled = true) {
-  const { accessLevel, page = 0, limit = 20, search } = filters;
+  const { accessLevel, minAccessLevel, page = 0, limit = 20, search } = filters;
   return useQuery({
-    queryKey: qk.users({ accessLevel, page, limit, search }),
+    queryKey: qk.users({ accessLevel, minAccessLevel, page, limit, search }),
     queryFn: () =>
       unwrap(
         UsersService.usersGetUsers({
           query: {
             access_level: accessLevel ?? null,
+            min_access_level: minAccessLevel ?? null,
             page,
             limit,
             search,

@@ -3,9 +3,18 @@ import { type HTMLAttributes, type TdHTMLAttributes, type ThHTMLAttributes } fro
 import type { Sort } from '@/lib/tableView';
 import { cn } from '@/lib/utils';
 
-export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
+export function Table({
+  className,
+  bare,
+  ...props
+}: HTMLAttributes<HTMLTableElement> & { bare?: boolean }) {
   return (
-    <div className="w-full overflow-x-auto rounded-[var(--radius-card)] border border-border bg-surface">
+    <div
+      className={cn(
+        'w-full overflow-x-auto bg-surface',
+        !bare && 'rounded-[var(--radius-card)] border border-border',
+      )}
+    >
       <table className={cn('w-full border-collapse text-sm', className)} {...props} />
     </div>
   );

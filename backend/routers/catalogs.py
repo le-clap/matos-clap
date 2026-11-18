@@ -136,7 +136,6 @@ def update_catalog(
             raise HTTPException(status_code=404, detail=f"Category with ID {update_data['category_id']} not found")
 
     db_catalog.sqlmodel_update(update_data)
-    session.add(db_catalog)
     session.commit()
     session.refresh(db_catalog)
     return db_catalog

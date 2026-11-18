@@ -76,7 +76,6 @@ def update_category(
         raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
 
     db_category.sqlmodel_update(category_patch.model_dump(exclude_unset=True))
-    session.add(db_category)
     session.commit()
     session.refresh(db_category)
     return db_category
