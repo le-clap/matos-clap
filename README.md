@@ -150,7 +150,7 @@ erDiagram
 
 ### 1. Configuration globale (Bypass du SSO en Dev)
 
-L'authentification passe par le SSO de CLA. En développement, vous pouvez la court-circuiter avec le flag
+L'authentification passe par l'OIDC de CLA (code + PKCE). En développement, vous pouvez la court-circuiter avec le flag
 `ENABLE_DEV_LOGIN` : le bouton de connexion ouvrira automatiquement une session admin sur le premier utilisateur de la
 base de données.
 

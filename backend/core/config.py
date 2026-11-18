@@ -27,8 +27,11 @@ class Settings(BaseSettings):
             )
         return self
 
-    CLA_HOST: str = "https://centralelilleassos.fr"
-    CLA_IDENTIFIER: str = "matos-clap"
+    CLA_ISSUER: str = "https://centralelilleassos.fr/auth"
+    CLA_CLIENT_ID: str = "matos-clap"
+    CLA_CLIENT_SECRET: str = ""
+    CLA_REDIRECT_URI: str = "https://matos.le-clap.fr/api/auth/callback"
+    SECRET_KEY: str = ""
 
     SESSION_COOKIE_NAME: str = "session_id"
     SESSION_COOKIE_SECURE: bool = True

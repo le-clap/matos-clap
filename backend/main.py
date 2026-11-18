@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 
 from core.config import settings
 from core.logging import configure_logging
@@ -35,6 +36,15 @@ app = FastAPI(
     docs_url=None if _production() else "/docs",
     redoc_url=None if _production() else "/redoc",
     generate_unique_id_function=_unique_id,
+)
+
+# Used by authlib to carry PKCE verifier
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    session_cookie="oidc_state",
+    https_only=settings.SESSION_COOKIE_SECURE,
+    max_age=600,
 )
 
 app.add_middleware(
