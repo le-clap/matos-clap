@@ -15,6 +15,7 @@ from dependencies.auth import get_current_user, has_role, require_role
 from models.enums import AccessLevel, Condition, LoanStatus, RequestStatus
 from models.models import Item, Loan, LoanedItem, Request, User
 from schemas.loans import (
+    LoanItemConditionPatch,
     LoanPartialReturnPost,
     LoanPatch,
     LoanPost,
@@ -44,6 +45,13 @@ def _loan_load_options():
         joinedload(Loan.assignee),  # ty: ignore[invalid-argument-type]
         selectinload(Loan.loaned_items).joinedload(LoanedItem.item),  # ty: ignore[invalid-argument-type]
     ]
+
+
+def _get_loan_or_404(session: Session, loan_id: int) -> Loan:
+    loan = session.exec(select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    return loan
 
 
 @router.get("/", response_model=PaginatedResponse[LoanPublic])
@@ -157,10 +165,7 @@ def get_loan_by_id(
     current_user: CurrentUserDep,
     loan_id: Annotated[int, Path(ge=1)],
 ) -> Loan:
-    statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
-    loan = session.exec(statement).first()
-    if not loan:
-        raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    loan = _get_loan_or_404(session, loan_id)
     if not has_role(current_user, AccessLevel.CLAP) and loan.borrower_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
     return loan
@@ -255,7 +260,6 @@ def create_loan(
 
     if db_request is not None:
         db_request.status = RequestStatus.APPROVED
-        session.add(db_request)
 
     session.commit()
 
@@ -282,10 +286,7 @@ def partial_return_loan_items(
     loan_id: Annotated[int, Path(ge=1)],
     partial_return_data: LoanPartialReturnPost,
 ) -> Loan:
-    statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
-    db_loan = session.exec(statement).first()
-    if not db_loan:
-        raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    db_loan = _get_loan_or_404(session, loan_id)
     if db_loan.actual_start_date is None:
         raise HTTPException(status_code=409, detail=f"Loan with ID {loan_id} has not been started yet")
     if db_loan.actual_return_date is not None:
@@ -322,7 +323,6 @@ def partial_return_loan_items(
         db_loaned_item.actual_return_date = returned_at
         if item.return_condition is not None:
             db_loaned_item.return_condition = item.return_condition
-        session.add(db_loaned_item)
 
     remaining_items = [loaned_item for loaned_item in db_loan.loaned_items if loaned_item.actual_return_date is None]
     if not remaining_items:
@@ -353,10 +353,7 @@ def return_loan(
     loan_id: Annotated[int, Path(ge=1)],
     return_data: LoanReturnPost,
 ) -> Loan:
-    statement = select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())
-    db_loan = session.exec(statement).first()
-    if not db_loan:
-        raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    db_loan = _get_loan_or_404(session, loan_id)
     if db_loan.actual_start_date is None:
         raise HTTPException(status_code=409, detail=f"Loan with ID {loan_id} has not been started yet")
     if db_loan.actual_return_date is not None:
@@ -382,7 +379,6 @@ def return_loan(
         for item_id, condition in condition_by_item_id.items():
             db_loaned_item = loaned_item_by_item_id[item_id]
             db_loaned_item.return_condition = condition
-            session.add(db_loaned_item)
 
     returned_at = datetime.now(UTC)
     if returned_at < db_loan.actual_start_date:
@@ -399,18 +395,48 @@ def return_loan(
             )
         if loaned_item.actual_return_date is None:
             loaned_item.actual_return_date = returned_at
-            session.add(loaned_item)
 
     db_loan.actual_return_date = returned_at
     db_loan.retained_deposit_cents = return_data.retained_deposit_cents
     if return_data.comments is not None:
         db_loan.comments = return_data.comments
 
-    session.add(db_loan)
     session.commit()
     session.refresh(db_loan)
 
     logger.info("loan.returned", loan_id=db_loan.id, retained_deposit_cents=db_loan.retained_deposit_cents)
+    return db_loan
+
+
+@router.patch(
+    "/{loan_id}/items/{item_id}/return-condition",
+    response_model=LoanPublic,
+    responses={
+        404: {"description": "Loan not found"},
+        409: {"description": "Item not returned yet"},
+        422: {"description": "Item not present in this loan"},
+    },
+)
+def update_return_condition(
+    session: SessionDep,
+    _user: ClapDep,
+    loan_id: Annotated[int, Path(ge=1)],
+    item_id: Annotated[int, Path(ge=1)],
+    payload: LoanItemConditionPatch,
+) -> Loan:
+    """Correct the recorded return condition of an already-returned item."""
+    db_loan = _get_loan_or_404(session, loan_id)
+    loaned_item = next((li for li in db_loan.loaned_items if li.item_id == item_id), None)
+    if loaned_item is None:
+        raise HTTPException(status_code=422, detail=f"Item {item_id} is not present in this loan")
+    if loaned_item.actual_return_date is None:
+        raise HTTPException(status_code=409, detail=f"Item {item_id} has not been returned yet")
+
+    loaned_item.return_condition = payload.return_condition
+    session.commit()
+    session.refresh(db_loan)
+
+    logger.info("loan.return_condition_updated", loan_id=loan_id, item_id=item_id)
     return db_loan
 
 
@@ -425,9 +451,7 @@ def update_loan(
     loan_id: Annotated[int, Path(ge=1)],
     loan_patch: LoanPatch,
 ) -> Loan:
-    db_loan = session.exec(select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())).first()
-    if not db_loan:
-        raise HTTPException(status_code=404, detail=f"Loan with ID {loan_id} not found")
+    db_loan = _get_loan_or_404(session, loan_id)
 
     update_data = loan_patch.model_dump(exclude_unset=True)
     new_item_ids = update_data.pop("item_ids", None)
@@ -439,12 +463,26 @@ def update_loan(
     if new_start >= new_end:
         raise HTTPException(status_code=422, detail="start_date must be before end_date")
 
-    # Structural edits (items, borrower) are only allowed before the loan starts.
-    if (new_item_ids is not None or changes_borrower) and db_loan.actual_start_date is not None:
+    changes_assignee = "assignee_id" in update_data and update_data["assignee_id"] != db_loan.assignee_id
+
+    # Structural edits (items, borrower, assignee) are only allowed before the loan starts.
+    if (new_item_ids is not None or changes_borrower or changes_assignee) and db_loan.actual_start_date is not None:
         raise HTTPException(
             status_code=409,
-            detail="A started loan's items and borrower can no longer be changed",
+            detail="A started loan's items, borrower and assignee can no longer be changed",
         )
+
+    if changes_assignee:
+        new_assignee = session.get(User, update_data["assignee_id"])
+        if not new_assignee:
+            raise HTTPException(status_code=404, detail=f"Assignee with ID {update_data['assignee_id']} not found")
+        if not has_role(new_assignee, AccessLevel.CLAP):
+            raise HTTPException(status_code=422, detail="Assignee must have at least the CLAP role")
+
+    new_total = update_data.get("total_deposit_cents", db_loan.total_deposit_cents)
+    new_retained = update_data.get("retained_deposit_cents", db_loan.retained_deposit_cents)
+    if new_retained is not None and new_retained > new_total:
+        raise HTTPException(status_code=422, detail="retained_deposit_cents cannot exceed total_deposit_cents")
 
     if changes_borrower and not session.get(User, update_data["borrower_id"]):
         raise HTTPException(status_code=404, detail=f"Borrower with ID {update_data['borrower_id']} not found")
@@ -472,7 +510,6 @@ def update_loan(
         ]
 
     db_loan.sqlmodel_update(update_data)
-    session.add(db_loan)
     session.commit()
 
     reloaded = session.exec(select(Loan).where(Loan.id == loan_id).options(*_loan_load_options())).first()
@@ -496,7 +533,6 @@ def delete_loan(
     # Deleting a loan that came from a request sends that request back to pending.
     if db_loan.request is not None:
         db_loan.request.status = RequestStatus.PENDING
-        session.add(db_loan.request)
 
     session.delete(db_loan)
     session.commit()

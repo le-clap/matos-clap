@@ -291,7 +291,6 @@ def update_request(
         raise HTTPException(status_code=422, detail="start_date must be before end_date")
 
     db_request.sqlmodel_update(request_patch.model_dump(exclude_unset=True))
-    session.add(db_request)
     session.commit()
     session.refresh(db_request)
     return db_request

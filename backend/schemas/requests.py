@@ -5,6 +5,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validato
 from models.enums import Availability, RequestStatus
 from schemas.catalogs import CatalogBrief
 from schemas.users import UserBrief
+from schemas.utils import NonNull
 
 # French phone number, optionally with +33 prefix and common separators.
 _PHONE_RE = re.compile(r"^(?:\+33|0)[1-9]\d{8}$")
@@ -54,11 +55,11 @@ class RequestPost(BaseModel):
 
 
 class RequestPatch(BaseModel):
-    phone_number: str | None = None
-    start_date: AwareDatetime | None = None
-    end_date: AwareDatetime | None = None
+    phone_number: NonNull[str] = None
+    start_date: NonNull[AwareDatetime] = None
+    end_date: NonNull[AwareDatetime] = None
     reason: str | None = None
-    status: RequestStatus | None = None
+    status: NonNull[RequestStatus] = None
 
     @field_validator("phone_number")
     @classmethod

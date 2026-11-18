@@ -3,6 +3,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 from models.enums import Condition, LoanStatus
 from schemas.items import ItemBrief
 from schemas.users import UserBrief
+from schemas.utils import NonNull
 
 
 class LoanedItemPublic(BaseModel):
@@ -32,16 +33,17 @@ class LoanPost(BaseModel):
 
 
 class LoanPatch(BaseModel):
-    borrower_id: int | None = None
-    start_date: AwareDatetime | None = None
-    end_date: AwareDatetime | None = None
-    total_deposit_cents: int | None = Field(default=None, ge=0)
+    borrower_id: NonNull[int] = None
+    assignee_id: NonNull[int] = None
+    start_date: NonNull[AwareDatetime] = None
+    end_date: NonNull[AwareDatetime] = None
+    total_deposit_cents: NonNull[int] = Field(default=None, ge=0)
     actual_start_date: AwareDatetime | None = None
     actual_return_date: AwareDatetime | None = None
     retained_deposit_cents: int | None = Field(default=None, ge=0)
     comments: str | None = None
-    # Structural edits: only allowed while the loan has not started.
-    item_ids: list[int] | None = Field(default=None, min_length=1)
+    # Structural edits (items, borrower, assignee): only allowed while the loan has not started.
+    item_ids: NonNull[list[int]] = Field(default=None, min_length=1)
 
 
 class LoanPostWarning(BaseModel):
@@ -57,6 +59,10 @@ class LoanPostResponse(BaseModel):
 
 class LoanReturnItemCondition(BaseModel):
     item_id: int
+    return_condition: Condition
+
+
+class LoanItemConditionPatch(BaseModel):
     return_condition: Condition
 
 

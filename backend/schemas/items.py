@@ -3,6 +3,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict
 from models.enums import Availability, Condition, LoanStatus
 from schemas.catalogs import CatalogBrief
 from schemas.users import UserBrief
+from schemas.utils import NonNull
 
 
 class ItemBrief(BaseModel):
@@ -21,11 +22,11 @@ class ItemPost(BaseModel):
 
 
 class ItemPatch(BaseModel):
-    name: str | None = None
-    catalog_id: int | None = None
-    condition: Condition | None = None
-    availability: Availability | None = None
-    deposit_cents: int | None = None
+    name: NonNull[str] = None
+    catalog_id: NonNull[int] = None
+    condition: NonNull[Condition] = None
+    availability: NonNull[Availability] = None
+    deposit_cents: NonNull[int] = None
 
 
 class ItemPublic(BaseModel):

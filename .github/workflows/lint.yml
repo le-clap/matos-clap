@@ -21,6 +21,11 @@ jobs:
           enable-cache: true
 
       - run: uv sync --frozen
+      - run: uv run generate_openapi.py
+
+      - name: Check OpenAPI specification is up to date
+        run: git diff --exit-code -- openapi.json
+
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run ty check

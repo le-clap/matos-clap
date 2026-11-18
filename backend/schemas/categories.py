@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
+from schemas.utils import NonNull
+
 
 class CategoryPost(BaseModel):
     name: str
@@ -7,7 +9,7 @@ class CategoryPost(BaseModel):
 
 
 class CategoryPatch(BaseModel):
-    name: str | None = None
+    name: NonNull[str] = None
     description: str | None = None
 
 

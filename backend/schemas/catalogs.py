@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
 from schemas.categories import CategoryPublic
+from schemas.utils import NonNull
 
 
 class CatalogBrief(BaseModel):
@@ -18,9 +19,9 @@ class CatalogPost(BaseModel):
 
 
 class CatalogPatch(BaseModel):
-    name: str | None = None
+    name: NonNull[str] = None
     description: str | None = None
-    category_id: int | None = None
+    category_id: NonNull[int] = None
 
 
 class CatalogImagePublic(BaseModel):

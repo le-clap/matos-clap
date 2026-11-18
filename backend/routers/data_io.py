@@ -232,7 +232,6 @@ async def import_categories(
             target.name = name
             if has_description:
                 target.description = description
-            session.add(target)
             updated += 1
 
     session.commit()
@@ -308,7 +307,6 @@ async def import_catalogs(
             target.category_id = category_id
             if has_description:
                 target.description = description
-            session.add(target)
             updated += 1
 
     session.commit()
@@ -433,7 +431,6 @@ async def import_items(
                 target.availability = availability
             if deposit_cents is not None:
                 target.deposit_cents = deposit_cents
-            session.add(target)
             updated += 1
 
     session.commit()
