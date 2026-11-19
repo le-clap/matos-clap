@@ -2,64 +2,76 @@
 
 import logging
 from unittest.mock import AsyncMock, patch
+from urllib.parse import parse_qs, urlparse
 
+import pytest
+from authlib.integrations.base_client import OAuthError
+
+from core.config import settings
 from models.enums import AccessLevel
+from services.oidc import oauth
 from tests.conftest import make_token, make_user
 
+METADATA = {
+    "issuer": "https://idp.test/auth",
+    "authorization_endpoint": "https://idp.test/auth/authorize/",
+    "token_endpoint": "https://idp.test/auth/token/",
+    "end_session_endpoint": "https://idp.test/auth/logout/",
+}
 
-def test_login_redirects_to_cla(client):
+
+@pytest.fixture(autouse=True)
+def _static_oidc_metadata(monkeypatch):
+    """Preload discovery metadata so tests never hit the network."""
+    monkeypatch.setattr(settings, "CLA_REDIRECT_URI", "https://matos.le-clap.fr/api/auth/callback")
+    oauth.cla.server_metadata = {**METADATA, "_loaded_at": 1}
+    yield
+    oauth.cla.server_metadata = {}
+
+
+def test_login_redirects_with_pkce(client):
     r = client.get("/api/auth/login", follow_redirects=False)
-    assert r.status_code in (301, 302, 307, 308)
-    assert "centralelilleassos" in r.headers["location"]
+    assert r.status_code == 302
+    q = parse_qs(urlparse(r.headers["location"]).query)
+    assert r.headers["location"].startswith(METADATA["authorization_endpoint"])
+    assert q["code_challenge_method"] == ["S256"]
+    assert "code_challenge" in q and "state" in q and "nonce" in q
 
 
-def test_callback_invalid_ticket_returns_401(client):
-    with patch("routers.auth.validate_ticket", new=AsyncMock(return_value=None)):
-        r = client.get("/api/auth/cla/callback?ticket=bad_ticket")
+def _callback(client, userinfo):
+    token = {"userinfo": userinfo}
+    with patch.object(oauth.cla, "authorize_access_token", new=AsyncMock(return_value=token)):
+        return client.get("/api/auth/callback?code=c&state=s", follow_redirects=False)
+
+
+def test_callback_failure_returns_401(client):
+    with patch.object(oauth.cla, "authorize_access_token", new=AsyncMock(side_effect=OAuthError("access_denied"))):
+        r = client.get("/api/auth/callback?error=access_denied")
     assert r.status_code == 401
 
 
-def test_callback_valid_ticket_creates_user_and_session(client, session):
-    payload = {
-        "username": "new_student",
-        "firstName": "New",
-        "lastName": "Student",
-        "emailSchool": "new.student@centralelille.fr",
-    }
-    with patch("routers.auth.validate_ticket", new=AsyncMock(return_value=payload)):
-        r = client.get("/api/auth/cla/callback?ticket=good_ticket", follow_redirects=False)
-
-    assert r.status_code in (301, 302, 307, 308)
+def test_callback_creates_user_and_session(client, session):
+    r = _callback(client, {"preferred_username": "new_student", "name": "New Student", "email": "new@centralelille.fr"})
+    assert r.status_code == 302
     assert "session_id" in r.cookies
 
-    # User was persisted
     client.cookies = {"session_id": r.cookies["session_id"]}
-    me_r = client.get("/api/users/me")
-    assert me_r.status_code == 200
-    data = me_r.json()
+    data = client.get("/api/users/me").json()
     assert data["username"] == "new_student"
-    assert data["email"] == "new.student@centralelille.fr"
+    assert data["email"] == "new@centralelille.fr"
 
 
 def test_callback_updates_existing_user(client, session):
-    """A second login with the same username updates name/email in place."""
     existing = make_user(session, AccessLevel.USER, 99)
+    r = _callback(
+        client, {"preferred_username": existing.username, "name": "Updated Name", "email": "u@centralelille.fr"}
+    )
+    assert r.status_code == 302
 
-    payload = {
-        "username": existing.username,
-        "firstName": "Updated",
-        "lastName": "Name",
-        "emailSchool": "updated@centralelille.fr",
-    }
-    with patch("routers.auth.validate_ticket", new=AsyncMock(return_value=payload)):
-        r = client.get("/api/auth/cla/callback?ticket=update_ticket", follow_redirects=False)
-
-    assert r.status_code in (301, 302, 307, 308)
     client.cookies = {"session_id": r.cookies["session_id"]}
-    me_r = client.get("/api/users/me")
-    data = me_r.json()
+    data = client.get("/api/users/me").json()
     assert data["name"] == "Updated Name"
-    assert data["email"] == "updated@centralelille.fr"
+    assert data["email"] == "u@centralelille.fr"
 
 
 def test_get_me_with_cookie(client, session):
@@ -95,27 +107,35 @@ def test_get_me_expired_session_returns_401(client, session):
     assert r.status_code == 401
 
 
-def test_logout_clears_session(client, session):
+def test_logout_clears_local_session(client, session):
     user = make_user(session, AccessLevel.USER, 4)
     token = make_token(session, user)
 
     client.cookies = {"session_id": token}
-    r = client.post("/api/auth/logout", follow_redirects=False)
-    assert r.status_code in (301, 302, 307, 308)
+    r = client.post("/api/auth/logout")
+    assert r.status_code == 200
+    assert r.json()["logout_url"].startswith(METADATA["end_session_endpoint"])
 
-    # Cookie should be cleared (max_age=0 or empty value)
-    assert r.cookies.get("session_id", "") in ("", None) or "session_id" not in r.cookies
-
-    # Token no longer valid
     client.cookies = {"session_id": token}
-    me_r = client.get("/api/users/me")
-    assert me_r.status_code == 401
+    assert client.get("/api/users/me").status_code == 401
+
+
+def test_logout_url_uses_client_id(client, session):
+    r = _callback(client, {"preferred_username": "bob", "name": "Bob", "email": "bob@centralelille.fr"})
+    client.cookies = {"session_id": r.cookies["session_id"]}
+
+    url = client.post("/api/auth/logout").json()["logout_url"]
+    assert url.startswith(METADATA["end_session_endpoint"])
+    q = parse_qs(urlparse(url).query)
+    assert q["client_id"] == ["matos-clap"]
+    assert "id_token_hint" not in q
+    assert q["post_logout_redirect_uri"] == ["https://matos.le-clap.fr/"]
 
 
 def test_logout_without_session_is_graceful(client):
-    """Logout without a session cookie should still redirect cleanly."""
-    r = client.post("/api/auth/logout", follow_redirects=False)
-    assert r.status_code in (301, 302, 307, 308)
+    r = client.post("/api/auth/logout")
+    assert r.status_code == 200
+    assert r.json() == {"logout_url": None}
 
 
 def test_permission_denied_is_logged(client, session, caplog):

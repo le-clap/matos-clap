@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { createContext, useContext, type ReactNode } from 'react';
-import { UsersService, type UserPublic, type AccessLevel } from '@/client';
+import { createContext, type ReactNode, useContext } from 'react';
+import { type AccessLevel, type UserPublic, UsersService } from '@/client';
 import { ApiError, unwrap } from '@/lib/api';
 import { hasRole as hasRoleFn } from '@/lib/roles';
 
@@ -18,11 +18,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const devLoginEnabled = import.meta.env.VITE_ENABLE_DEV_LOGIN === 'true';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const {
-    data: user,
-    isLoading,
-    refetch,
-  } = useQuery({
+  const { data: user, isLoading } = useQuery({
     queryKey: ['me'],
     queryFn: async () => {
       try {
@@ -41,15 +37,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    let logoutUrl: string | null = null;
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-        redirect: 'manual',
-      });
+      const res = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      if (res.ok) logoutUrl = (await res.json()).logout_url;
     } finally {
-      await refetch();
-      window.location.href = '/login';
+      window.location.href = logoutUrl ?? '/login';
     }
   };
 

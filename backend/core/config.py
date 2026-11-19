@@ -27,8 +27,11 @@ class Settings(BaseSettings):
             )
         return self
 
-    CLA_HOST: str = "https://centralelilleassos.fr"
-    CLA_IDENTIFIER: str = "matos-clap"
+    CLA_ISSUER: str = ""
+    CLA_CLIENT_ID: str = "matos-clap"
+    CLA_CLIENT_SECRET: str = ""
+    CLA_REDIRECT_URI: str = ""
+    SECRET_KEY: str = ""
 
     SESSION_COOKIE_NAME: str = "session_id"
     SESSION_COOKIE_SECURE: bool = True
@@ -37,6 +40,15 @@ class Settings(BaseSettings):
     @field_validator("ALLOWED_ORIGINS")
     def parse_allowed_origins(cls, v: str) -> list[str]:
         return v.split(",") if v else []
+
+    @model_validator(mode="after")
+    def require_oidc_settings(self) -> Settings:
+        if self.ENV != "production" or self.ENABLE_DEV_LOGIN:
+            return self
+        required = ("CLA_ISSUER", "CLA_CLIENT_SECRET", "CLA_REDIRECT_URI", "SECRET_KEY")
+        if missing := [name for name in required if not getattr(self, name)]:
+            raise ValueError(f"Missing required settings: {', '.join(missing)}")
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",
