@@ -1,7 +1,7 @@
 {
   "name": "matos-clap-frontend",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,7 +27,9 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "the": "^1.0.2",
+    "with": "^7.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
