@@ -31,7 +31,7 @@ def _production() -> bool:
 
 app = FastAPI(
     title="MATOS CLAP",
-    version="1.2.3",
+    version="1.2.4",
     openapi_url=None if _production() else "/openapi.json",
     docs_url=None if _production() else "/docs",
     redoc_url=None if _production() else "/redoc",
