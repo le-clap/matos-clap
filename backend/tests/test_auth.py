@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from authlib.integrations.base_client import OAuthError
 
+from core.config import settings
 from models.enums import AccessLevel
 from services.oidc import oauth
 from tests.conftest import make_token, make_user
@@ -20,8 +21,9 @@ METADATA = {
 
 
 @pytest.fixture(autouse=True)
-def _static_oidc_metadata():
+def _static_oidc_metadata(monkeypatch):
     """Preload discovery metadata so tests never hit the network."""
+    monkeypatch.setattr(settings, "CLA_REDIRECT_URI", "https://matos.le-clap.fr/api/auth/callback")
     oauth.cla.server_metadata = {**METADATA, "_loaded_at": 1}
     yield
     oauth.cla.server_metadata = {}

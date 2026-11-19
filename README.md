@@ -152,7 +152,7 @@ erDiagram
 
 L'authentification passe par l'OIDC de CLA (code + PKCE). En développement, vous pouvez la court-circuiter avec le flag
 `ENABLE_DEV_LOGIN` : le bouton de connexion ouvrira automatiquement une session admin sur le premier utilisateur de la
-base de données.
+base de données. Avec ce flag, aucune variable `CLA_*` ni `SECRET_KEY` n'est nécessaire.
 
 ### 2. Démarrage du Backend
 
@@ -251,6 +251,19 @@ Tags d'image produits pour `v1.2.3` : `1.2.3`, `1.2`, `1` et `latest`.
 ### Releases avec migration
 
 N'oubliez pas d'appliquer la migration sur le serveur, pour que l'image mise à jour démarre correctement.
+
+### Configuration de l'authentification (OIDC)
+
+Le `.env` du serveur doit contenir, en plus de la configuration de la base de
+données, les variables suivantes :
+
+| Variable            | Description                                                                             |
+|---------------------|-----------------------------------------------------------------------------------------|
+| `CLA_ISSUER`        | URL de l'issuer OIDC (ex. `https://centralelilleassos.fr/auth`)                         |
+| `CLA_CLIENT_SECRET` | Secret du client `matos-clap`                                                           |
+| `CLA_REDIRECT_URI`  | URL de callback enregistrée chez CLA (ex. `https://matos.le-clap.fr/api/auth/callback`) |
+| `SECRET_KEY`        | Clé aléatoire signant le cookie temporaire `oidc_state` (`openssl rand -hex 32`)        |
+| `CLA_CLIENT_ID`     | Facultatif, défaut `matos-clap`                                                         |
 
 ## Commandes utiles
 
