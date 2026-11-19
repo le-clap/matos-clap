@@ -9,7 +9,6 @@ dependencies = [
     "authlib>=1.9.9",
     "fastapi-cli>=0.0.34",
     "fastapi>=0.165.0",
-    "httpx2>=2.16.0",
     "itsdangerous>=2.2.0",
     "psycopg2-binary>=2.9.13",
     "pydantic-settings>=2.16.3",
@@ -22,6 +21,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.16.2",
     "ruff>=0.17.4",
     "ty>=0.0.100",
     "pre-commit>=4.7.0",

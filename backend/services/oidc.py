@@ -19,7 +19,7 @@ oauth.register(
 def create_or_update_user(session: Session, claims: dict) -> User:
     """Match on preferred_username and refresh name/email from the IdP."""
     username = claims["preferred_username"]
-    name = claims.get("name") or f"{claims.get('given_name', '')} {claims.get('family_name', '')}".strip() or username
+    name = claims.get("name") or username
 
     user = session.exec(select(User).where(User.username == username)).first()
     if user:

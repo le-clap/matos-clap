@@ -547,7 +547,6 @@ dependencies = [
     { name = "authlib" },
     { name = "fastapi" },
     { name = "fastapi-cli" },
-    { name = "httpx2" },
     { name = "itsdangerous" },
     { name = "psycopg2-binary" },
     { name = "pydantic", extra = ["email"] },
@@ -560,6 +559,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "httpx2" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-env" },
@@ -574,7 +574,6 @@ requires-dist = [
     { name = "authlib", specifier = ">=1.9.9" },
     { name = "fastapi", specifier = ">=0.165.0" },
     { name = "fastapi-cli", specifier = ">=0.0.34" },
-    { name = "httpx2", specifier = ">=2.16.0" },
     { name = "itsdangerous", specifier = ">=2.2.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.13" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.14.3" },
@@ -587,6 +586,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "httpx2", specifier = ">=2.16.2" },
     { name = "pre-commit", specifier = ">=4.7.0" },
     { name = "pytest", specifier = ">=9.2.0" },
     { name = "pytest-env", specifier = ">=1.8.5" },

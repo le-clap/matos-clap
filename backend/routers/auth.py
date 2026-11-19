@@ -63,11 +63,7 @@ async def callback(request: Request, session: SessionDep) -> RedirectResponse:
         logger.warning("auth.login_failed", error=e.error)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login failed") from e
 
-    claims = dict(token["userinfo"])
-    if "email" not in claims or "preferred_username" not in claims:
-        claims |= await oauth.cla.userinfo(token=token)
-
-    user = create_or_update_user(session, claims)
+    user = create_or_update_user(session, token["userinfo"])
     user_session = _create_session(session, user)
     logger.info("auth.login", user_id=user.id, username=user.username)
 
